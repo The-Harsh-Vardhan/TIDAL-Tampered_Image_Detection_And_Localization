@@ -27,3 +27,6 @@ venv/
 *.pth
 *.onnx
 checkpoints/
+
+# Dataset images (too large for git)
+kaggle/input/

@@ -1,0 +1,11 @@
+# Cross-Document Conflicts
+
+This file lists only real contradictions or spec drift in `Docs3/`, including important docs-to-notebook mismatches.
+
+| Conflicting artifacts | Conflict | Why it matters | Recommended resolution |
+|---|---|---|---|
+| `01_System_Architecture.md` vs `03_Model_Architecture.md` vs `10_Project_Timeline.md` | `01` says Phase 2 ELA changes `in_channels` to 6, while `03` and `10` describe ELA as a 4th input channel. | This is the main remaining architectural contradiction. An implementer cannot know whether ELA means RGB+ELA (4 channels) or some 6-channel variant. | Standardize ELA everywhere as a 4th channel if that is the intended design. Keep 6 channels only for the separate SRM path. |
+| `08_Engineering_Practices.md` vs `notebooks/tamper_detection_v3.ipynb` | `08` uses `!pip install -q kaggle segmentation-models-pytorch albumentations>=1.3.1,<2.0`, while the notebook correctly quotes `"albumentations>=1.3.1,<2.0"`. | The doc version can be interpreted incorrectly by the shell because `<2.0` may be treated as input redirection. | Copy the notebook form into the doc exactly. |
+| `09_Experiment_Tracking.md` vs `notebooks/tamper_detection_v3.ipynb` | `09` says W&B is optional, but its setup block shows unconditional install/import/login/init. The notebook uses `USE_WANDB` and guarded login/init. | The doc can push implementers toward making W&B mandatory even though the intended design is optional tracking. | Rewrite the setup section to start with the guarded optional pattern, then show install/login only inside the enabled path. |
+| `09_Experiment_Tracking.md` internal drift | The top of the doc defines an optional guarded W&B pattern, but the setup section immediately below behaves as if W&B is always enabled. | This is a self-contradiction inside the same spec. | Remove the unconditional setup path or explicitly label it as "only if W&B is enabled." |
+| `00_Master_Report.md` vs rest of `Docs3/` | `00` maps bonus "subtle tampering detection" coverage to `05_Evaluation_Methodology.md` via forgery-type breakdown, but no other doc defines a subtle-tampering capability beyond standard CASIA categories. | This overstates what the final spec actually promises. | Reword the claim to say the docs report manipulation-type breakdown, not guaranteed subtle-tampering detection. |

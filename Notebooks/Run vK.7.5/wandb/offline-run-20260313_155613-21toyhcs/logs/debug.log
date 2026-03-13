@@ -1,0 +1,9 @@
+2026-03-13 15:56:13,580 INFO    MainThread:868 [wandb_setup.py:_flush():81] Current SDK version is 0.25.1
+2026-03-13 15:56:13,581 INFO    MainThread:868 [wandb_setup.py:_flush():81] Configure stats pid to 868
+2026-03-13 15:56:13,581 INFO    MainThread:868 [wandb_setup.py:_flush():81] Loading settings from environment variables
+2026-03-13 15:56:13,581 INFO    MainThread:868 [wandb_init.py:setup_run_log_directory():717] Logging user logs to c:\D Drive\Projects\BigVision Assignment\Notebooks\wandb\offline-run-20260313_155613-21toyhcs\logs\debug.log
+2026-03-13 15:56:13,581 INFO    MainThread:868 [wandb_init.py:setup_run_log_directory():718] Logging internal logs to c:\D Drive\Projects\BigVision Assignment\Notebooks\wandb\offline-run-20260313_155613-21toyhcs\logs\debug-internal.log
+2026-03-13 15:56:13,581 INFO    MainThread:868 [wandb_init.py:init():844] calling init triggers
+2026-03-13 15:56:13,581 INFO    MainThread:868 [wandb_init.py:init():849] wandb.init called with sweep_config: {}
+config: {'architecture': 'UNetWithClassifier', 'image_size': 256, 'batch_size': 8, 'num_workers': 2, 'learning_rate': 0.0001, 'epochs': 50, 'classification_loss_weight': 1.5, 'segmentation_loss_weight': 1.0, 'scheduler': 'CosineAnnealingLR(T_max=10)', 'dropout': 0.5, 'dataset': 'CASIA tampered vs authentic with binary masks', 'runtime': 'Google Colab', '_wandb': {}}
+2026-03-13 15:56:13,581 INFO    MainThread:868 [wandb_init.py:init():892] starting backend

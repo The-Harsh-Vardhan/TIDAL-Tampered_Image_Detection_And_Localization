@@ -1,0 +1,23 @@
+# Conflict Resolution Check
+
+This file compares the highest-signal findings from `Audit 1/` against the rewritten docs in `Docs 2/`.
+
+| Audit 1 issue | Docs 2 evidence | Status | Remaining risk |
+|---|---|---|---|
+| Hard-coded dataset counts and misaligned-pair counts made the dataset spec brittle | `02_Dataset_and_Preprocessing.md` says counts must be determined dynamically and misaligned pairs must be validated and logged rather than hard-coded | Resolved | None beyond normal dataset-mirror variation |
+| Split procedure was under-specified | `02_Dataset_and_Preprocessing.md` now gives the explicit two-step 85 / 7.5 / 7.5 split procedure | Resolved | Still no true group-aware split because CASIA source groupings are unavailable |
+| Split integrity / leakage prevention was missing | `02_Dataset_and_Preprocessing.md` and `11_Limitations_and_Future_Work.md` now acknowledge the limitation and persist a split manifest | Partially resolved | Leakage risk is documented but not eliminated |
+| Baseline versus later-stage augmentation drifted across docs | `03_Data_Pipeline.md`, `10_Project_Timeline.md`, and `12_Final_Submission_Checklist.md` now agree that MVP uses spatial transforms and photometric transforms are Phase 2 | Resolved | `albumentations` compatibility risk remains in the optional Phase 2 path |
+| `model.unet.*` paths did not match plain `smp.Unet` | `04_Model_Architecture.md` explicitly documents direct SMP attributes, and `05_Training_Strategy.md` uses `model.encoder`, `model.decoder`, and `model.segmentation_head` | Resolved | None |
+| Scheduler was baseline in one doc and Phase 2 in others | `05_Training_Strategy.md` now makes the scheduler Phase 2, matching `10_Project_Timeline.md` and `12_Final_Submission_Checklist.md` | Resolved | None |
+| The final partial gradient-accumulation window was lost | `05_Training_Strategy.md` adds an explicit flush after the training loop | Resolved | None |
+| Mixed authentic/tampered averages could inflate localization metrics | `06_Evaluation_Methodology.md` now requires both mixed-set and tampered-only reporting | Resolved | Pixel/image threshold ambiguity still needs cleanup |
+| The main visualization emphasized a heatmap instead of the required predicted mask | `07_Visualization_and_Results.md` and `12_Final_Submission_Checklist.md` now make the binary predicted mask the required third panel | Resolved | None |
+| The docs lacked a dedicated limitations/future-work section | `11_Limitations_and_Future_Work.md` now exists and captures key limitations cleanly | Resolved | None |
+| The checklist mixed core, optional, and bonus work | `12_Final_Submission_Checklist.md` now separates MVP Required, Phase 2 Improvements, and Phase 3 Bonus | Resolved | None |
+| Memory and performance numbers were stated too confidently | `04_Model_Architecture.md` says parameter and VRAM usage should be measured in the actual notebook; `08_Robustness_Testing.md` reports only measured results | Resolved | Colab runtime variability still exists, but it is now acknowledged |
+| External workflow tools were described as if they were not dependencies at all | `01_Assignment_Overview.md` now distinguishes Kaggle API and Google Drive as workflow tools rather than deployment requirements | Resolved | `09_Engineering_Practices.md` should install `kaggle` by default if it uses the CLI |
+| No concrete implementation artifact existed in the repo | `tamper_detection.ipynb` now contains matching pipeline sections, threshold selection, checkpointing, and robustness sections | Partially resolved | Notebook alignment exists, but this audit does not prove numerical correctness or end-to-end execution |
+| Image-level detection based on `max()` was fragile | `04_Model_Architecture.md`, `06_Evaluation_Methodology.md`, and `11_Limitations_and_Future_Work.md` now acknowledge the issue and mention alternatives | Partially resolved | The final image-level score is still not locked |
+| Threshold policy was ambiguous | `04_Model_Architecture.md`, `05_Training_Strategy.md`, `06_Evaluation_Methodology.md`, and `10_Project_Timeline.md` now agree that validation chooses the threshold before test reporting | Partially resolved | `06_Evaluation_Methodology.md` still uses one threshold argument in the example evaluation function even while saying the image threshold may differ |
+| Resize robustness degraded masks as well as images | `08_Robustness_Testing.md` now says masks must remain clean and provides an image-only resize helper | Partially resolved | The shown evaluation loop still does not demonstrate how resize-degraded images are fed through that helper |
