@@ -139,12 +139,14 @@ The ETASR CNN (Track 1) outputs only a binary classification label. The assignme
 
 | Version | Change | Input | Encoder State | Expected Impact |
 |---------|--------|-------|--------------|-----------------|
-| **vR.P.0** | ResNet-34 + UNet, RGB, frozen encoder | RGB 384×384 | Fully frozen | Establish localization baseline (target: Tam-F1 ≥ 0.35) |
-| **vR.P.1** | Gradual unfreeze (last 2 encoder blocks) | RGB 384×384 | Partially unfrozen | +2-5% F1 from domain adaptation |
-| **vR.P.2** | ELA as input (replace RGB) | ELA 384×384 | Frozen (BN unfrozen) | Test ELA + pretrained compatibility |
-| **vR.P.3** | 4-channel (RGB + ELA) | RGB+ELA 384×384 | Frozen | Test combined signal |
-| **vR.P.4** | ResNet-50 encoder | RGB 384×384 | Frozen | Test deeper features |
-| **vR.P.5** | EfficientNet-B0 encoder | RGB 384×384 | Frozen | Test parameter efficiency |
+| **vR.P.0** | ResNet-34 + UNet, RGB, frozen encoder | RGB 384x384 | Fully frozen | Establish localization baseline |
+| **vR.P.1** | Dataset fix + GT mask auto-detection | RGB 384x384 | Fully frozen | Proper GT masks from sagnikkayalcse52 |
+| **vR.P.1.5** | Speed optimizations (AMP, workers) | RGB 384x384 | Fully frozen | Training speed only |
+| **vR.P.2** | Gradual unfreeze (last 2 encoder blocks) | RGB 384x384 | Partially unfrozen | +2-5% F1 from domain adaptation |
+| **vR.P.3** | ELA as input (replace RGB) | ELA 384x384 | Frozen (BN unfrozen) | Test ELA + pretrained compatibility |
+| **vR.P.4** | 4-channel (RGB + ELA) | RGB+ELA 384x384 | Frozen (conv1 unfrozen) | Test combined signal |
+| **vR.P.5** | ResNet-50 encoder | RGB 384x384 | Frozen | Test deeper features |
+| **vR.P.6** | EfficientNet-B0 encoder | RGB 384x384 | Frozen | Test parameter efficiency |
 
 ### vR.P.0 Configuration (First Experiment)
 

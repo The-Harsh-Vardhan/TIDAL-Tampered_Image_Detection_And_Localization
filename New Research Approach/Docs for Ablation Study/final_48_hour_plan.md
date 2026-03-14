@@ -1,5 +1,7 @@
 # Final 48-Hour Execution Plan
 
+> **STATUS: SUPERSEDED** -- This plan was written on 2026-03-14 and has been substantially completed. The ETASR track progressed through vR.1.7 (best: vR.1.6 at 90.23%). The pretrained track progressed through vR.P.2 with vR.P.3-P.6 submitted to Kaggle. See `ablation_master_plan.md` for current tracking.
+
 | Field | Value |
 |-------|-------|
 | **Deadline** | ~2 days from 2026-03-14 |

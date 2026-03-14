@@ -228,7 +228,7 @@ Compared to ETASR CNN's 29,520,034 fully trainable parameters — **59× fewer t
 for param in model.encoder.parameters():
     param.requires_grad = False
 
-# Phase 2: Gradual unfreeze last 2 blocks (vR.P.1)
+# Phase 2: Gradual unfreeze last 2 blocks (vR.P.2)
 def unfreeze_encoder(model, num_blocks=2):
     children = list(model.encoder.children())
     for child in children[-num_blocks:]:
@@ -333,7 +333,7 @@ class ForensicClassifier(nn.Module):
 
 This gives ~650K trainable parameters (vs ETASR's 29.5M) with ImageNet features as a frozen backbone.
 
-### ELA Input Adaptation (vR.P.2)
+### ELA Input Adaptation (vR.P.3)
 
 When using ELA as input to the pretrained encoder, the BatchNorm domain shift must be addressed:
 

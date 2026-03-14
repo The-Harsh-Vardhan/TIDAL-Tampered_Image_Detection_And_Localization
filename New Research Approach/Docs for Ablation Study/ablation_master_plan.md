@@ -229,18 +229,22 @@ The ETASR ablation study (Section 3) optimizes a classification-only model. The 
 ### How the Two Tracks Relate
 
 ```
-Track 1 (ETASR Classification)          Track 2 (Pretrained Localization)
-───────────────────────────              ──────────────────────────────────
-vR.1.0 → vR.1.1 → vR.1.2(✗)
-         ↓                               vR.P.0 (divg07, ELA pseudo-masks)
-         vR.1.3 → vR.1.4 → ...           ↓
-                                          vR.P.1 (sagnikkayalcse52, GT masks)
-                                           ↓
-                                          vR.P.2 (gradual unfreeze) → vR.P.3 → ...
-         ↓                               ↓
-         vR.2.0 (ELA pseudo-loc)          vR.P.x (best model)
-                                          ↓
-                                     FINAL SUBMISSION NOTEBOOK
+Track 1 (ETASR Classification)             Track 2 (Pretrained Localization)
+------------------------------              ----------------------------------
+vR.1.0 -> vR.1.1 -> vR.1.2(X)
+           |                                vR.P.0 (divg07, ELA pseudo-masks)
+           v                                 |
+         vR.1.3 -> vR.1.4 -> vR.1.5        vR.P.1 (sagnikkayalcse52, GT masks)
+                               |              |
+                               v            vR.P.1.5 (speed optimizations)
+                  vR.1.6 (BEST: 90.23%)       |
+                     |                      vR.P.2 (gradual unfreeze) [BEST pixel F1]
+                     v                        |
+                  vR.1.7 (NEUTRAL)          vR.P.3 -> vR.P.4 -> vR.P.5 -> vR.P.6
+                                              |         |         |          |
+                                            [training on Kaggle ...]
+                                              |
+                                         FINAL SUBMISSION NOTEBOOK
 ```
 
 - **Track 1** demonstrates ablation methodology, paper reproduction, and experimental rigor
@@ -303,7 +307,7 @@ After each run:
 | **vR.1.4** | **BatchNorm** | **88.75%** | **0.9401** | **0.8657** | **0.9013** | **0.8240** | **0.9194** | **0.8691** | **0.8852** | **0.9536** | **8 (3)** | **NEUTRAL** |
 | **vR.1.5** | **LR scheduler** | **88.96%** | **0.9403** | **0.8692** | **0.9034** | **0.8279** | **0.9194** | **0.8712** | **0.8873** | **0.9560** | **10 (5)** | **NEUTRAL** |
 | **vR.1.6** | **Deeper CNN** | **90.23%** | **0.9572** | **0.8746** | **0.9140** | **0.8372** | **0.9428** | **0.8869** | **0.9004** | **0.9657** | **18 (13)** | **POSITIVE ✅** |
-| **vR.1.7** | **GAP replaces Flatten** | **89.17%** | **0.9590** | **0.8541** | **0.9035** | **0.8161** | **0.9467** | **0.8766** | **0.8901** | **0.9495** | **10 (5)** | **NEGATIVE — REJECTED** |
+| **vR.1.7** | **GAP replaces Flatten** | **89.17%** | **0.9590** | **0.8541** | **0.9035** | **0.8161** | **0.9467** | **0.8766** | **0.8901** | **0.9495** | **10 (5)** | **NEUTRAL (−1.06pp)\*** |
 | vR.2.0 | ELA localization | — | — | — | — | — | — | — | — | — | — | Pending |
 
 \* vR.1.0 metrics are on validation set (no test set). Not directly comparable to subsequent versions.
