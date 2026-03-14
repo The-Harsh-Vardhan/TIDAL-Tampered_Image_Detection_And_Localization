@@ -15,9 +15,9 @@ import json
 from pathlib import Path
 
 
-NOTEBOOKS_DIR = Path(__file__).resolve().parent
-SOURCE_NOTEBOOK = NOTEBOOKS_DIR / "vK.3 Image Detection and Localisation [Code Comments were changed.ipynb"
-TARGET_NOTEBOOK = NOTEBOOKS_DIR / "vK.6 Image Detection and Localisation [Subsections by Codex].ipynb"
+NOTEBOOKS_DIR = Path(__file__).resolve().parent.parent
+SOURCE_NOTEBOOK = NOTEBOOKS_DIR / "source" / "vK.3 Image Detection and Localisation [Code Comments were changed.ipynb"
+TARGET_NOTEBOOK = NOTEBOOKS_DIR / "source" / "vK.6 Image Detection and Localisation [Subsections by Codex].ipynb"
 
 
 TOC_MARKDOWN = """## Table of Contents

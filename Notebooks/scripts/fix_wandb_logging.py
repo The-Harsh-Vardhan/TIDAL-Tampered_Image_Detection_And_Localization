@@ -20,13 +20,13 @@ from pathlib import Path
 NOTEBOOKS_DIR = Path(__file__).resolve().parent.parent
 
 NOTEBOOKS = [
-    ("vK.11.0 Image Detection and Localisation.ipynb",                       "11.0"),
-    ("vK.11.0 Image Detection and Localisation [Pretrained ResNet34].ipynb", "11.0"),
-    ("vK.11.1 Image Detection and Localisation.ipynb",                       "11.1"),
-    ("vK.11.2 Image Detection and Localisation.ipynb",                       "11.2"),
-    ("vK.11.3 Image Detection and Localisation.ipynb",                       "11.3"),
-    ("vK.11.4 Image Detection and Localisation.ipynb",                       "11.4"),
-    ("vK.11.5 Image Detection and Localisation.ipynb",                       "11.5"),
+    ("source/vK.11.0 Image Detection and Localisation.ipynb",                       "11.0"),
+    ("source/vK.11.0 Image Detection and Localisation [Pretrained ResNet34].ipynb", "11.0"),
+    ("source/vK.11.1 Image Detection and Localisation.ipynb",                       "11.1"),
+    ("source/vK.11.2 Image Detection and Localisation.ipynb",                       "11.2"),
+    ("source/vK.11.3 Image Detection and Localisation.ipynb",                       "11.3"),
+    ("source/vK.11.4 Image Detection and Localisation.ipynb",                       "11.4"),
+    ("source/vK.11.5 Image Detection and Localisation.ipynb",                       "11.5"),
 ]
 
 

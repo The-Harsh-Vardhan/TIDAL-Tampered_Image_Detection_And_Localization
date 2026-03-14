@@ -27,8 +27,8 @@ sys.stdout.reconfigure(encoding="utf-8")
 # ── Paths ──────────────────────────────────────────────────────────────
 SCRIPT_DIR = Path(__file__).resolve().parent
 NOTEBOOKS_DIR = SCRIPT_DIR.parent
-INPUT = NOTEBOOKS_DIR / "vK.11.5 Image Detection and Localisation.ipynb"
-OUTPUT = NOTEBOOKS_DIR / "vK.12.0 Image Detection and Localisation.ipynb"
+INPUT = NOTEBOOKS_DIR / "source" / "vK.11.5 Image Detection and Localisation.ipynb"
+OUTPUT = NOTEBOOKS_DIR / "latest" / "vK.12.0 Image Detection and Localisation.ipynb"
 
 # ── Helpers ─────────────────────────────────────────────────────────────
 

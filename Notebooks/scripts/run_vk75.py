@@ -11,10 +11,10 @@ import re
 import time
 import os
 
-os.chdir(r"c:\D Drive\Projects\BigVision Assignment\Notebooks")
+os.chdir(r"c:\D Drive\Projects\BigVision Assignment\Notebooks\source")
 
 INPUT_PATH = "vK.7.5 Image Detection and Localisation.ipynb"
-OUTPUT_PATH = "vK.7.5_run_output.ipynb"
+OUTPUT_PATH = "../runs/vK.7.5_run_output.ipynb"
 
 # Load the notebook
 with open(INPUT_PATH, "r", encoding="utf-8") as f:

@@ -34,8 +34,8 @@ from pathlib import Path
 
 
 NOTEBOOKS_DIR = Path(__file__).resolve().parent.parent
-INPUT_PATH = NOTEBOOKS_DIR / "vK.10.6 Image Detection and Localisation.ipynb"
-OUTPUT_PATH = NOTEBOOKS_DIR / "vK.11.0 Image Detection and Localisation.ipynb"
+INPUT_PATH = NOTEBOOKS_DIR / "source" / "vK.10.6 Image Detection and Localisation.ipynb"
+OUTPUT_PATH = NOTEBOOKS_DIR / "source" / "vK.11.0 Image Detection and Localisation.ipynb"
 
 
 # ---------------------------------------------------------------------------

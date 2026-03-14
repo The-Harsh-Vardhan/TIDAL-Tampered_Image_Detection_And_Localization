@@ -14,9 +14,9 @@ import json
 from pathlib import Path
 
 
-NOTEBOOKS_DIR = Path(__file__).resolve().parent
-INPUT_PATH = NOTEBOOKS_DIR / "vK.7 Image Detection and Localisation [Subsections by Opus].ipynb"
-OUTPUT_PATH = NOTEBOOKS_DIR / "vK.7.1 Image Detection and Localisation.ipynb"
+NOTEBOOKS_DIR = Path(__file__).resolve().parent.parent
+INPUT_PATH = NOTEBOOKS_DIR / "source" / "vK.7 Image Detection and Localisation [Subsections by Opus].ipynb"
+OUTPUT_PATH = NOTEBOOKS_DIR / "source" / "vK.7.1 Image Detection and Localisation.ipynb"
 
 
 def load_notebook(path: Path) -> dict:

@@ -5,9 +5,12 @@ No code is modified - only cell splitting and markdown insertion.
 
 import json
 import copy
+from pathlib import Path
 
-INPUT_PATH = "vK.3 Image Detection and Localisation [Code Comments were changed.ipynb"
-OUTPUT_PATH = "vK.7 Image Detection and Localisation.ipynb"
+SCRIPT_DIR = Path(__file__).resolve().parent
+NOTEBOOKS_DIR = SCRIPT_DIR.parent
+INPUT_PATH = NOTEBOOKS_DIR / "source" / "vK.3 Image Detection and Localisation [Code Comments were changed.ipynb"
+OUTPUT_PATH = NOTEBOOKS_DIR / "source" / "vK.7 Image Detection and Localisation.ipynb"
 
 
 def load_notebook(path):
