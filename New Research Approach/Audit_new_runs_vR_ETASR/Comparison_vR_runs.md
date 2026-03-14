@@ -27,7 +27,7 @@ Seven runs of the ETASR CNN. Two years of the paper's reported accuracy have bee
 | **vR.1.4** | BatchNorm caused the worst epoch-1 spike in history (val_loss=16.13) then converged to the same numbers. |
 | **vR.1.5** | LR scheduler bought 2 extra epochs and +0.21pp. Marginal everywhere. NEUTRAL. |
 | **vR.1.6** | **THE BREAKTHROUGH.** 3rd conv layer broke 90% for the first time. Best AUC, best F1, 53% fewer params. |
-| **vR.1.7** | GAP killed 99.5% of params but took 1.06pp accuracy with it. Regularization works, capacity doesn't. REJECTED. |
+| **vR.1.7** | GAP killed 99.5% of params but took 1.06pp accuracy with it. Regularization works, capacity doesn't. NEUTRAL. |
 
 ---
 
@@ -213,7 +213,7 @@ The underfitting is brutal. Train-val gap is near-zero (0.8810 vs 0.8848) — th
 
 But: **0.9467 tampered recall** — the highest in the entire series. Only 41 tampered images missed. GAP's extreme compression somehow preserves the "is this image tampered?" signal while destroying the "where is the tampering?" information that contributes to precision.
 
-Score: 4/10. NEGATIVE — REJECTED. But the 89.17% accuracy with 64K parameters is an efficiency data point worth noting.
+Score: 4/10. NEUTRAL — kept. The 89.17% accuracy with 64K parameters is an efficiency data point worth noting.
 
 **What it taught us:** Spatial information matters. Average pooling is too aggressive for forensics.
 
@@ -231,7 +231,7 @@ All deltas are computed from **vR.1.1** (the honest baseline). Only runs with pr
 | **vR.1.4** | BatchNorm | 88.75% | +0.37pp | 0.8852 | +0.0047 | 0.9536 | -0.0065 | **NEUTRAL** |
 | **vR.1.5** | LR scheduler | 88.96% | +0.58pp | 0.8873 | +0.0068 | 0.9560 | -0.0041 | **NEUTRAL** |
 | **vR.1.6** | **Deeper CNN** | **90.23%** | **+1.85pp** | **0.9004** | **+0.0199** | **0.9657** | **+0.0056** | **POSITIVE** |
-| **vR.1.7** | GAP | 89.17% | +0.79pp | 0.8901 | +0.0096 | 0.9495 | -0.0106 | **REJECTED** |
+| **vR.1.7** | GAP | 89.17% | +0.79pp | 0.8901 | +0.0096 | 0.9495 | -0.0106 | **NEUTRAL** |
 
 **Running total improvement (vR.1.6, best):** +1.85pp accuracy, +0.0199 Macro F1, +0.0056 AUC from baseline.
 
@@ -260,7 +260,7 @@ vR.ETASR (bare prototype, 80/20 val eval)
                 |
                 +-- vR.1.6 (deeper CNN) <- POSITIVE (90.23%) ** BEST **
                     |
-                    +-- vR.1.7 (GAP) <- REJECTED (89.17%)
+                    +-- vR.1.7 (GAP) <- NEUTRAL (89.17%)
 ```
 
 **Key:** vR.1.2 and vR.1.7 are dead branches. The best model is vR.1.6 at 90.23%.
