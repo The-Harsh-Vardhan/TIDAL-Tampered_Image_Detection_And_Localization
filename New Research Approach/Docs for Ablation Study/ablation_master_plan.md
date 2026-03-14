@@ -184,6 +184,7 @@ The ETASR ablation study (Section 3) optimizes a classification-only model. The 
 |---------|--------|-------|---------|----------------|-----------------|
 | **vR.P.0** | ResNet-34 + UNet, frozen encoder | RGB 384×384 | ResNet-34 (ImageNet, frozen) | W13, W15, W17 | Establish localization baseline |
 | **vR.P.1** | Dataset fix + GT mask auto-detection | RGB 384×384 | ResNet-34 (ImageNet, frozen) | — | Proper GT masks from sagnikkayalcse52 dataset |
+| **vR.P.1.5** | Speed optimizations (AMP, pin_memory, prefetch) | RGB 384×384 | ResNet-34 (ImageNet, frozen) | — | Training speed only, no quality change |
 | **vR.P.2** | Gradual unfreeze (last 2 blocks) | RGB 384×384 | ResNet-34 (partially unfrozen) | — | +2-5% F1 from domain adaptation |
 | **vR.P.3** | ELA as input (replace RGB) | ELA 384×384 | ResNet-34 (frozen, BN unfrozen) | — | Test ELA with pretrained features |
 | **vR.P.4** | 4-channel (RGB + ELA) | RGB+ELA 384×384 | ResNet-34 (frozen) | — | Test combined signal |
@@ -216,9 +217,10 @@ The ETASR ablation study (Section 3) optimizes a classification-only model. The 
 
 | Version | Change | Pixel-F1 | IoU | Pixel-AUC | Tam-F1 (cls) | Macro F1 (cls) | Test Acc | Epochs | Verdict |
 |---------|--------|----------|-----|-----------|-------------|----------------|----------|--------|---------|
-| vR.P.0 | ResNet-34 frozen, RGB (divg07, ELA pseudo-masks) | — | — | — | — | — | — | — | Pending |
-| vR.P.1 | Dataset fix + GT masks (sagnikkayalcse52) | — | — | — | — | — | — | — | Pending |
-| vR.P.2 | Gradual unfreeze (layer3+layer4) | — | — | — | — | — | — | — | Pending |
+| **vR.P.0** | **ResNet-34 frozen, RGB (divg07, ELA pseudo-masks)** | **0.3749** | **0.2307** | **0.8486** | **0.5924** | **0.6814** | **70.63%** | **24 (17)** | **Baseline (no GT)** |
+| **vR.P.1** | **Dataset fix + GT masks (sagnikkayalcse52)** | **0.4546** | **0.2942** | **0.8509** | **0.6185** | **0.6867** | **70.15%** | **25 (18)** | **Proper baseline ✅** |
+| **vR.P.1.5** | **Speed optimizations (from P.1)** | **0.4227** | **0.2680** | **0.8560** | **0.6501** | **0.7016** | **71.05%** | **23 (16)** | **NEUTRAL (speed only)** |
+| **vR.P.2** | **Gradual unfreeze (layer3+layer4)** | **0.5117** | **0.3439** | **0.8688** | **0.5796** | **0.6673** | **69.04%** | **14 (7)** | **POSITIVE ✅ (pixel)** |
 | vR.P.3 | ELA input | — | — | — | — | — | — | — | Pending |
 | vR.P.4 | RGB + ELA 4ch | — | — | — | — | — | — | — | Pending |
 | vR.P.5 | ResNet-50 | — | — | — | — | — | — | — | Pending |
@@ -301,7 +303,7 @@ After each run:
 | **vR.1.4** | **BatchNorm** | **88.75%** | **0.9401** | **0.8657** | **0.9013** | **0.8240** | **0.9194** | **0.8691** | **0.8852** | **0.9536** | **8 (3)** | **NEUTRAL** |
 | **vR.1.5** | **LR scheduler** | **88.96%** | **0.9403** | **0.8692** | **0.9034** | **0.8279** | **0.9194** | **0.8712** | **0.8873** | **0.9560** | **10 (5)** | **NEUTRAL** |
 | **vR.1.6** | **Deeper CNN** | **90.23%** | **0.9572** | **0.8746** | **0.9140** | **0.8372** | **0.9428** | **0.8869** | **0.9004** | **0.9657** | **18 (13)** | **POSITIVE ✅** |
-| vR.1.7 | GAP replaces Flatten | — | — | — | — | — | — | — | — | — | — | Pending |
+| **vR.1.7** | **GAP replaces Flatten** | **89.17%** | **0.9590** | **0.8541** | **0.9035** | **0.8161** | **0.9467** | **0.8766** | **0.8901** | **0.9495** | **10 (5)** | **NEGATIVE — REJECTED** |
 | vR.2.0 | ELA localization | — | — | — | — | — | — | — | — | — | — | Pending |
 
 \* vR.1.0 metrics are on validation set (no test set). Not directly comparable to subsequent versions.
