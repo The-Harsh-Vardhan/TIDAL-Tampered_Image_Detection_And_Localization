@@ -183,16 +183,17 @@ The ETASR ablation study (Section 3) optimizes a classification-only model. The 
 | Version | Change | Input | Encoder | Weakness Fixed | Expected Impact |
 |---------|--------|-------|---------|----------------|-----------------|
 | **vR.P.0** | ResNet-34 + UNet, frozen encoder | RGB 384×384 | ResNet-34 (ImageNet, frozen) | W13, W15, W17 | Establish localization baseline |
-| **vR.P.1** | Gradual unfreeze (last 2 blocks) | RGB 384×384 | ResNet-34 (partially unfrozen) | — | +2-5% F1 from domain adaptation |
-| **vR.P.2** | ELA as input (replace RGB) | ELA 384×384 | ResNet-34 (frozen, BN unfrozen) | — | Test ELA with pretrained features |
-| **vR.P.3** | 4-channel (RGB + ELA) | RGB+ELA 384×384 | ResNet-34 (frozen) | — | Test combined signal |
-| **vR.P.4** | ResNet-50 encoder | RGB 384×384 | ResNet-50 (frozen) | — | Test deeper features |
-| **vR.P.5** | EfficientNet-B0 encoder | RGB 384×384 | EfficientNet-B0 (frozen) | — | Test parameter efficiency |
+| **vR.P.1** | Dataset fix + GT mask auto-detection | RGB 384×384 | ResNet-34 (ImageNet, frozen) | — | Proper GT masks from sagnikkayalcse52 dataset |
+| **vR.P.2** | Gradual unfreeze (last 2 blocks) | RGB 384×384 | ResNet-34 (partially unfrozen) | — | +2-5% F1 from domain adaptation |
+| **vR.P.3** | ELA as input (replace RGB) | ELA 384×384 | ResNet-34 (frozen, BN unfrozen) | — | Test ELA with pretrained features |
+| **vR.P.4** | 4-channel (RGB + ELA) | RGB+ELA 384×384 | ResNet-34 (frozen) | — | Test combined signal |
+| **vR.P.5** | ResNet-50 encoder | RGB 384×384 | ResNet-50 (frozen) | — | Test deeper features |
+| **vR.P.6** | EfficientNet-B0 encoder | RGB 384×384 | EfficientNet-B0 (frozen) | — | Test parameter efficiency |
 
 ### Pretrained Track Design Principles
 
 1. **Same single-variable ablation methodology** as the ETASR track
-2. **vR.P.0 is the anchor** — all subsequent versions change one variable from vR.P.0
+2. **vR.P.0 is the initial anchor** — vR.P.1 fixes the dataset, subsequent versions change one variable from vR.P.1
 3. **Framework: PyTorch + SMP** — native ResNet-34 support, built-in freeze/unfreeze, segmentation losses
 4. **Same dataset** (CASIA v2.0), same seed (42), same 70/15/15 split
 5. **Resolution: 384×384** — proven in v6.5 (3× more pixels than ETASR's 128×128)
@@ -201,7 +202,7 @@ The ETASR ablation study (Section 3) optimizes a classification-only model. The 
 
 | Parameter | Value | Reason |
 |-----------|-------|--------|
-| Dataset | CASIA v2.0 | Consistency with ETASR track |
+| Dataset | CASIA v2.0 — vR.P.0: divg07 (no GT masks); vR.P.1+: sagnikkayalcse52 (with GT masks) | Dataset continuity; GT masks from vR.P.1 |
 | Random seed | 42 | Reproducibility |
 | Input size | 384×384 | v6.5 setting, fits T4 with batch=16 |
 | Decoder | UNet (SMP default) | Skip connections from all 4 encoder stages |
@@ -215,12 +216,13 @@ The ETASR ablation study (Section 3) optimizes a classification-only model. The 
 
 | Version | Change | Pixel-F1 | IoU | Pixel-AUC | Tam-F1 (cls) | Macro F1 (cls) | Test Acc | Epochs | Verdict |
 |---------|--------|----------|-----|-----------|-------------|----------------|----------|--------|---------|
-| vR.P.0 | ResNet-34 frozen, RGB | — | — | — | — | — | — | — | Pending |
-| vR.P.1 | Gradual unfreeze | — | — | — | — | — | — | — | Pending |
-| vR.P.2 | ELA input | — | — | — | — | — | — | — | Pending |
-| vR.P.3 | RGB + ELA 4ch | — | — | — | — | — | — | — | Pending |
-| vR.P.4 | ResNet-50 | — | — | — | — | — | — | — | Pending |
-| vR.P.5 | EfficientNet-B0 | — | — | — | — | — | — | — | Pending |
+| vR.P.0 | ResNet-34 frozen, RGB (divg07, ELA pseudo-masks) | — | — | — | — | — | — | — | Pending |
+| vR.P.1 | Dataset fix + GT masks (sagnikkayalcse52) | — | — | — | — | — | — | — | Pending |
+| vR.P.2 | Gradual unfreeze (layer3+layer4) | — | — | — | — | — | — | — | Pending |
+| vR.P.3 | ELA input | — | — | — | — | — | — | — | Pending |
+| vR.P.4 | RGB + ELA 4ch | — | — | — | — | — | — | — | Pending |
+| vR.P.5 | ResNet-50 | — | — | — | — | — | — | — | Pending |
+| vR.P.6 | EfficientNet-B0 | — | — | — | — | — | — | — | Pending |
 
 ### How the Two Tracks Relate
 
@@ -228,9 +230,11 @@ The ETASR ablation study (Section 3) optimizes a classification-only model. The 
 Track 1 (ETASR Classification)          Track 2 (Pretrained Localization)
 ───────────────────────────              ──────────────────────────────────
 vR.1.0 → vR.1.1 → vR.1.2(✗)
-         ↓                               vR.P.0 (branches after vR.1.3)
+         ↓                               vR.P.0 (divg07, ELA pseudo-masks)
          vR.1.3 → vR.1.4 → ...           ↓
-                                          vR.P.1 → vR.P.2 → ...
+                                          vR.P.1 (sagnikkayalcse52, GT masks)
+                                           ↓
+                                          vR.P.2 (gradual unfreeze) → vR.P.3 → ...
          ↓                               ↓
          vR.2.0 (ELA pseudo-loc)          vR.P.x (best model)
                                           ↓
