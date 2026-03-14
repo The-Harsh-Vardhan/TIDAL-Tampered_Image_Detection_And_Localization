@@ -1,0 +1,255 @@
+# Final Recommendations
+
+**Based on Technical Audit of All Runs (vK.1 → vK.10.5)**
+**Date:** 2026-03-14
+**Priority:** Ordered by expected impact on assignment score
+
+---
+
+## The Real Story
+
+v6.5 already implemented the most impactful architectural decision — a pretrained ResNet34 encoder via SMP — and achieved Tam-F1=0.41 with a comprehensive evaluation suite. v8 added important methodology improvements (scheduler, augmentations, shortcut detection, per-sample Dice) but broke the model with pos_weight=30.01 and 16× batch increase. The vK.10.x series then inexplicably abandoned the pretrained approach entirely, reverting to training from scratch and collapsing to Tam-F1=0.0006.
+
+**The recommendations below are reframed accordingly:** not "try pretrained for the first time" but "build on what v6.5 proved and stop regressing."
+
+---
+
+## Priority 0 — Adopt v6.5's Architecture in vK.10.x
+
+### R1: Port SMP Pretrained Encoder to the vK.10.x Codebase
+
+**Impact:** Expected to improve vK.10.x from F1=0.0006 → 0.40+ (already proven in v6.5)
+**Effort:** Medium — requires merging v6.5's model setup into vK.10.x's training infrastructure
+**Risk:** Zero — v6.5 already demonstrated this works
+
+The vK.10.x series has excellent engineering (CONFIG, AMP, seeding, DataParallel, `get_base_model()`) but trains from scratch. v6.5 has the right architecture but weaker engineering in some areas. The goal is to combine:
+
+```python
+# In vK.10.x's CONFIG:
+CONFIG = {
+    'model': 'smp.Unet',
+    'encoder': 'resnet34',
+    'encoder_weights': 'imagenet',
+    'in_channels': 3,
+    'classes': 1,
+    'image_size': 384,
+    # ... keep vK.10.x's training infrastructure
+}
+```
+
+**What v6.5 already solved:**
+- SMP model initialization with pretrained weights
+- DataParallel prefix handling for SMP models
+- Image-level classification from max pixel probability (no separate classifier head needed)
+- Differential learning rates (encoder: 1e-4, decoder: 1e-3)
+
+---
+
+## Priority 1 — Fix v8's Mistakes While Keeping Its Improvements
+
+### R2: Fix pos_weight Computation
+
+**Impact:** Removes the primary cause of v8's regression
+**Current:** pos_weight=30.01 (computed from ALL pixels including authentic images)
+**Fix:** Compute on tampered images only → expected pos_weight ~3–5×
+
+```python
+# WRONG (v8's approach):
+pos_weight = total_bg_pixels / total_fg_pixels  # 30.01 (includes authentic)
+
+# CORRECT:
+tampered_masks = [m for m in train_masks if m.sum() > 0]
+fg = sum(m.sum() for m in tampered_masks)
+bg = sum(m.numel() - m.sum() for m in tampered_masks)
+pos_weight = bg / fg  # ~3-5 (tampered images only)
+```
+
+### R3: Adopt v8's Improvements Without Its Batch Size Error
+
+**Impact:** Addresses v6.5's genuine weaknesses
+**What to adopt from v8:**
+- ReduceLROnPlateau(patience=3, factor=0.5) — fills v6.5's biggest training gap
+- Per-sample Dice loss — fixes batch-level bias toward large masks
+- Expanded augmentations: ColorJitter, ImageCompression, GaussNoise, GaussianBlur
+- Encoder warmup option (freeze encoder for first 3–5 epochs)
+
+**What NOT to adopt from v8:**
+- Effective batch size 256 without LR rescaling (keep at 16–32)
+- pos_weight=30.01 (see R2)
+
+### R4: Apply LR Scaling if Increasing Batch Size
+
+**Lesson from v8:** If increasing effective batch from 16 to N, scale LR proportionally:
+
+```python
+base_lr = 1e-4  # for effective batch 16
+scale = effective_batch / 16
+encoder_lr = base_lr * scale
+decoder_lr = 1e-3 * scale
+```
+
+---
+
+## Priority 2 — Complete the Evaluation Suite
+
+### R5: Add Confusion Matrix + PR Curves
+
+**Impact:** Assignment compliance — these are missing from ALL runs including v6.5/v8
+**Already present in v6.5/v8:** Threshold optimization, forgery-type breakdown, Grad-CAM, robustness testing, failure analysis, AUC-ROC (numerical)
+**Still missing from all runs:**
+- Confusion matrix visualization (image-level classification)
+- Precision-Recall curve with AP annotation (plotted, not just numerical)
+- ROC curve visualization (v6.5/v8 compute AUC but don't plot the curve)
+
+These are already implemented in vK.10.6.
+
+### R6: Fix the Robustness Evaluation Bug in v6.5
+
+**Impact:** Makes robustness results trustworthy
+**Issue:** v6.5's robustness evaluation produces identical F1=0.5938 for jpeg_qf50, gaussian_noise_light, and gaussian_noise_heavy — statistically impossible for different degradations
+**Fix:** Debug the perturbation application pipeline. Verify that transforms are actually modifying the input tensors (add a visual sanity check).
+
+v8's robustness results are more plausible (different F1 values for different degradations), suggesting the bug was fixed in v8.
+
+### R7: Adopt v8's Shortcut Learning Validation
+
+**Impact:** Validates model integrity, interview-impressive
+**Already proven in v8:** Mask randomization test (F1=0.0772, PASS) and boundary sensitivity analysis (delta <0.02, PASS)
+**Missing from:** v6.5 and all vK.x runs
+
+---
+
+## Priority 3 — Push Beyond v6.5's F1=0.41
+
+### R8: Add ELA (Error Level Analysis) as 4th Input Channel
+
+**Impact:** 10–20% F1 improvement on JPEG-compressed forgeries
+**Effort:** ~30 lines + change `in_channels=4`
+**Not tried in any run**
+
+```python
+def compute_ela(image_path, quality=90):
+    img = Image.open(image_path)
+    buffer = io.BytesIO()
+    img.save(buffer, 'JPEG', quality=quality)
+    buffer.seek(0)
+    ela = np.abs(np.float32(img) - np.float32(Image.open(buffer)))
+    return ela.mean(axis=2)  # single-channel ELA map
+```
+
+### R9: Edge-Aware Loss
+
+**Impact:** Better boundary delineation around tampered regions
+**Not tried in any run**
+
+```python
+edges = sobel(gt_mask)
+boundary_weight = 1.0 + 5.0 * edges
+seg_loss = (bce_loss * boundary_weight).mean()
+```
+
+### R10: Test-Time Augmentation (TTA)
+
+**Impact:** ~2–3% F1 boost for free at inference time
+**Not tried in any run**
+
+```python
+pred1 = model(image)
+pred2 = torch.flip(model(torch.flip(image, [3])), [3])
+final = (pred1 + pred2) / 2
+```
+
+### R11: Multi-Scale Input
+
+Use input at 384×384 and 512×512, average predictions from both scales.
+
+---
+
+## What NOT to Change
+
+1. **Keep v6.5's SMP pretrained encoder approach** — the single most impactful decision in the project
+2. **Keep v6.5/v8's evaluation suites** — threshold optimization, Grad-CAM, robustness testing, forgery-type breakdown, failure analysis
+3. **Keep vK.10.x's CONFIG dict system** — well-designed centralized configuration
+4. **Keep vK.10.5's DataParallel + `get_base_model()`** — properly implemented multi-GPU support
+5. **Keep AMP** — free speedup, present in both tracks
+6. **Keep v8's per-sample Dice** — corrects v6.5's batch-level bias
+7. **Keep v8's expanded augmentations** — proven JPEG robustness improvement
+8. **Keep v8's shortcut detection tests** — model integrity validation
+
+---
+
+## Recommended Next Run Configuration
+
+Merge the best of v6.5, v8, and vK.10.x:
+
+```python
+CONFIG = {
+    # Architecture (from v6.5)
+    'model': 'smp.Unet',
+    'encoder': 'resnet34',
+    'encoder_weights': 'imagenet',
+    'in_channels': 3,
+    'classes': 1,
+    'image_size': 384,
+
+    # Training (from vK.10.x + v8 fixes)
+    'optimizer': 'AdamW',
+    'encoder_lr': 1e-4,
+    'decoder_lr': 1e-3,
+    'weight_decay': 1e-4,
+    'scheduler': 'ReduceLROnPlateau',   # from v8
+    'scheduler_patience': 3,
+    'scheduler_factor': 0.5,
+    'batch_size': 4,                     # keep v6.5's batch
+    'accumulation_steps': 4,             # effective 16
+    'max_epochs': 50,
+    'amp': True,
+
+    # Loss (from v8, with pos_weight fix)
+    'seg_loss': 'bce_dice',
+    'dice_mode': 'per_sample',           # from v8
+    'pos_weight': 4.0,                   # FIXED from v8's 30.01
+
+    # Early Stopping (from vK.10.x)
+    'early_stop_metric': 'val_f1_tampered',
+    'early_stop_patience': 10,
+
+    # Encoder Freezing (from v8 infrastructure)
+    'freeze_encoder_epochs': 3,
+
+    # Augmentations (from v8)
+    'augmentations': ['HFlip', 'VFlip', 'Rotate90',
+                      'ColorJitter', 'ImageCompression',
+                      'GaussNoise', 'GaussianBlur'],
+}
+```
+
+---
+
+## Expected Impact Summary
+
+| Recommendation | Baseline | Expected F1 | Effort | Risk |
+|---|---|---|---|---|
+| R1: Port SMP to vK.10.x | vK.10.5: 0.0006 | 0.35–0.41 (match v6.5) | Medium | Zero |
+| R2: Fix pos_weight | v8: 0.2949 | 0.40–0.45 (exceed v6.5) | Trivial | Zero |
+| R3: Adopt v8 improvements | v6.5: 0.4101 | 0.43–0.48 | Low | Low |
+| R5: Confusion matrix + PR | v6.5: present | Assignment compliance | Low | Zero |
+| R6: Fix robustness bug | v6.5: buggy | Trustworthy results | Low | Zero |
+| R8: ELA input | v6.5: 0.41 | 0.45–0.55 | Medium | Low |
+| R9: Edge-aware loss | v6.5: 0.41 | 0.43–0.46 | Low | Low |
+| **Combined R1–R3+R8** | **0.0006 (vK.10.x)** | **0.50–0.60** | **1 day** | **Low** |
+
+---
+
+## Bottom Line
+
+**v6.5 already demonstrated the right approach.** Pretrained ResNet34, comprehensive evaluation, sound engineering. It achieved F1=0.41 — mediocre by published standards, but 680× better than the most recent vK.10.x runs.
+
+The project's trajectory went backwards: v6.5 had the right architecture, v8 tried to improve training but broke hyperparameters, and vK.10.x abandoned the pretrained encoder entirely while building excellent infrastructure around a model that cannot learn.
+
+**The path forward is synthesis, not revolution:**
+1. Start from v6.5's proven architecture
+2. Add v8's improvements (scheduler, augmentations, per-sample Dice, shortcut detection) with fixed hyperparameters
+3. Port into vK.10.x's engineering infrastructure (CONFIG, seeding, checkpoints, `get_base_model()`)
+4. Add the missing evaluation pieces (confusion matrix, PR curves)
+5. Push beyond 0.41 with ELA input and edge-aware loss
