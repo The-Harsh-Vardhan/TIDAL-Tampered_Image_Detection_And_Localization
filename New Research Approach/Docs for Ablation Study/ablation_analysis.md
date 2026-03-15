@@ -5,7 +5,7 @@
 | **Date** | 2026-03-15 |
 | **Scope** | Cross-run impact analysis for all ETASR and Pretrained ablation experiments |
 | **Paper** | ETASR_9593 -- "Enhanced Image Tampering Detection using ELA and a CNN" |
-| **Versions Covered** | ETASR: vR.1.0--vR.1.7 (8 runs) / Pretrained: vR.P.0--vR.P.9 (11 runs) / Standalone: 3 runs |
+| **Versions Covered** | ETASR: vR.1.0--vR.1.7 (8 runs) / Pretrained: vR.P.0--vR.P.14 (16 runs) / Standalone: 4 runs |
 
 ---
 
@@ -468,3 +468,71 @@ Three standalone runs implemented the paper's CNN architecture outside the ablat
 4. **The ablation methodology works.** Single-variable control identified the critical factors in both tracks. In ETASR: architecture (deeper CNN) > training tricks. In pretrained: input (ELA) > encoder > freeze strategy > loss function. Without strict ablation, these insights would be obscured by confounding changes.
 
 5. **Diminishing returns are setting in.** P.8 (+0.65pp) and P.9 (+0.03pp) show that incremental changes to the P.3 configuration yield diminishing gains. The next breakthrough likely requires a more fundamental change (extended training, higher resolution, or attention mechanisms).
+
+---
+
+## 13. New Runs Analysis (P.10 r02, P.12, P.14, ELA-CNN-Forgery-sagnik)
+
+### vR.P.10 Run-02: Perfect Reproducibility
+
+P.10 Run-02 was a reproducibility verification of the series-best model. Every single metric was identical to Run-01:
+- Pixel F1: 0.7277, IoU: 0.5719, Pixel AUC: 0.9573
+- Image Acc: 87.32%, Image F1: 0.8615, Image ROC-AUC: 0.9633
+- Best epoch: 24 (same), LR schedule changes at same epochs
+
+**Implication:** SEED=42 + `torch.backends.cudnn.deterministic=True` on P100 GPUs produces bit-identical training runs. This is the gold standard for experimental reproducibility in deep learning.
+
+### vR.P.12: Augmentation + Focal+Dice
+
+| Metric | P.3 (Baseline) | P.12 | Delta |
+|--------|----------------|------|-------|
+| Pixel F1 | 0.6920 | 0.6968 | +0.48pp |
+| IoU | 0.5291 | 0.5347 | +0.56pp |
+| Pixel AUC | 0.9528 | 0.9502 | -0.26pp |
+| Img Acc | 86.79% | 88.48% | +1.69pp |
+| Img F1 | 0.8534 | 0.8756 | +2.22pp |
+| FN Rate | ~28% | 24.6% | -3.4pp (improved) |
+
+**Analysis:** Augmentation helped image-level classification more than pixel-level localization. The FN rate improvement suggests augmentation regularized the model to catch more tampered images, but the pixel-level gain is within noise. Training instability (val loss spikes at ep19, 21) indicates augmented ELA samples occasionally confuse the model.
+
+**Confounding issue:** P.12 changed two variables (augmentation AND loss function). Since P.9 showed Focal+Dice is neutral, the gain is likely from augmentation alone, but this cannot be definitively stated.
+
+### vR.P.14: TTA (NEGATIVE Result)
+
+| Metric | No-TTA | TTA (4 views) | Delta |
+|--------|--------|---------------|-------|
+| Pixel F1 | 0.6919 | 0.6388 | **-5.31pp** |
+| Pixel Precision | 0.7555 | 0.7877 | +3.22pp |
+| Pixel Recall | 0.6388 | 0.5654 | **-7.34pp** |
+| Pixel AUC | 0.9528 | 0.9618 | +0.90pp |
+
+**Analysis:** TTA is harmful for binary segmentation at threshold=0.5. The 4-view probability averaging compresses the output distribution toward 0.5, pushing borderline "tampered" pixels below the binary threshold. This destroys recall (-7.34pp) while slightly improving precision (+3.22pp). The AUC improvement (+0.90pp) confirms that the underlying probability maps are better — the damage is entirely due to the fixed threshold.
+
+**Actionable insight:** TTA would benefit from threshold optimisation (e.g., find optimal threshold on validation set after TTA averaging). This is a potential free improvement for a future experiment.
+
+**Code failure:** Cell 18 crash (`test_probs` not defined) destroyed all image-level evaluation. This notebook needs a bugfix re-run.
+
+### ELA-CNN-Forgery-sagnik: Data Leak Confirmed
+
+The Sagnik dataset run achieved 99.95% accuracy with the deeper CNN architecture. Combined with the paper-architecture run (100% accuracy), this dataset is scientifically invalid. Input statistics (X range [0.0, 0.76]) suggest mask images were loaded instead of photographs.
+
+**Implication:** Any experiment on this dataset should be discarded. Future work should exclusively use the divg07 (standard CASIA2) dataset.
+
+---
+
+## 14. Updated Impact Hierarchy (All Experiments)
+
+```
+Rank  Category                     Best Example              Delta (pp Pixel F1)
+──────────────────────────────────────────────────────────────────────────────────
+  1   INPUT REPRESENTATION         P.3: RGB→ELA              +23.74
+  2   ATTENTION MECHANISM          P.10: +CBAM               +3.57
+  3   TRAINING BUDGET              P.7: 25→50 epochs         +2.34
+  4   ENCODER ARCHITECTURE         P.6: RN34→EffNet-B0       +6.71 (from RGB P.1)
+  5   DATA AUGMENTATION            P.12: +Albumentations     +0.48
+  6   PROGRESSIVE UNFREEZE         P.8: 3-stage              +0.65
+  7   LOSS FUNCTION                P.9: BCE→Focal+Dice       +0.03
+  8   POST-PROCESSING (TTA)        P.14: 4-view TTA          -5.32 (HARMFUL)
+```
+
+**Key conclusion:** After the ELA breakthrough (P.3), the only changes that meaningfully improved Pixel F1 were attention (P.10, +3.57pp) and extended training (P.7, +2.34pp). Everything else was marginal or harmful.

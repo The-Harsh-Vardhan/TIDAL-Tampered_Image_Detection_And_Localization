@@ -368,10 +368,18 @@ These runs implement the original paper's CNN architecture (or a deeper variant)
 
 ### Remaining / Future Experiments
 
-| ID | Experiment | Rationale | Expected Impact |
-|----|-----------|-----------|-----------------|
-| vR.P.13 | CBAM + augmentation + 50ep (combined best) | Combine P.10's CBAM + P.12's augmentation + P.7's training budget | +1-3pp Pixel F1 (est. 0.74-0.76) |
-| vR.P.15 | Multi-quality ELA (Q=75/85/95) | 3 grayscale ELA channels capture different artifact signatures | +2-5pp Pixel F1 (input experiment) |
-| vR.P.16 | EfficientNet-B0 + ELA | Test more efficient encoder on ELA input | +1-3pp Pixel F1 |
-| vR.P.17 | Higher resolution (512×512) | More spatial detail for fine-grained localization | +2-4pp Pixel F1, +memory cost |
-| vR.P.18 | Threshold optimization + CRF post-processing | Recalibrate threshold from 0.5; CRF smoothing | +1-3pp Pixel F1 (free gain) |
+| ID | Experiment | Rationale | Expected Impact | Status |
+|----|-----------|-----------|-----------------|--------|
+| vR.P.13 | CBAM + augmentation + 50ep (combined best) | Combine P.10's CBAM + P.12's augmentation + P.7's training budget | +1-3pp Pixel F1 (est. 0.74-0.76) | Notebook created, pending Kaggle run |
+| vR.P.15 | Multi-quality ELA (Q=75/85/95) | 3 grayscale ELA channels capture different artifact signatures | +2-5pp Pixel F1 (input experiment) | Notebook created, pending Kaggle run |
+| vR.P.16 | DCT spatial map baseline | JPEG DCT coefficients as forgery signal (frequency domain) | +1-4pp Pixel F1 | Docs created |
+| vR.P.17 | ELA + DCT fusion (6ch) | Combine ELA (3ch) + DCT features (3ch) | +2-5pp Pixel F1 | Docs created |
+| vR.P.18 | Compression robustness evaluation | Test P.3 under Q=70/80/90/95 JPEG recompression | Robustness characterization | Docs created |
+
+### Priority Order
+
+1. **vR.P.13** (combined best) — High confidence, builds on proven components
+2. **vR.P.15** (multi-quality ELA) — Input representation experiment, historically highest impact category
+3. **vR.P.16** (DCT baseline) — New feature domain, could unlock frequency-based detection
+4. **vR.P.17** (ELA+DCT fusion) — If P.16 shows promise, fusion could be the best-of-both
+5. **vR.P.18** (robustness) — Evaluation experiment, important for real-world deployment claims

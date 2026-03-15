@@ -198,7 +198,33 @@ The +3.17pp accuracy gap is the cost of localization. The UNet must make pixel-l
 | Paper CNN (divg07) | 56/100 | Not assignment-viable — classification only | NO |
 | Paper CNN (sagnik) | 28/100 | **INVALID — DATA LEAK** | NO |
 | Deeper CNN (divg07) | 66/100 | Best classification, not assignment-viable | NO |
+| **Deeper CNN (sagnik)** | **34/100** | **INVALID — DATA LEAK** (99.95% accuracy) | NO |
 
 ### Recommendation
 
 **CONTINUE with the pretrained ablation track (vR.P.x).** The paper CNN runs confirm that ELA preprocessing is effective (already incorporated since P.3) but demonstrate that classification-only architectures cannot satisfy the assignment's localization requirement. The pretrained UNet is the only viable path to assignment completion.
+
+---
+
+## 9. Update: Post-Audit Findings (2026-03-15)
+
+### New Standalone Run: ELA-CNN-Forgery-sagnik
+
+A deeper CNN architecture (3×Conv with BN + Dense(512)) trained on the Sagnik dataset achieved 99.95% accuracy. This independently confirms the data leak found in the paper-architecture Sagnik run (100%). The Sagnik dataset is **permanently invalidated** — both architectures achieve near-perfect accuracy, which is physically impossible for real forgery detection.
+
+### Pretrained Track Progress Since Paper Comparison
+
+Since the standalone comparison, the pretrained track has advanced significantly:
+
+| Metric | At Time of Comparison (P.8 best) | Current Best | Improvement |
+|--------|----------------------------------|-------------|-------------|
+| Pixel F1 | 0.6985 (P.8) | **0.7277** (P.10) | +2.92pp |
+| Image Accuracy | 87.59% (P.8) | **88.48%** (P.12) | +0.89pp |
+| Series length | P.0--P.9 (11 runs) | P.0--P.14 (16 runs) | +5 runs |
+
+**Key developments:**
+- **P.10 (CBAM):** Attention mechanism in decoder achieved series-best Pixel F1 (0.7277, +3.57pp from P.3)
+- **P.7 (extended training):** 50 epochs confirmed P.3 was undertrained (best epoch 36, Pixel F1=0.7154)
+- **P.12 (augmentation):** Best image accuracy (88.48%) but marginal pixel-level improvement
+- **P.14 (TTA):** Negative result — TTA hurt Pixel F1 by 5.32pp at threshold=0.5
+- **P.10 Run-02:** Perfect reproducibility confirmed (bit-identical metrics)

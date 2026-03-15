@@ -325,3 +325,35 @@ The ETASR track demonstrates that the paper's architecture is fundamentally limi
 - ImageNet-pretrained features (orders of magnitude more representational power)
 - 384x384 resolution (3x the detail)
 - UNet architecture with skip connections (spatial information preserved at all resolutions)
+
+---
+
+## 11. Lessons from P.12 and P.14 Audit (2026-03-15)
+
+### Lesson 31: TTA can HURT binary segmentation at fixed thresholds
+
+P.14 applied 4-view TTA (orig, hflip, vflip, hvflip) and averaged probability maps. Result: Pixel F1 dropped 5.32pp (0.6919 -> 0.6388). **Root cause:** Averaging pushes borderline pixels (probabilities near 0.5) below the threshold. Recall dropped 7.34pp while precision gained only 3.22pp. However, Pixel AUC *improved* by +0.9pp, meaning TTA does produce better-calibrated probabilities -- the problem is the fixed 0.5 threshold. **Lesson: TTA requires threshold recalibration to be beneficial for segmentation.**
+
+### Lesson 32: Augmentation is not free -- it introduces training instability
+
+P.12 added Albumentations (HFlip, VFlip, Rotate90, ShiftScaleRotate, GaussianBlur, BrightnessContrast) applied jointly to ELA image and mask. Despite well-chosen transforms, val loss spiked at epochs 19 and 21 before stabilizing. The final Pixel F1 gain was marginal (+0.48pp). **Lesson: Augmentation on ELA images may corrupt the error-level signal (brightness/contrast changes alter the numerical relationship that ELA measures). Use only geometric transforms for ELA augmentation.**
+
+### Lesson 33: Confounding variables invalidate ablation conclusions
+
+P.12 changed TWO variables simultaneously: (1) added augmentation AND (2) switched from BCE+Dice to Focal+Dice loss. Since P.9 showed Focal+Dice was neutral/harmful, the +0.48pp gain is likely from augmentation alone -- but we *cannot* be certain. **Lesson: Single-variable discipline is not optional. Every confounded experiment produces ambiguous results.**
+
+### Lesson 34: Code bugs have cascading consequences
+
+P.14's cell 18 referenced `test_probs` instead of `preds_tta` (copy-paste from P.3). This single NameError crashed cells 18-27, losing: image-level metrics, confusion matrix, all visualizations, sample predictions, and model save. 40% of the notebook's output was destroyed. **Lesson: Always smoke-test variable names after refactoring. A 30-second manual review of cell dependencies catches these instantly.**
+
+### Lesson 35: Perfect reproducibility is achievable with SEED + deterministic ops
+
+P.10 Run-02 produced metrics **identical** to Run-01 across all reported values: same epoch-by-epoch loss curves, same LR schedule, same final Pixel F1 (0.7277). Both ran on P100 GPUs with SEED=42. **Lesson: CUDA determinism (`torch.backends.cudnn.deterministic=True`) + fixed seeds produces bit-identical results on same hardware. Always include reproducibility runs for your best model.**
+
+### Lesson 36: Never trust a dataset that gives >99% accuracy
+
+The ELA-CNN-Forgery-sagnik run achieved 99.95% accuracy on a supposedly standard CASIA-like dataset. Investigation revealed X range [0.0, 0.76] instead of expected [0.0, 1.0], suggesting mask images were loaded as input. **Lesson: Before ANY training, always: (1) visualize random samples, (2) check input statistics, (3) verify image dimensions match expectations. Data leaks are the #1 source of invalid ML results.**
+
+### Lesson 37: Data augmentation benefits image-level more than pixel-level metrics
+
+P.12's augmentation improved Image Accuracy by +1.69pp (86.79% -> 88.48%) and Image F1 by +1.06pp, but Pixel F1 gained only +0.48pp. The augmentation helped the model recognize more tampered/authentic *images* but barely improved pixel-level localization precision. **Lesson: Augmentation regularizes the encoder's image-level features more than the decoder's pixel-level reconstruction.**

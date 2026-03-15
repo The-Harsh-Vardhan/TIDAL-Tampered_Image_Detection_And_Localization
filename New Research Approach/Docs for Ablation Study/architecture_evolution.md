@@ -430,3 +430,115 @@ Total: 24,225,316                            Dropout(0.5)
 | Test loss | ~0.35 | 0.6185 (severely overfit) | 0.2178 (well calibrated) |
 
 **Key insight:** The deeper standalone CNN (90.76%) marginally outperforms the ETASR deepest (90.23%), but at the cost of 38.3M vs 13.8M parameters. Early stopping is the primary driver of the standalone's lower test loss, not the deeper architecture itself.
+
+---
+
+## 12. Pretrained Track Architecture Evolution (P.10--P.14)
+
+### CBAM Attention Module (vR.P.10)
+
+```
+Decoder Block (per stage):
+    upsampled features + skip connection
+        |
+    [Standard UNet Conv Block]
+        |
+    [Channel Attention]  ← SEBlock variant (avg+max pool → shared MLP → sigmoid)
+        |
+    [Spatial Attention]  ← 7×7 conv on channel-wise avg+max → sigmoid
+        |
+    Output features (refined)
+
+5 CBAM blocks injected into all decoder stages.
+Trainable param increase: +14K (3.17M → 3.18M)
+Impact: +3.57pp Pixel F1 (0.6920 → 0.7277) — SERIES BEST
+```
+
+CBAM's success confirms that decoder-side attention is highly effective for forensic segmentation. The attention maps learn to weight ELA-sensitive spatial regions (boundaries, high-frequency areas) while suppressing noise.
+
+### Data Augmentation Pipeline (vR.P.12)
+
+```
+Albumentations Compose:
+    HorizontalFlip(p=0.5)
+    VerticalFlip(p=0.3)
+    RandomRotate90(p=0.5)
+    ShiftScaleRotate(shift=0.05, scale=0.1, rotate=15, p=0.3)
+    GaussianBlur(blur_limit=(3,5), p=0.1)
+    RandomBrightnessContrast(brightness=0.1, contrast=0.1, p=0.2)
+
+Applied jointly to image+mask via Albumentations' dual transform.
+Architecture unchanged from P.3 baseline.
+Loss: Focal+Dice (confounding variable with augmentation).
+Impact: +0.48pp Pixel F1 (marginal), +1.69pp Image Accuracy
+Training instability: val loss spikes at ep 19 and 21.
+```
+
+### Test-Time Augmentation (vR.P.14)
+
+```
+TTA Pipeline (inference only):
+    Original → predict → prob map
+    HFlip   → predict → inverse flip → prob map
+    VFlip   → predict → inverse flip → prob map
+    HVFlip  → predict → inverse flip → prob map
+
+    Final = mean(4 prob maps)
+    Binary mask = final > 0.5
+
+Architecture/training: identical to P.3
+Impact: -5.32pp Pixel F1 (HARMFUL at threshold=0.5)
+Root cause: Averaging pushes borderline probabilities below 0.5
+AUC improved +0.9pp → suggests threshold recalibration could help
+```
+
+### Combined Best-of (vR.P.13, pending)
+
+```
+Combines:
+    CBAM attention (from P.10) → best architecture
+    Albumentations (from P.12) → augmentation pipeline
+    50 epochs (from P.7)       → extended training budget
+    Focal+Dice loss            → from P.10/P.12
+
+Expected: 0.74-0.76 Pixel F1
+Risk: Too many changes = hard to attribute improvement
+```
+
+### Multi-Quality ELA Input (vR.P.15, pending)
+
+```
+Input change:
+    Before: ELA at Q=90 → RGB image (3 channels, correlated)
+    After:  ELA at Q=75, Q=85, Q=95 → 3 grayscale images (3 channels, independent)
+
+Each quality level captures:
+    Q=75: Strong artifacts, large errors, coarse signal
+    Q=85: Medium artifacts, balanced fidelity
+    Q=95: Subtle artifacts, fine-grained differences
+
+Architecture: unchanged from P.3
+Expected: +2-5pp Pixel F1 (input representation experiment)
+```
+
+---
+
+## 13. Architecture Summary Table (Full Series)
+
+| Version | Encoder | Decoder Mods | Input | Freeze | Loss | Pixel F1 |
+|---------|---------|-------------|-------|--------|------|----------|
+| P.0 | ResNet-34 | Standard | RGB | All frozen | BCE+Dice | 0.3749 |
+| P.1 | ResNet-34 | Standard | RGB | All frozen | BCE+Dice | 0.4546 |
+| P.1.5 | ResNet-34 | Standard | RGB | All frozen | BCE+Dice | 0.4227 |
+| P.2 | ResNet-34 | Standard | RGB | L3+L4 unfrozen | BCE+Dice | 0.5117 |
+| **P.3** | ResNet-34 | Standard | **ELA** | Frozen+BN | BCE+Dice | **0.6920** |
+| P.4 | ResNet-34 | Standard | RGB+ELA (4ch) | Frozen+BN+conv1 | BCE+Dice | 0.7053 |
+| P.5 | ResNet-50 | Standard | RGB | All frozen | BCE+Dice | 0.5137 |
+| P.6 | EffNet-B0 | Standard | RGB | All frozen | BCE+Dice | 0.5217 |
+| P.7 | ResNet-34 | Standard | ELA | Frozen+BN | BCE+Dice | 0.7154 |
+| P.8 | ResNet-34 | Standard | ELA | Progressive | BCE+Dice | 0.6985 |
+| P.9 | ResNet-34 | Standard | ELA | Frozen+BN | Focal+Dice | 0.6923 |
+| **P.10** | ResNet-34 | **+CBAM** | **ELA** | Frozen+BN | Focal+Dice | **0.7277** |
+| P.12 | ResNet-34 | Standard | ELA | Frozen+BN | Focal+Dice | 0.6968 |
+| P.14 | ResNet-34 | Standard+TTA | ELA | Frozen+BN | BCE+Dice | 0.6388* |
+
