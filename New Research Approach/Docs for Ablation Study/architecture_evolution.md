@@ -5,7 +5,7 @@
 | **Date** | 2026-03-15 |
 | **Scope** | Structural progression of the ETASR CNN and Pretrained UNet across all ablation versions |
 | **Paper** | ETASR_9593 -- "Enhanced Image Tampering Detection using ELA and a CNN" |
-| **Versions Covered** | ETASR: vR.1.0--vR.1.7 / Pretrained: vR.P.0--vR.P.9 / Standalone: 3 runs |
+| **Versions Covered** | ETASR: vR.1.0--vR.1.7 / Pretrained: vR.P.0--vR.P.15 / Standalone: 3 runs |
 
 ---
 
@@ -505,20 +505,24 @@ Expected: 0.74-0.76 Pixel F1
 Risk: Too many changes = hard to attribute improvement
 ```
 
-### Multi-Quality ELA Input (vR.P.15, pending)
+### Multi-Quality ELA Input (vR.P.15) — NEW SERIES BEST
 
 ```
 Input change:
-    Before: ELA at Q=90 → RGB image (3 channels, correlated)
+    Before: ELA at Q=90 → RGB image (3 channels, correlated ~0.9)
     After:  ELA at Q=75, Q=85, Q=95 → 3 grayscale images (3 channels, independent)
 
 Each quality level captures:
-    Q=75: Strong artifacts, large errors, coarse signal
-    Q=85: Medium artifacts, balanced fidelity
-    Q=95: Subtle artifacts, fine-grained differences
+    Q=75: Strong artifacts, large errors, coarse signal (mean=0.0684)
+    Q=85: Medium artifacts, balanced fidelity (mean=0.0605)
+    Q=95: Subtle artifacts, fine-grained differences (mean=0.0402)
 
-Architecture: unchanged from P.3
-Expected: +2-5pp Pixel F1 (input representation experiment)
+Architecture: unchanged from P.3 (standard UNet + ResNet-34, frozen+BN)
+conv1: Pretrained RGB weights reused (grayscale channels map to R/G/B slots)
+
+Result: Pixel F1 = 0.7329 (+4.09pp from P.3, +0.52pp from P.10)
+Verdict: POSITIVE — NEW SERIES BEST
+Key insight: Quality-level diversity > color information
 ```
 
 ---
@@ -541,4 +545,5 @@ Expected: +2-5pp Pixel F1 (input representation experiment)
 | **P.10** | ResNet-34 | **+CBAM** | **ELA** | Frozen+BN | Focal+Dice | **0.7277** |
 | P.12 | ResNet-34 | Standard | ELA | Frozen+BN | Focal+Dice | 0.6968 |
 | P.14 | ResNet-34 | Standard+TTA | ELA | Frozen+BN | BCE+Dice | 0.6388* |
+| **P.15** | ResNet-34 | Standard | **Multi-Q ELA** | Frozen+BN | BCE+Dice | **0.7329** |
 

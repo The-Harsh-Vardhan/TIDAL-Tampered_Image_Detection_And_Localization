@@ -250,14 +250,17 @@ vR.1.0 -> vR.1.1 -> vR.1.2(X)
                   vR.1.6 (BEST: 90.23%)       |         (EffNet-B0)   (ResNet-50)
                      |                      vR.P.2 (gradual unfreeze)
                      v                        |
-                  vR.1.7 (NEUTRAL)          vR.P.3 ✅✅ (ELA input, BEST F1=0.6920)
+                  vR.1.7 (NEUTRAL)          vR.P.3 ✅✅ (ELA input, F1=0.6920)
                                               |         \           \
-                                            vR.P.4 ✅    vR.P.7     vR.P.10
+                                            vR.P.4 ✅    vR.P.7 ✅   vR.P.10 ✅
                                             (4ch)      (extended)   (CBAM+Focal)
-                                              |          |            |
-                                         FINAL       PENDING       PENDING
-                                        SUBMISSION
-                                        NOTEBOOK
+                                              |         F1=0.7154   F1=0.7277
+                                         FINAL           \         /
+                                        SUBMISSION      vR.P.15 ✅✅ (Multi-Q ELA)
+                                        NOTEBOOK        SERIES BEST F1=0.7329
+                                                           |
+                                                        vR.P.19--P.28
+                                                        (Phase 2 experiments)
 ```
 
 - **Track 1** demonstrates ablation methodology, paper reproduction, and experimental rigor

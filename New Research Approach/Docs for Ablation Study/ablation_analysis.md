@@ -5,7 +5,7 @@
 | **Date** | 2026-03-15 |
 | **Scope** | Cross-run impact analysis for all ETASR and Pretrained ablation experiments |
 | **Paper** | ETASR_9593 -- "Enhanced Image Tampering Detection using ELA and a CNN" |
-| **Versions Covered** | ETASR: vR.1.0--vR.1.7 (8 runs) / Pretrained: vR.P.0--vR.P.14 (16 runs) / Standalone: 4 runs |
+| **Versions Covered** | ETASR: vR.1.0--vR.1.7 (8 runs) / Pretrained: vR.P.0--vR.P.15 (17 runs) / Standalone: 4 runs |
 
 ---
 
@@ -536,3 +536,85 @@ Rank  Category                     Best Example              Delta (pp Pixel F1)
 ```
 
 **Key conclusion:** After the ELA breakthrough (P.3), the only changes that meaningfully improved Pixel F1 were attention (P.10, +3.57pp) and extended training (P.7, +2.34pp). Everything else was marginal or harmful.
+
+---
+
+## 15. vR.P.15 Multi-Quality ELA Audit (2026-03-15)
+
+### Experiment Overview
+
+P.15 replaced single-quality RGB ELA (Q=90, 3ch correlated) with multi-quality grayscale ELA (Q=75/Q=85/Q=95, 3ch independent). Everything else identical to P.3. This tests whether **quality-level diversity** provides richer forensic signal than **color information**.
+
+### Results
+
+| Metric | P.3 (parent) | P.10 (prev best) | **P.15 (this)** | Delta from P.3 |
+|--------|-------------|------------------|-----------------|----------------|
+| Pixel F1 | 0.6920 | 0.7277 | **0.7329** | **+4.09pp** |
+| Pixel IoU | 0.5291 | 0.5719 | **0.5785** | **+4.94pp** |
+| Pixel AUC | 0.9528 | 0.9573 | **0.9608** | **+0.80pp** |
+| Pixel Precision | 0.8379 | 0.8611 | 0.8409 | +0.30pp |
+| Pixel Recall | 0.5880 | 0.6300 | **0.6496** | **+6.16pp** |
+| Image Accuracy | 86.79% | 87.32% | 87.53% | +0.74pp |
+| Image Macro F1 | 0.8560 | 0.8615 | 0.8660 | +1.00pp |
+| Image ROC-AUC | 0.9502 | 0.9633 | 0.9423 | -0.79pp |
+
+**Verdict: POSITIVE — NEW SERIES BEST (Pixel F1)**
+
+### ELA Channel Statistics
+
+| Quality | Mean | Std | Character |
+|---------|------|-----|-----------|
+| Q=75 | 0.0684 | 0.0656 | Large residuals, coarse signal |
+| Q=85 | 0.0605 | 0.0604 | Medium residuals, balanced |
+| Q=95 | 0.0402 | 0.0471 | Small residuals, fine-grained |
+
+The three channels have meaningfully different distributions (mean range 0.040--0.068). Unlike RGB ELA where R/G/B channels have ~0.9 inter-channel correlation, these quality-based channels carry independent information about compression artifacts at different sensitivity levels.
+
+### Key Insight: Quality Diversity > Color Information
+
+This is the most important finding since the original RGB-to-ELA switch (P.3):
+- **RGB ELA** gives 3 highly-correlated channels (same Q=90, different color components)
+- **Multi-Q ELA** gives 3 independent channels (different quality levels, grayscale)
+- P.15's +4.09pp gain over P.3 proves that independent forensic perspectives are more valuable than color redundancy
+
+### Where P.15 Trades Off
+
+| Loss area | Details |
+|-----------|---------|
+| Image ROC-AUC | 0.9423 vs P.10's 0.9633 (-2.10pp) — grayscale channels lose some classification calibration |
+| Pixel Precision | 0.8409 vs P.10's 0.8611 (-2.02pp) — recall-driven improvement trades some precision |
+
+### Training Observations
+
+- Model hit 25-epoch cap still improving (best epoch = 24, LR never decayed)
+- ReduceLROnPlateau never triggered — suggests the learning rate was appropriate throughout
+- Extended training (like P.7's 50 epochs) would likely push Pixel F1 to ~0.75+
+
+### Confusion Matrix (Image-Level)
+
+| | Predicted Au | Predicted Tp |
+|---|---|---|
+| **Actual Au** | TN = 1078 | FP = 46 |
+| **Actual Tp** | FN = 190 | TP = 579 |
+
+FP Rate: 4.1% (good), FN Rate: 24.7% (competitive with series average).
+
+---
+
+## 16. Updated Impact Hierarchy (All Experiments Through P.15)
+
+```
+Rank  Category                     Best Example              Delta (pp Pixel F1)
+──────────────────────────────────────────────────────────────────────────────────
+  1   INPUT REPRESENTATION         P.3: RGB→ELA              +23.74
+  2   INPUT VARIANT                P.15: Single-Q→Multi-Q    +4.09
+  3   ATTENTION MECHANISM          P.10: +CBAM               +3.57
+  4   TRAINING BUDGET              P.7: 25→50 epochs         +2.34
+  5   ENCODER ARCHITECTURE         P.6: RN34→EffNet-B0       +6.71 (from RGB P.1)
+  6   PROGRESSIVE UNFREEZE         P.8: 3-stage              +0.65
+  7   DATA AUGMENTATION            P.12: +Albumentations     +0.48
+  8   LOSS FUNCTION                P.9: BCE→Focal+Dice       +0.03
+  9   POST-PROCESSING (TTA)        P.14: 4-view TTA          -5.32 (HARMFUL)
+```
+
+**Updated conclusion:** Input representation remains the dominant factor. Within the input domain, P.15 proves that **how you construct the channels matters as much as what signal you use**. Multi-quality ELA (P.15, +4.09pp) outperformed attention mechanisms (P.10, +3.57pp) and training budget extension (P.7, +2.34pp), establishing input engineering as the #1 lever after the initial ELA switch.

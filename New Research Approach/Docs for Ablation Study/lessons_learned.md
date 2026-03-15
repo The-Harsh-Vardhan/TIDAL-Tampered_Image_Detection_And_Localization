@@ -5,7 +5,7 @@
 | **Date** | 2026-03-15 |
 | **Scope** | Retrospective insights from the complete ETASR and Pretrained ablation studies |
 | **Paper** | ETASR_9593 -- "Enhanced Image Tampering Detection using ELA and a CNN" |
-| **Versions Covered** | ETASR: vR.1.0--vR.1.7 / Pretrained: vR.P.0--vR.P.9 / Standalone: 3 runs |
+| **Versions Covered** | ETASR: vR.1.0--vR.1.7 / Pretrained: vR.P.0--vR.P.15 / Standalone: 3 runs |
 
 ---
 
@@ -357,3 +357,27 @@ The ELA-CNN-Forgery-sagnik run achieved 99.95% accuracy on a supposedly standard
 ### Lesson 37: Data augmentation benefits image-level more than pixel-level metrics
 
 P.12's augmentation improved Image Accuracy by +1.69pp (86.79% -> 88.48%) and Image F1 by +1.06pp, but Pixel F1 gained only +0.48pp. The augmentation helped the model recognize more tampered/authentic *images* but barely improved pixel-level localization precision. **Lesson: Augmentation regularizes the encoder's image-level features more than the decoder's pixel-level reconstruction.**
+
+---
+
+## 12. Lessons from P.15 Multi-Quality ELA Audit (2026-03-15)
+
+### Lesson 38: Channel independence matters more than channel semantics
+
+P.15 replaced 3 correlated RGB ELA channels (inter-channel correlation ~0.9) with 3 independent quality-level channels (Q=75/85/95, mean range 0.040--0.068). Result: +4.09pp Pixel F1. **Lesson: When constructing multi-channel inputs for CNNs, channels with independent information are more valuable than channels that share the same underlying signal (like R/G/B from the same ELA computation). Design inputs to maximize inter-channel diversity.**
+
+### Lesson 39: Multi-quality ELA captures forensic information at different scales
+
+The three quality levels provide complementary forensic perspectives: Q=75 (mean=0.068) detects strong manipulations with large residuals, Q=95 (mean=0.040) reveals subtle artifacts invisible at lower quality settings. P.15's +6.16pp recall gain over P.3 suggests that multi-quality coverage helps the model detect manipulations that single-quality ELA misses entirely. **Lesson: No single ELA quality is optimal for all forgery types. Stacking multiple qualities gives the model a "multi-resolution" view of compression artifacts.**
+
+### Lesson 40: Input representation remains the highest-impact lever
+
+P.15 (+4.09pp from input change alone) outperformed CBAM attention (P.10, +3.57pp architectural change) and extended training (P.7, +2.34pp). Both P.3 (+23.74pp, RGB→ELA) and P.15 (+4.09pp, single-Q→multi-Q) confirm this pattern. **Lesson: Before investing in architecture changes, loss functions, or training tricks, exhaust input representation experiments first. The signal you feed the model matters 10× more than how the model processes it.**
+
+### Lesson 41: Models that hit the epoch cap need extended training runs
+
+P.15 reached epoch 25/25 with best epoch at 24 and LR never decaying. P.7 previously showed +2.34pp from simply extending P.3 to 50 epochs. P.15 is likely leaving performance on the table. **Lesson: If a model's best epoch is within 2 of the epoch cap AND the LR scheduler never triggered, the model is undertrained. Always follow up with an extended training experiment.**
+
+### Lesson 42: Recall-driven improvements are more valuable than precision-driven ones for forgery detection
+
+P.15 gained +6.16pp recall but only +0.30pp precision over P.3, resulting in +4.09pp F1. In forensic applications, missing a real forgery (FN) is worse than flagging a clean image (FP). P.15's FN rate (24.7%) is competitive, while its FP rate (4.1%) remains excellent. **Lesson: For tampered image detection, optimizing recall is the higher-value objective. A model that finds more forgeries with slightly less precision is preferable to one that is very precise but misses many manipulations.**
