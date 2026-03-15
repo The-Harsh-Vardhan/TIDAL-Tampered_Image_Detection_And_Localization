@@ -18,8 +18,8 @@ vR.P.14,3,UNet+ResNet34,BCE+Dice,0.4693,0.6388,0.9618,,completed,NEGATIVE
 vR.P.14b,3,UNet+ResNet34,BCE+Dice,0.4693,0.6388,0.9618,,completed,NEGATIVE (re-run with complete eval)
 vR.P.13,3,UNet+ResNet34+CBAM,Focal+Dice,,,,,pending,
 vR.P.15,3,UNet+ResNet34,BCE+Dice,0.5785,0.7329,0.9608,,completed,POSITIVE
-vR.P.16,3,UNet+ResNet34,BCE+Dice,,,,,pending,
-vR.P.17,6,UNet+ResNet34,BCE+Dice,,,,,pending,
+vR.P.16,3,UNet+ResNet34,BCE+Dice,0.1911,0.3209,0.7778,,completed,NEGATIVE (catastrophic)
+vR.P.17,6,UNet+ResNet34,BCE+Dice,0.5751,0.7302,0.9431,,completed,POSITIVE
 vR.P.18,3,UNet+ResNet34,BCE+Dice,,,,,completed,INVALID (P.3 checkpoint not found)
 vR.P.19,9,UNet+ResNet34,BCE+Dice,,,,,pending,
 vR.P.20,3,UNet+ResNet34,BCE+Dice,,,,,pending,
@@ -31,3 +31,8 @@ vR.P.25,3,UNet+ResNet34,BCE+Dice+EdgeBCE,,,,,pending,
 vR.P.26,3,DualTaskUNet+ResNet34,BCE+Dice+ClsBCE,,,,,pending,
 vR.P.27,3,UNet+ResNet34,BCE+Dice,,,,,pending,
 vR.P.28,3,UNet+ResNet34,BCE+Dice,,,,,pending,
+vR.P.30,3,UNet+ResNet34+CBAM,BCE+Dice,,,,,pending,
+vR.P.30.1,3,UNet+ResNet34+CBAM,BCE+Dice,,,,,pending,
+vR.P.30.2,3,UNet+ResNet34+CBAM,BCE+Dice,,,,,pending,
+vR.P.30.3,3,UNet+ResNet34+CBAM,Focal+Dice,,,,,pending,
+vR.P.30.4,3,UNet+ResNet34+CBAM,BCE+Dice,,,,,pending,

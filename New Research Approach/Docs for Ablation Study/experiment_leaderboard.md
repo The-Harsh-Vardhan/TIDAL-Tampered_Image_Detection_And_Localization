@@ -2,10 +2,10 @@
 
 | Field | Value |
 |-------|-------|
-| **Date** | 2026-03-15 |
+| **Date** | 2026-03-16 |
 | **Scope** | Ranked results and scoring for all ETASR ablation runs |
 | **Paper** | ETASR_9593 -- "Enhanced Image Tampering Detection using ELA and a CNN" |
-| **Versions Covered** | ETASR: vR.1.0--vR.1.7 (8 runs) / Pretrained: vR.P.0--vR.P.18 (21 runs, 1 INVALID, 1 pending) / Standalone: 4 runs |
+| **Versions Covered** | ETASR: vR.1.0--vR.1.7 (8 runs) / Pretrained: vR.P.0--vR.P.30.4 (23 completed, 1 INVALID, 15 pending) / Standalone: 4 runs |
 
 ---
 
@@ -207,20 +207,22 @@ vR.1.7 is **214x more parameter-efficient** than vR.1.6.
 | Rank | Version | Change | Pixel F1 | IoU | Pixel AUC | Img Acc | Verdict |
 |------|---------|--------|----------|-----|-----------|---------|---------|
 | 1 | **vR.P.15** | **Multi-Quality ELA (Q=75/85/95)** | **0.7329** | **0.5785** | **0.9608** | 87.53% | **POSITIVE (NEW SERIES BEST)** |
-| 2 | **vR.P.10** | CBAM attention | 0.7277 | 0.5719 | 0.9573 | 87.32% | **POSITIVE** |
-| 3 | **vR.P.7** | Extended training | 0.7154 | 0.5569 | 0.9504 | 87.37% | **POSITIVE** |
-| 4 | vR.P.4 | 4ch RGB+ELA | 0.7053 | 0.5447 | 0.9433 | 84.42% | NEUTRAL |
-| 5 | vR.P.8 | Progressive unfreeze | 0.6985 | 0.5367 | 0.9541 | **87.59%** | NEUTRAL |
-| 6 | **vR.P.12** | **Augmentation + Focal+Dice** | **0.6968** | **0.5347** | 0.9502 | **88.48%** | **NEUTRAL (NEW)** |
-| 7 | **vR.P.3** | ELA input | 0.6920 | 0.5291 | 0.9528 | 86.79% | STRONG POSITIVE |
-| 8 | vR.P.9 | Focal+Dice loss | 0.6923 | 0.5294 | 0.9323 | 87.16% | NEUTRAL |
-| 9 | **vR.P.14b** | **TTA (4 views)** | **0.6388** | **0.4693** | **0.9618** | **87.43%** | **NEGATIVE** |
-| 10 | vR.P.6 | EfficientNet-B0 | 0.5217 | 0.3529 | 0.8708 | 70.68% | POSITIVE |
-| 11 | vR.P.5 | ResNet-50 | 0.5137 | 0.3456 | 0.8828 | 72.00% | POSITIVE |
-| 12 | vR.P.2 | Gradual unfreeze | 0.5117 | 0.3439 | 0.8688 | 69.04% | POSITIVE |
-| 13 | vR.P.1 | Dataset fix (baseline) | 0.4546 | 0.2942 | 0.8509 | 70.15% | Baseline |
-| 14 | vR.P.1.5 | Speed opts | 0.4227 | 0.2680 | 0.8560 | 71.05% | NEUTRAL |
-| 15 | vR.P.0 | Initial (no GT masks) | 0.3749 | 0.2307 | 0.8486 | 70.63% | Baseline (no GT) |
+| 2 | **vR.P.17** | **ELA + DCT fusion (6ch)** | **0.7302** | **0.5751** | 0.9431 | 87.06% | **POSITIVE (+3.82pp)** |
+| 3 | **vR.P.10** | CBAM attention | 0.7277 | 0.5719 | 0.9573 | 87.32% | **POSITIVE** |
+| 4 | **vR.P.7** | Extended training | 0.7154 | 0.5569 | 0.9504 | 87.37% | **POSITIVE** |
+| 5 | vR.P.4 | 4ch RGB+ELA | 0.7053 | 0.5447 | 0.9433 | 84.42% | NEUTRAL |
+| 6 | vR.P.8 | Progressive unfreeze | 0.6985 | 0.5367 | 0.9541 | **87.59%** | NEUTRAL |
+| 7 | **vR.P.12** | **Augmentation + Focal+Dice** | **0.6968** | **0.5347** | 0.9502 | **88.48%** | **NEUTRAL** |
+| 8 | **vR.P.3** | ELA input | 0.6920 | 0.5291 | 0.9528 | 86.79% | STRONG POSITIVE |
+| 9 | vR.P.9 | Focal+Dice loss | 0.6923 | 0.5294 | 0.9323 | 87.16% | NEUTRAL |
+| 10 | **vR.P.14b** | **TTA (4 views)** | **0.6388** | **0.4693** | **0.9618** | **87.43%** | **NEGATIVE** |
+| 11 | vR.P.6 | EfficientNet-B0 | 0.5217 | 0.3529 | 0.8708 | 70.68% | POSITIVE |
+| 12 | vR.P.5 | ResNet-50 | 0.5137 | 0.3456 | 0.8828 | 72.00% | POSITIVE |
+| 13 | vR.P.2 | Gradual unfreeze | 0.5117 | 0.3439 | 0.8688 | 69.04% | POSITIVE |
+| 14 | vR.P.1 | Dataset fix (baseline) | 0.4546 | 0.2942 | 0.8509 | 70.15% | Baseline |
+| 15 | vR.P.1.5 | Speed opts | 0.4227 | 0.2680 | 0.8560 | 71.05% | NEUTRAL |
+| 16 | vR.P.0 | Initial (no GT masks) | 0.3749 | 0.2307 | 0.8486 | 70.63% | Baseline (no GT) |
+| 17 | **vR.P.16** | **DCT spatial maps** | **0.3209** | **0.1911** | **0.7778** | **61.60%** | **NEGATIVE (catastrophic)** |
 | -- | **vR.P.18** | **JPEG Robustness** | INVALID | -- | -- | -- | **INVALID (checkpoint missing)** |
 
 *P.14b = P.14 Run-02 with complete evaluation (supersedes Run-01 which had cell 18 crash). Without TTA: Pixel F1=0.6919 (identical to P.3).*
@@ -363,6 +365,26 @@ These runs implement the original paper's CNN architecture (or a deeper variant)
 | Test Accuracy | 94.14% | 90.33% | -3.81pp |
 | Precision | 94.1% | 90.31% | -3.79pp |
 | Recall | 94.07% | 90.10% | -3.97pp |
+
+---
+
+## 11.5 Phase 3: Combination Experiments (Pending)
+
+### vR.P.30.x -- Multi-Quality ELA + CBAM Series
+
+| Version | Configuration | Expected F1 | Status |
+|---------|--------------|-------------|--------|
+| **vR.P.30** | Multi-Q ELA + CBAM (25ep, BCE+Dice) | 0.76-0.78 | Pending |
+| **vR.P.30.1** | Multi-Q ELA + CBAM (50ep, BCE+Dice) | 0.78-0.80 | Pending |
+| **vR.P.30.2** | Multi-Q ELA + CBAM + Progressive Unfreeze (40ep) | 0.77-0.80 | Pending |
+| **vR.P.30.3** | Multi-Q ELA + CBAM + Focal+Dice (25ep) | 0.76-0.78 | Pending |
+| **vR.P.30.4** | Multi-Q ELA + CBAM + Geometric Aug (50ep) | 0.77-0.79 | Pending |
+
+**Rationale:** Combines the two highest-impact independent techniques:
+- Multi-Q ELA (P.15, +4.09pp) -- input representation
+- CBAM attention (P.10, +3.54pp isolated) -- decoder attention
+
+These operate on different pipeline stages and are expected to be additive.
 
 ---
 

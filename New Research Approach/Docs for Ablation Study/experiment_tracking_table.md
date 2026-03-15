@@ -5,7 +5,7 @@
 | **Date** | 2026-03-15 |
 | **Scope** | Complete metrics reference for all experimental runs |
 | **Paper** | ETASR_9593 -- "Enhanced Image Tampering Detection using ELA and a CNN" |
-| **Versions Covered** | ETASR Track: vR.1.0--vR.1.7 (8 runs) / Pretrained Track: vR.P.0--vR.P.18 (21 runs, 1 INVALID, 1 pending) / Standalone: 4 runs |
+| **Versions Covered** | ETASR Track: vR.1.0--vR.1.7 (8 runs) / Pretrained Track: vR.P.0--vR.P.30.4 (23 runs completed, 1 INVALID, 15 pending) / Standalone: 4 runs |
 
 ---
 
@@ -54,9 +54,14 @@
 | **vR.P.14** | **Test-Time Augmentation (TTA)** | ResNet-34 (frozen+BN) | **ELA** | 0.6388 | 0.4693 | 0.9618 | 87.43% | 0.8619 | 0.9610 | 25 (25) | 3.17M | **NEGATIVE (-5.32pp)** |
 | **vR.P.15** | **Multi-Quality ELA (Q=75/85/95)** | ResNet-34 (frozen+BN) | **Multi-Q ELA** | **0.7329** | **0.5785** | **0.9608** | **87.53%** | **0.8660** | **0.9423** | 25 (24) | 3.17M | **POSITIVE (+4.09pp) — SERIES BEST** |
 | **vR.P.18** | **JPEG Compression Robustness** | ResNet-34 (eval-only) | **ELA** | INVALID | — | — | — | — | — | eval-only | — | **INVALID (checkpoint not found)** |
-| vR.P.16 | DCT spatial feature maps | ResNet-34 (frozen+BN) | **DCT** | *pending* | *pending* | *pending* | *pending* | *pending* | *pending* | — | 3.17M | *pending* |
-| vR.P.17 | ELA + DCT fusion (6ch) | ResNet-34 (frozen+conv1+BN) | **ELA+DCT** | *pending* | *pending* | *pending* | *pending* | *pending* | *pending* | — | 3.18M | *pending* |
+| vR.P.16 | DCT spatial feature maps | ResNet-34 (frozen+BN) | **DCT** | 0.3209 | 0.1911 | 0.7778 | 61.60% | 0.5678 | 0.6204 | 18 (11) | 3.17M | **NEGATIVE (catastrophic)** |
+| vR.P.17 | ELA + DCT fusion (6ch) | ResNet-34 (frozen+conv1+BN) | **ELA+DCT** | 0.7302 | 0.5751 | 0.9431 | 87.06% | 0.8589 | 0.9462 | 25 (24) | 3.18M | **POSITIVE (+3.82pp)** |
 | vR.P.18 | Compression robustness test | ResNet-34 (frozen+BN) | **ELA** | *eval-only* | *eval-only* | *eval-only* | *eval-only* | *eval-only* | *eval-only* | — (P.3 model) | 3.17M | *measurement* |
+| **vR.P.30** | **Multi-Q ELA + CBAM (25ep)** | ResNet-34 (frozen+BN) | **Multi-Q ELA** | *pending* | *pending* | *pending* | *pending* | *pending* | *pending* | — | 3.18M | *pending* |
+| **vR.P.30.1** | **Multi-Q ELA + CBAM (50ep)** | ResNet-34 (frozen+BN) | **Multi-Q ELA** | *pending* | *pending* | *pending* | *pending* | *pending* | *pending* | — | 3.18M | *pending* |
+| **vR.P.30.2** | **Multi-Q ELA + CBAM + Unfreeze (40ep)** | ResNet-34 (progressive) | **Multi-Q ELA** | *pending* | *pending* | *pending* | *pending* | *pending* | *pending* | — | 3.18M→14.1M | *pending* |
+| **vR.P.30.3** | **Multi-Q ELA + CBAM + Focal (25ep)** | ResNet-34 (frozen+BN) | **Multi-Q ELA** | *pending* | *pending* | *pending* | *pending* | *pending* | *pending* | — | 3.18M | *pending* |
+| **vR.P.30.4** | **Multi-Q ELA + CBAM + Aug (50ep)** | ResNet-34 (frozen+BN) | **Multi-Q ELA** | *pending* | *pending* | *pending* | *pending* | *pending* | *pending* | — | 3.18M | *pending* |
 
 *P.14 TTA metrics from Run-02 (P.14b). Without TTA: Pixel F1=0.6919, IoU=0.5290 (identical to P.3). Image-level: Acc=87.43%, Macro F1=0.8619, ROC-AUC=0.9610. P.14b supersedes P.14 Run-01 (which had cell 18 crash). P.18 INVALID — checkpoint not found, needs re-run.*
 

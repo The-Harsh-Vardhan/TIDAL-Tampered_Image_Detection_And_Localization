@@ -2,10 +2,10 @@
 
 | Field | Value |
 |-------|-------|
-| **Date** | 2026-03-15 |
+| **Date** | 2026-03-16 |
 | **Scope** | Cross-run impact analysis for all ETASR and Pretrained ablation experiments |
 | **Paper** | ETASR_9593 -- "Enhanced Image Tampering Detection using ELA and a CNN" |
-| **Versions Covered** | ETASR: vR.1.0--vR.1.7 (8 runs) / Pretrained: vR.P.0--vR.P.18 (21 runs, 1 INVALID) / Standalone: 4 runs |
+| **Versions Covered** | ETASR: vR.1.0--vR.1.7 (8 runs) / Pretrained: vR.P.0--vR.P.30.4 (23 completed, 1 INVALID, 10 pending) / Standalone: 4 runs |
 
 ---
 
@@ -675,3 +675,88 @@ P.18 was designed as a pure evaluation notebook: load P.3's trained checkpoint, 
 **Diagnostic:** ImageNet features (mountains, dogs, faces) are completely irrelevant for ELA forensic patterns. Without the P.3 weights that adapted BN statistics to ELA distribution (mean≈0.05 vs ImageNet mean≈0.45), the encoder produces noise.
 
 **Action required:** Re-run P.18 with P.3 checkpoint uploaded as a Kaggle dataset input. The notebook framework (5 compression conditions, per-condition metrics, degradation curves) is well-designed; only the checkpoint is missing.
+
+---
+
+## 18. DCT Input Analysis: P.16 and P.17 (2026-03-16)
+
+### vR.P.16: DCT Spatial Maps -- Catastrophic Failure
+
+P.16 replaced ELA with DCT spatial feature maps (3 channels derived from JPEG DCT coefficients). This tested whether frequency-domain features alone carry enough forensic signal.
+
+| Metric | P.3 (ELA) | P.16 (DCT) | Delta |
+|--------|-----------|------------|-------|
+| Pixel F1 | 0.6920 | 0.3209 | **-0.3711** |
+| IoU | 0.5291 | 0.1911 | -0.3380 |
+| Pixel AUC | 0.9528 | 0.7778 | -0.1750 |
+| Image Acc | 86.79% | 61.60% | **-25.19pp** |
+| Image Macro F1 | 0.8560 | 0.5678 | -0.2882 |
+
+**Root cause:** DCT spatial maps encode block-level frequency information but lack the fine-grained pixel-level artifacts that ELA highlights. The frozen ResNet-34 encoder, adapted to ELA distribution via BN unfreeze, produces poor features on DCT maps. Early stopping at epoch 18 (best at 11) confirms the model plateaued early with no useful gradient signal.
+
+**Significance:** This is the worst-performing ELA-era experiment -- even below RGB baselines. DCT alone is not a viable input modality for this pipeline.
+
+### vR.P.17: ELA + DCT Fusion (6ch) -- Strong Positive
+
+P.17 combined ELA (3ch) + DCT spatial maps (3ch) into a 6-channel input, requiring conv1 unfreeze. This tested whether DCT provides complementary information when combined with ELA.
+
+| Metric | P.3 (ELA 3ch) | P.17 (ELA+DCT 6ch) | Delta |
+|--------|---------------|---------------------|-------|
+| Pixel F1 | 0.6920 | 0.7302 | **+3.82pp** |
+| IoU | 0.5291 | 0.5751 | +4.60pp |
+| Pixel AUC | 0.9528 | 0.9431 | -0.97pp |
+| Image Acc | 86.79% | 87.06% | +0.27pp |
+
+**Key insight: DCT is catastrophic alone but valuable as a complement to ELA.** The frequency-domain features from DCT provide orthogonal information that helps the decoder distinguish manipulation boundaries. P.17 ranks #2 in the series (behind only P.15).
+
+**Still improving:** P.17 hit the 25-epoch cap (best at epoch 24), suggesting extended training could push it into the 0.74+ range.
+
+### DCT Summary
+
+```
+DCT alone (P.16):     F1 = 0.3209  -- CATASTROPHIC (-36.11pp from P.3)
+DCT + ELA (P.17):     F1 = 0.7302  -- STRONG POSITIVE (+3.82pp from P.3)
+ELA alone (P.3):      F1 = 0.6920  -- Baseline
+Multi-Q ELA (P.15):   F1 = 0.7329  -- Series best (+4.09pp from P.3)
+```
+
+**Conclusion:** DCT features are useful only when ELA provides the primary forensic signal. The model needs ELA's pixel-level artifacts as a foundation; DCT adds frequency-domain context that helps at boundaries.
+
+---
+
+## 19. P.30.x Combination Experiments Rationale (2026-03-16)
+
+### The Two Most Impactful Independent Techniques
+
+The ablation study has identified two techniques that independently produce the largest gains from P.3:
+
+| Technique | Version | Pixel F1 Delta | Mechanism |
+|-----------|---------|----------------|-----------|
+| **Multi-Quality ELA** | P.15 | **+4.09pp** | Richer input: 3 quality levels capture different artifact signatures |
+| **CBAM Attention** | P.10 | **+3.54pp** (isolated) | Smarter decoder: channel + spatial attention focuses on forensic regions |
+
+### Why These Should Be Additive
+
+These techniques operate on completely different parts of the pipeline:
+
+```
+Multi-Q ELA -> WHAT the model sees (input representation)
+CBAM        -> WHERE the decoder focuses (attention mechanism)
+```
+
+Since they are architecturally independent -- Multi-Q ELA modifies the input before any model weights, while CBAM modifies the decoder after the encoder -- their effects should be additive or at worst partially additive.
+
+**Conservative estimate:** 0.76-0.78 Pixel F1 (assuming 70% additivity)
+**Optimistic estimate:** 0.80+ Pixel F1 (full additivity + synergy)
+
+### P.30.x Series Design
+
+| Version | Configuration | Purpose |
+|---------|--------------|---------|
+| **P.30** | Multi-Q ELA + CBAM (25ep, BCE+Dice) | Primary combination baseline |
+| **P.30.1** | Multi-Q ELA + CBAM (50ep, BCE+Dice) | Extended training |
+| **P.30.2** | Multi-Q ELA + CBAM + Progressive Unfreeze (40ep) | Domain adaptation |
+| **P.30.3** | Multi-Q ELA + CBAM + Focal+Dice (25ep) | Loss function interaction |
+| **P.30.4** | Multi-Q ELA + CBAM + Geometric Aug (50ep) | Augmentation viability |
+
+P.30 is the critical experiment. If Multi-Q ELA + CBAM produces >=0.76 Pixel F1, it confirms partial additivity and justifies extended training (P.30.1). If it falls below 0.73, the techniques may interfere or share the same performance bottleneck.

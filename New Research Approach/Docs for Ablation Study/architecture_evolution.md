@@ -2,10 +2,10 @@
 
 | Field | Value |
 |-------|-------|
-| **Date** | 2026-03-15 |
+| **Date** | 2026-03-16 |
 | **Scope** | Structural progression of the ETASR CNN and Pretrained UNet across all ablation versions |
 | **Paper** | ETASR_9593 -- "Enhanced Image Tampering Detection using ELA and a CNN" |
-| **Versions Covered** | ETASR: vR.1.0--vR.1.7 / Pretrained: vR.P.0--vR.P.18 / Standalone: 3 runs |
+| **Versions Covered** | ETASR: vR.1.0--vR.1.7 / Pretrained: vR.P.0--vR.P.30.4 / Standalone: 3 runs |
 
 ---
 
@@ -591,4 +591,73 @@ Key insight: Quality-level diversity > color information
 | P.14b | ResNet-34 | Standard+TTA | ELA | Frozen+BN | BCE+Dice | 0.6388 |
 | **P.15** | ResNet-34 | Standard | **Multi-Q ELA** | Frozen+BN | BCE+Dice | **0.7329** |
 | ~~P.18~~ | ResNet-34 | Standard (eval) | ELA | Frozen+BN | BCE+Dice | INVALID |
+| **P.16** | ResNet-34 | Standard | **DCT** | Frozen+BN | BCE+Dice | **0.3209** |
+| **P.17** | ResNet-34 | Standard | **ELA+DCT (6ch)** | Frozen+BN+conv1 | BCE+Dice | **0.7302** |
+| *P.30* | ResNet-34 | **+CBAM** | **Multi-Q ELA** | Frozen+BN | BCE+Dice | *pending* |
+| *P.30.1* | ResNet-34 | +CBAM | Multi-Q ELA | Frozen+BN | BCE+Dice | *pending* |
+| *P.30.2* | ResNet-34 | +CBAM | Multi-Q ELA | Progressive | BCE+Dice | *pending* |
+| *P.30.3* | ResNet-34 | +CBAM | Multi-Q ELA | Frozen+BN | Focal+Dice | *pending* |
+| *P.30.4* | ResNet-34 | +CBAM | Multi-Q ELA | Frozen+BN | BCE+Dice | *pending* |
 
+
+
+---
+
+## 14. DCT Input Experiments (P.16, P.17) -- Architecture Notes
+
+### vR.P.16: DCT Spatial Maps (Catastrophic Failure)
+
+```
+Input: DCT spatial feature maps (3ch, derived from JPEG 8x8 block coefficients)
+Encoder: ResNet-34 (frozen body + BN unfrozen) -- same as P.3
+Decoder: Standard UNet -- same as P.3
+Loss: BCE+Dice -- same as P.3
+
+Result: Pixel F1 = 0.3209 -- CATASTROPHIC (-36.11pp from P.3)
+```
+
+The architecture is identical to P.3 except for input. DCT spatial maps capture frequency-domain block statistics (DC coefficient, AC energy, etc.) but lack ELA's pixel-level error signal. The encoder's BN statistics, adapted to ELA's distribution (mean ~0.05), are poorly suited to DCT's different distribution. Early stopping at epoch 18/25 confirms the model could not learn from this signal.
+
+### vR.P.17: ELA + DCT Fusion (6-Channel Input)
+
+```
+Input: ELA (3ch) + DCT spatial maps (3ch) = 6 channels
+Encoder: ResNet-34 (frozen body + conv1 UNFROZEN + BN unfrozen)
+    - conv1 expanded: 3ch -> 6ch (new weights initialized, then trained)
+Decoder: Standard UNet -- same as P.3
+Loss: BCE+Dice -- same as P.3
+
+Result: Pixel F1 = 0.7302 -- POSITIVE (+3.82pp from P.3)
+```
+
+The 6ch input requires unfreezing conv1 (the first convolutional layer) to accept 6 input channels instead of 3. This is the same approach used in P.4 (RGB+ELA 4ch). The extra 3 DCT channels provide frequency-domain context that complements ELA's pixel-level artifacts. Notably, P.17 was still improving at epoch 25.
+
+---
+
+## 15. P.30.x Combination Architecture (Pending)
+
+### Multi-Quality ELA + CBAM Decoder (P.30 series)
+
+```
+Input: Multi-Quality ELA (Q=75/Q=85/Q=95, 3 grayscale channels)
+    - Same as P.15
+Encoder: ResNet-34 (frozen body + BN unfrozen)
+    - Same as P.3/P.15
+Decoder: Standard UNet + CBAM attention in each decoder block
+    - CBAM from P.10: ChannelAttention + SpatialAttention per block
+    - 5 CBAM blocks (one per decoder stage)
+    - +14K trainable params
+Loss: BCE+Dice (P.30, P.30.1, P.30.2, P.30.4) or Focal+Dice (P.30.3)
+
+Expected: Pixel F1 = 0.76-0.80 (additive combination of P.15 + P.10 gains)
+```
+
+### P.30.x Variant Architectures
+
+| Version | Architecture Difference from P.30 |
+|---------|----------------------------------|
+| P.30 | Base: Multi-Q ELA + CBAM, 25 epochs |
+| P.30.1 | Same architecture, 50 epochs, patience=10 |
+| P.30.2 | Same + progressive encoder unfreeze (from P.8): frozen->layer4->layer3+layer4 |
+| P.30.3 | Same architecture, Focal+Dice loss replaces BCE+Dice |
+| P.30.4 | Same + geometric augmentation (HFlip, VFlip, Rotate90, ShiftScaleRotate), 50 epochs |

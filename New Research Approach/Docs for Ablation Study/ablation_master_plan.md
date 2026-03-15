@@ -236,6 +236,8 @@ The ETASR ablation study (Section 3) optimizes a classification-only model. The 
 | **vR.P.14** | **Test-Time Augmentation (TTA)** | **0.6388** | **0.4693** | **0.9618** | **0.8205** | **0.8619** | **87.43%** | **25 (25)** | **NEGATIVE (-5.32pp)** |
 | **vR.P.14b** | **P.14 re-run (bug fix, complete eval)** | **0.6388** | **0.4693** | **0.9618** | **0.8205** | **0.8619** | **87.43%** | **25 (25)** | **Supersedes P.14 Run-01** |
 | **vR.P.15** | **Multi-Quality ELA (Q=75/85/95)** | **0.7329** | **0.5785** | **0.9608** | **0.8660** | **0.8660** | **87.53%** | **25 (24)** | **POSITIVE (+4.09pp) — NEW SERIES BEST** |
+| vR.P.16 | DCT spatial map baseline | 0.3209 | 0.1911 | 0.7778 | 0.4235 | 0.5678 | 61.60% | 18 (11) | **NEGATIVE (catastrophic)** |
+| vR.P.17 | ELA + DCT spatial fusion (6ch) | 0.7302 | 0.5751 | 0.9431 | 0.8184 | 0.8589 | 87.06% | 25 (24) | **POSITIVE (+3.82pp)** |
 | **vR.P.18** | **JPEG Compression Robustness** | **INVALID** | **—** | **—** | **—** | **—** | **—** | **eval-only** | **INVALID (checkpoint not found)** |
 
 ### How the Two Tracks Relate
@@ -253,16 +255,22 @@ vR.1.0 -> vR.1.1 -> vR.1.2(X)
                      |                      vR.P.2 (gradual unfreeze)
                      v                        |
                   vR.1.7 (NEUTRAL)          vR.P.3 ✅✅ (ELA input, F1=0.6920)
-                                              |         \           \
-                                            vR.P.4 ✅    vR.P.7 ✅   vR.P.10 ✅
-                                            (4ch)      (extended)   (CBAM+Focal)
-                                              |         F1=0.7154   F1=0.7277
-                                         FINAL           \         /
-                                        SUBMISSION      vR.P.15 ✅✅ (Multi-Q ELA)
-                                        NOTEBOOK        SERIES BEST F1=0.7329
+                                              |         \           \           \
+                                            vR.P.4 ✅    vR.P.7 ✅   vR.P.10 ✅   vR.P.16 ✗
+                                            (4ch)      (extended)   (CBAM+Focal)  (DCT-only)
+                                              |         F1=0.7154   F1=0.7277     F1=0.3209
+                                         FINAL           \         /              vR.P.17 ✅
+                                        SUBMISSION      vR.P.15 ✅✅ (Multi-Q ELA) (ELA+DCT)
+                                        NOTEBOOK        SERIES BEST F1=0.7329     F1=0.7302
                                                            |
                                                         vR.P.19--P.28
                                                         (Phase 2 experiments)
+                                                           |
+                                                  ┌── vR.P.30 (Multi-Q ELA + CBAM)
+                                                  |      |        |         \        \
+                                                  |   P.30.1   P.30.2    P.30.3   P.30.4
+                                                  |   (50ep)  (unfreeze) (Focal)   (aug)
+                                                  └── Phase 3: Combination Experiments
 ```
 
 - **Track 1** demonstrates ablation methodology, paper reproduction, and experimental rigor
@@ -567,5 +575,46 @@ Training Experiments:
 Evaluation Experiments:
     P.14 (TTA -- negative result)
     P.18 (compression robustness)
+```
+
+---
+
+## 10. Phase 3: Combination Experiments (vR.P.30.x)
+
+### Rationale
+
+Phase 1 (P.0–P.18) explored individual techniques in isolation. Phase 2 (P.19–P.28) expands the feature/technique space. Phase 3 combines the empirically-proven best components from Phase 1:
+
+- **#1 Input:** Multi-Quality ELA (P.15, +4.09pp F1) — different JPEG quality levels as independent channels
+- **#2 Attention:** CBAM (P.10, +3.54pp F1 isolated) — channel + spatial attention in decoder
+
+These two improvements operate on different parts of the pipeline (input vs. decoder) and are expected to be additive rather than competing.
+
+### Important Design Notes
+
+- **P.15 is the base notebook**, not P.10. P.15 has the higher F1 and the more complex dataset code (multi-Q ELA). CBAM is injected into the decoder as a self-contained module.
+- **BCE+Dice is the default loss** (not Focal+Dice). P.10 used Focal+Dice, but P.9 showed Focal+Dice adds only +0.03pp. P.30.3 tests loss function interaction with CBAM as a separate variable.
+- **CBAM with BCE+Dice has never been tested.** P.30 isolates this for the first time.
+
+### P.30.x Roadmap
+
+| Version | Change | Input | Attention | Loss | Epochs | Parent | Expected F1 |
+|---------|--------|-------|-----------|------|--------|--------|-------------|
+| **vR.P.30** | Multi-Q ELA + CBAM (25ep) | Q=75/85/95 | CBAM | BCE+Dice | 25 | P.15 | 0.76–0.78 |
+| **vR.P.30.1** | Multi-Q ELA + CBAM (50ep) | Q=75/85/95 | CBAM | BCE+Dice | 50 | P.30 | 0.78–0.80 |
+| **vR.P.30.2** | Multi-Q ELA + CBAM + Progressive Unfreeze (40ep) | Q=75/85/95 | CBAM | BCE+Dice | 40 | P.30 | 0.77–0.80 |
+| **vR.P.30.3** | Multi-Q ELA + CBAM + Focal+Dice (25ep) | Q=75/85/95 | CBAM | Focal+Dice | 25 | P.30 | 0.76–0.78 |
+| **vR.P.30.4** | Multi-Q ELA + CBAM + Geometric Aug (50ep) | Q=75/85/95 | CBAM | BCE+Dice | 50 | P.30.1 | 0.77–0.79 |
+
+### Dependency Graph
+
+```
+vR.P.15 (Multi-Q ELA)          vR.P.10 (CBAM)
+    F1=0.7329                    F1=0.7277
+         \                        /
+          vR.P.30 (Multi-Q ELA + CBAM, 25ep)
+             |         |          |            \
+          P.30.1    P.30.2    P.30.3        P.30.4
+          (50ep)   (unfreeze) (Focal)    (augmentation)
 ```
 

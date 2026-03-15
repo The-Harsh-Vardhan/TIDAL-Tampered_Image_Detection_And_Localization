@@ -2,10 +2,10 @@
 
 | Field | Value |
 |-------|-------|
-| **Date** | 2026-03-15 |
+| **Date** | 2026-03-16 |
 | **Scope** | Retrospective insights from the complete ETASR and Pretrained ablation studies |
 | **Paper** | ETASR_9593 -- "Enhanced Image Tampering Detection using ELA and a CNN" |
-| **Versions Covered** | ETASR: vR.1.0--vR.1.7 / Pretrained: vR.P.0--vR.P.18 / Standalone: 3 runs |
+| **Versions Covered** | ETASR: vR.1.0--vR.1.7 / Pretrained: vR.P.0--vR.P.30.4 / Standalone: 3 runs |
 
 ---
 
@@ -405,3 +405,24 @@ P.18's invalid results were immediately identifiable: Image Acc = 40.62% = exact
 ### Lesson 47: Well-designed frameworks survive implementation failures
 
 P.18's framework (5 JPEG compression conditions, per-condition metrics, degradation curves, same-seed determinism) is genuinely well-designed for robustness characterization. The only failure was operational (missing checkpoint), not methodological. **Lesson: Separate framework design quality from execution quality. A sound experimental framework that fails due to a missing file can be trivially fixed and re-run. A flawed experimental design cannot be salvaged regardless of execution quality.**
+
+
+---
+
+## 14. Lessons from P.16/P.17 DCT Experiments and P.30.x Design (2026-03-16)
+
+### Lesson 48: DCT-only input fails catastrophically for forensic segmentation
+
+P.16 fed DCT spatial feature maps (3 channels from JPEG block coefficients) to the same UNet+ResNet-34 pipeline that achieves F1=0.69+ with ELA. Result: F1=0.3209 -- worse than even the RGB baseline (P.1: 0.4546). **Lesson: Frequency-domain features alone cannot substitute for pixel-level error analysis. The frozen encoder's BN statistics are calibrated for ELA; feeding it a fundamentally different distribution produces garbage features. Always verify that your input representation is compatible with your encoder's learned statistics.**
+
+### Lesson 49: DCT as a complement to ELA succeeds -- orthogonal information adds value
+
+P.17 combined ELA (3ch) + DCT (3ch) into a 6-channel input. Result: F1=0.7302 (+3.82pp from P.3), making it the #2 experiment in the series. **Lesson: A feature that fails catastrophically alone can still be valuable as a complement. DCT provides block-level frequency information that ELA's pixel-level error analysis cannot capture. When two signals are orthogonal, fusion often outperforms either alone. The key is ensuring the primary signal (ELA) is present -- DCT cannot stand on its own.**
+
+### Lesson 50: Models still improving at the epoch cap are undertrained
+
+P.17 achieved best epoch at 24/25, with no LR decay triggered -- exactly the same pattern as P.15 (best at 24/25) and P.3 (best at 25/25). All three models were likely still learning when training stopped. P.7 previously showed +2.34pp from simply extending P.3 to 50 epochs. **Lesson: When best_epoch >= max_epochs - 2 AND the LR scheduler never triggered, the model is undertrained. Always follow up with an extended training run. The P.30.1 experiment is specifically designed to test this for the Multi-Q ELA + CBAM combination.**
+
+### Lesson 51: Untested component combinations represent the largest remaining opportunity
+
+After 23 completed experiments, the two best independent gains are Multi-Q ELA (P.15, +4.09pp) and CBAM attention (P.10, +3.54pp isolated). These have never been combined. Since they operate on different pipeline stages (input vs decoder), they should be additive. **Lesson: In ablation studies, the combinatorial space of tested components grows factorially. After establishing individual component effects, the highest-value experiments are testing combinations of top performers. The P.30.x series tests this systematically.**
