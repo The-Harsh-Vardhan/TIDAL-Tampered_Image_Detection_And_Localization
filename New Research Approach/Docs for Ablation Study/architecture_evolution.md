@@ -5,7 +5,7 @@
 | **Date** | 2026-03-15 |
 | **Scope** | Structural progression of the ETASR CNN and Pretrained UNet across all ablation versions |
 | **Paper** | ETASR_9593 -- "Enhanced Image Tampering Detection using ELA and a CNN" |
-| **Versions Covered** | ETASR: vR.1.0--vR.1.7 / Pretrained: vR.P.0--vR.P.6 |
+| **Versions Covered** | ETASR: vR.1.0--vR.1.7 / Pretrained: vR.P.0--vR.P.9 / Standalone: 3 runs |
 
 ---
 
@@ -358,3 +358,75 @@ P.5/P.6:        All encoder FROZEN (like P.1)
 ```
 
 **The BN unfreeze strategy (P.3) is the sweet spot:** only 17K extra trainable params for domain adaptation, but they allow the encoder's batch normalization to adapt running statistics to the ELA distribution. This is the key enabler of P.3's breakthrough result.
+
+### Extended Freeze Strategy (P.8, P.9)
+
+```
+P.8:             3-STAGE PROGRESSIVE UNFREEZE
+                 Stage 0: Frozen body + BN unfrozen (epochs 1-23)
+                 Stage 1: layer4 unfrozen + BN (epochs 24-32, early stopped)
+                 Stage 2: layer3+layer4 unfrozen (never reached)
+                 Dual LR: 1e-5 encoder, 1e-3 decoder
+                 Trainable: 3.17M → 12.5M → 18.7M (by stage)
+                 → Pixel F1: 0.6985 (best at Stage 0, epoch 23)
+
+P.9:             Same freeze as P.3 (frozen body + BN unfrozen)
+                 Loss change: FocalLoss(alpha=0.25, gamma=2.0) + DiceLoss
+                 Trainable: 3.17M (unchanged)
+                 → Pixel F1: 0.6923
+```
+
+**Key finding from P.8:** Progressive unfreezing was counterproductive. The best results occurred during Stage 0 (frozen encoder), and unfreezing layer4 in Stage 1 caused performance to degrade. This confirms that for this dataset size (~12.6K images), the BN-only unfreeze strategy is optimal.
+
+**Key finding from P.9:** Changing the loss function (Focal vs BCE) while keeping the freeze strategy constant had negligible impact on pixel-level metrics but degraded probability calibration (AUC). Loss function is a low-impact variable.
+
+---
+
+## 11. Standalone CNN Architecture Comparison
+
+### Paper Architecture vs Deeper Variant
+
+Three standalone runs tested the original paper CNN architecture and a deeper variant, outside the main ablation framework. These provide classification-only baselines.
+
+```
+Paper Architecture (divg07 + sagnik):       Deeper Architecture (divg07):
+
+Input: ELA 150x150, [0,1]                   Input: ELA 150x150, [0,1]
+    |                                            |
+Conv2D(32, 5x5, ReLU)   2,432 params        Conv2D(64, 3x3, ReLU)   1,792 params
+    |                                        BatchNorm
+Conv2D(32, 5x5, ReLU)   25,632 params       MaxPool(2x2)
+    |                                            |
+MaxPool(2x2)                                 Conv2D(128, 3x3, ReLU)  73,856 params
+    |                                        BatchNorm
+Flatten (161,312)                            MaxPool(2x2)
+    |                                            |
+Dense(150, ReLU)    **24,196,950** params    Conv2D(256, 3x3, ReLU)  295,168 params
+    |                                        BatchNorm
+Dense(2, sigmoid)   302 params               MaxPool(2x2)
+                                                 |
+Total: 24,225,316                            Dropout(0.5)
+99.88% in Dense bottleneck                   Flatten (73,984)
+                                                 |
+                                             Dense(512, ReLU)  **37,880,320** params
+                                             Dropout(0.5)
+                                             Dense(2, sigmoid)  1,026 params
+
+                                             Total: 38,253,954
+                                             99.0% in Dense bottleneck
+```
+
+### Comparison with ETASR Ablation Architecture
+
+| Property | ETASR (128x128) | Paper Standalone (150x150) | Deeper Standalone (150x150) |
+|----------|-----------------|---------------------------|----------------------------|
+| Conv blocks | 2 (32+32) → 3 (32+32+64) | 2 (32+32) | 3 (64+128+256) |
+| Kernel size | 5×5 / 3×3 | 5×5 | 3×3 |
+| BatchNorm | Added in vR.1.4+ | No | Yes |
+| Dense input | 115,200 → 53,824 → GAP(64) | 161,312 | 73,984 |
+| Dense bottleneck | 29.5M → 13.8M → 16.6K | 24.2M | 37.9M |
+| Early stopping | Yes (patience=5) | No (40 fixed epochs) | Yes (patience=5) |
+| Best test acc | 90.23% (vR.1.6) | 90.33% | **90.76%** |
+| Test loss | ~0.35 | 0.6185 (severely overfit) | 0.2178 (well calibrated) |
+
+**Key insight:** The deeper standalone CNN (90.76%) marginally outperforms the ETASR deepest (90.23%), but at the cost of 38.3M vs 13.8M parameters. Early stopping is the primary driver of the standalone's lower test loss, not the deeper architecture itself.

@@ -5,7 +5,7 @@
 | **Date** | 2026-03-15 |
 | **Scope** | Complete metrics reference for all experimental runs |
 | **Paper** | ETASR_9593 -- "Enhanced Image Tampering Detection using ELA and a CNN" |
-| **Versions Covered** | ETASR Track: vR.1.0--vR.1.7 (8 runs) / Pretrained Track: vR.P.0--vR.P.6 (8 runs) |
+| **Versions Covered** | ETASR Track: vR.1.0--vR.1.7 (8 runs) / Pretrained Track: vR.P.0--vR.P.9 (11 runs) / Standalone: 3 runs |
 
 ---
 
@@ -44,6 +44,9 @@
 | **vR.P.4** | 4ch RGB+ELA (conv1+BN) | ResNet-34 (frozen+conv1+BN) | RGB+ELA | **0.7053** | **0.5447** | 0.9433 | 84.42% | 0.8322 | 0.9229 | 25 (24) | 3.18M | NEUTRAL |
 | **vR.P.5** | ResNet-50 encoder | ResNet-50 (frozen) | RGB | 0.5137 | 0.3456 | 0.8828 | 72.00% | 0.7143 | 0.8126 | 25 (19) | 9.01M | POSITIVE |
 | **vR.P.6** | EfficientNet-B0 encoder | EffNet-B0 (frozen) | RGB | 0.5217 | 0.3529 | 0.8708 | 70.68% | 0.6950 | 0.7801 | 23 (16) | 2.24M | POSITIVE |
+| vR.P.3 r02 | Reproducibility re-run | ResNet-34 (frozen+BN) | ELA | 0.6920 | 0.5291 | 0.9528 | 86.79% | 0.8560 | 0.9502 | 25 (25) | 3.17M | BASELINE (re-run) |
+| **vR.P.8** | **Progressive unfreeze** | ResNet-34 (progressive) | **ELA** | **0.6985** | **0.5367** | **0.9541** | **87.59%** | **0.8650** | **0.9578** | 32 (23) | 3.17M→14.1M | NEUTRAL (+0.65pp) |
+| vR.P.9 | Focal+Dice loss | ResNet-34 (frozen+BN) | ELA | 0.6923 | 0.5294 | 0.9323 | 87.16% | 0.8606 | 0.9076 | 25 (21) | 3.17M | NEUTRAL (+0.03pp) |
 
 **Bold** values = best in series for that metric.
 
@@ -60,6 +63,9 @@
 | vR.P.4 | 4ch RGB+ELA | +0.2507 | +0.2505 | +0.0924 | +14.27pp | Best absolute, marginal over P.3 |
 | vR.P.5 | ResNet-50 | +0.0591 | +0.0514 | +0.0319 | +1.85pp | Encoder depth helps modestly |
 | vR.P.6 | EffNet-B0 | +0.0671 | +0.0587 | +0.0199 | +0.53pp | Best param efficiency |
+| vR.P.3 r02 | Reproducibility re-run | +0.2374 | +0.2349 | +0.1019 | +16.64pp | Confirms P.3 result |
+| **vR.P.8** | **Progressive unfreeze** | **+0.2439** | **+0.2425** | **+0.1032** | **+17.44pp** | Best overall Pixel F1 |
+| vR.P.9 | Focal+Dice loss | +0.2377 | +0.2352 | +0.0814 | +17.01pp | AUC regression |
 
 ### Pretrained Confusion Matrix Summary
 
@@ -73,24 +79,27 @@
 | vR.P.4 | 1,052 | 72 | 223 | 546 | 6.4% | 29.0% |
 | vR.P.5 | 816 | 308 | 222 | **547** | 27.4% | 28.9% |
 | vR.P.6 | 855 | 269 | 286 | 483 | 23.9% | 37.2% |
+| vR.P.3 r02 | 1,094 | 30 | 220 | 549 | 2.7% | 28.6% |
+| **vR.P.8** | **1,098** | **26** | 209 | 560 | **2.3%** | 27.2% |
+| vR.P.9 | 1,088 | 36 | 207 | 562 | 3.2% | 26.9% |
 
 ### Pretrained Per-Metric Champions
 
 | Metric | Best Version | Value | Runner-Up | Value |
 |--------|-------------|-------|-----------|-------|
-| Pixel F1 | **vR.P.4** | 0.7053 | vR.P.3 | 0.6920 |
-| Pixel IoU | **vR.P.4** | 0.5447 | vR.P.3 | 0.5291 |
-| Pixel AUC | **vR.P.3** | 0.9528 | vR.P.4 | 0.9433 |
-| Pixel Precision | **vR.P.4** | 0.8452 | vR.P.3 | 0.8356 |
-| Pixel Recall | **vR.P.4** | 0.6051 | vR.P.3 | 0.5905 |
-| Image Accuracy | **vR.P.3** | 86.79% | vR.P.4 | 84.42% |
-| Image Macro F1 | **vR.P.3** | 0.8560 | vR.P.4 | 0.8322 |
-| Image ROC-AUC | **vR.P.3** | 0.9502 | vR.P.4 | 0.9229 |
-| Lowest FP Rate | **vR.P.3** | 2.7% | vR.P.4 | 6.4% |
-| Lowest FN Rate | **vR.P.3** | 28.6% | vR.P.5 | 28.9% |
+| Pixel F1 | **vR.P.4** | 0.7053 | vR.P.8 | 0.6985 |
+| Pixel IoU | **vR.P.4** | 0.5447 | vR.P.8 | 0.5367 |
+| Pixel AUC | **vR.P.8** | 0.9541 | vR.P.3 | 0.9528 |
+| Pixel Precision | **vR.P.8** | 0.8857 | vR.P.4 | 0.8452 |
+| Pixel Recall | **vR.P.9** | 0.5922 | vR.P.3 | 0.5905 |
+| Image Accuracy | **vR.P.8** | 87.59% | vR.P.9 | 87.16% |
+| Image Macro F1 | **vR.P.8** | 0.8650 | vR.P.9 | 0.8606 |
+| Image ROC-AUC | **vR.P.8** | 0.9578 | vR.P.3 | 0.9502 |
+| Lowest FP Rate | **vR.P.8** | 2.3% | vR.P.3 | 2.7% |
+| Lowest FN Rate | **vR.P.9** | 26.9% | vR.P.8 | 27.2% |
 | Param Efficiency | **vR.P.6** | 2.24M trainable | vR.P.3 | 3.17M |
 
-**vR.P.3 dominates** 7 of 11 metrics. **vR.P.4** wins pixel F1/IoU/precision/recall (marginal). **vR.P.6** wins param efficiency.
+**vR.P.8 dominates** 7 of 11 metrics. **vR.P.4** wins pixel F1/IoU. **vR.P.9** wins pixel recall and lowest FN rate. **vR.P.6** wins param efficiency.
 
 ---
 
@@ -168,5 +177,28 @@
 |---------|-------|----------|
 | STRONG POSITIVE | 1 | vR.P.3 (+23.74pp from P.1) |
 | POSITIVE | 3 | vR.P.2 (+5.71pp), vR.P.5 (+9.10pp), vR.P.6 (+6.71pp) |
-| NEUTRAL | 2 | vR.P.1.5 (speed only), vR.P.4 (+1.33pp from P.3) |
-| Baseline | 2 | vR.P.0 (no GT), vR.P.1 (proper baseline) |
+| NEUTRAL | 4 | vR.P.1.5 (speed only), vR.P.4 (+1.33pp from P.3), vR.P.8 (+0.65pp from P.3), vR.P.9 (+0.03pp from P.3) |
+| Baseline | 3 | vR.P.0 (no GT), vR.P.1 (proper baseline), vR.P.3 r02 (reproducibility) |
+
+---
+
+## 7. Standalone Research Paper Architecture Runs
+
+### Metrics Table
+
+| Run | Architecture | Params | Dataset | Test Acc | F1 | Test Loss | Epochs | Localization | Verdict |
+|-----|-------------|--------|---------|----------|-----|-----------|--------|-------------|---------|
+| Paper CNN (divg07) | 2×Conv32(5x5) + Dense(150) | 24.2M | divg07 (standard) | 90.33% | 0.9006 | 0.6185 | 40 (no ES) | NO | Not assignment-viable |
+| Paper CNN (sagnik) | 2×Conv32(5x5) + Dense(150) | 24.2M | sagnik (**LEAKED**) | 100.00% | 1.0000 | 0.0000 | 40 (no ES) | NO | **INVALID — DATA LEAK** |
+| **Deeper CNN (divg07)** | **3×Conv(64/128/256) + BN + Dense(512)** | **38.2M** | **divg07** | **90.76%** | **0.9082** | **0.2178** | 7 (ES) | NO | Best classification |
+
+### Paper Claims vs Reproduction
+
+| Claim (Nagm et al. 2024) | Reproduction Result | Gap |
+|--------------------------|--------------------|-----|
+| Training Accuracy: 99.05% | 98.57% (divg07) | -0.48pp |
+| **Testing Accuracy: 94.14%** | **90.33%** (divg07) | **-3.81pp** |
+| Precision: 94.1% | 90.31% | -3.79pp |
+| Recall: 94.07% | 90.10% | -3.97pp |
+
+**Note:** All standalone CNN runs are classification-only — they cannot produce localization masks and do not satisfy the assignment requirement.

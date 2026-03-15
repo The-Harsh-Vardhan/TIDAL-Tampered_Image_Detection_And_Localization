@@ -5,7 +5,7 @@
 | **Date** | 2026-03-15 |
 | **Scope** | Retrospective insights from the complete ETASR and Pretrained ablation studies |
 | **Paper** | ETASR_9593 -- "Enhanced Image Tampering Detection using ELA and a CNN" |
-| **Versions Covered** | ETASR: vR.1.0--vR.1.7 / Pretrained: vR.P.0--vR.P.6 |
+| **Versions Covered** | ETASR: vR.1.0--vR.1.7 / Pretrained: vR.P.0--vR.P.9 / Standalone: 3 runs |
 
 ---
 
@@ -221,6 +221,30 @@ P.6 omits AMP, TF32, and drop_last (branching from P.1), while P.5 includes them
 
 P.3's NameError (`denormalize` vs `denormalize_ela`) is a trivial fix but it prevented saving the best model in the series. A 1-minute pre-run test of visualization cells would have caught this. **The cost of a test cell is negligible; the cost of losing a trained model is enormous.**
 
+### Lesson 25: Progressive encoder unfreeze shows diminishing returns past BN
+
+P.8's 3-stage progressive unfreeze (frozen → layer4 → layer3+layer4) produced its best results during Stage 0 (frozen encoder, BN only). Unfreezing layer4 in Stage 1 actually degraded performance — the model never recovered. **For datasets of ~12K images, frozen encoder + BN unfreeze is the optimal strategy. Partial unfreezing requires significantly more data or more aggressive regularization.**
+
+### Lesson 26: Focal Loss does not improve forensic segmentation
+
+P.9 replaced BCE with Focal Loss (alpha=0.25, gamma=2.0). Pixel F1 changed by +0.03pp (noise), but Pixel AUC regressed -0.0205 and Image ROC-AUC dropped -0.0426. **Focal Loss was designed for object detection (rare objects vs background). In forensic segmentation, Dice Loss already handles class imbalance. Adding Focal Loss is treating a disease the patient doesn't have.**
+
+### Lesson 27: Dataset source matters critically — always validate before training
+
+The Sagnik dataset produced 100% test accuracy — a data leak. X range [0.0, 0.76] (vs standard [0.0, 1.0]) indicates mask images were loaded instead of photographs. **Never trust a dataset at face value. Inspect input distributions, visualize samples, and sanity-check results that seem too good to be true.**
+
+### Lesson 28: Early stopping is essential for CNN classification
+
+The paper architecture ran 40 epochs without early stopping: train acc 98.57%, test loss 0.6185 (severely overfit). The deeper CNN with early stopping (patience=5) stopped at epoch 7: test loss 0.2178 (3x better calibrated). **Training without early stopping wastes compute and produces worse models.**
+
+### Lesson 29: Published paper accuracy claims may not be reproducible
+
+Nagm et al. (2024) claims 94.14% test accuracy. Reproduction achieves 90.33% — a 3.81pp gap. Likely causes: JPEG-only filtering (paper uses 9,501 vs reproduction's 12,614 images), undocumented preprocessing steps, or evaluation on validation/train data. **Always reproduce paper results on a standard dataset before building on their claims.**
+
+### Lesson 30: Classification accuracy ≠ localization capability
+
+The deeper standalone CNN achieves the best classification (90.76%, +3.17pp over UNet P.8's 87.59%). But it cannot produce pixel-level masks. For the assignment — which requires localization — this advantage is irrelevant. **A model that answers "is this image tampered?" better than another is useless if the assignment asks "where is the tampering?"**
+
 ---
 
 ## 10. Cross-Track Synthesis
@@ -241,9 +265,14 @@ P.3's NameError (`denormalize` vs `denormalize_ela`) is a trivial fix but it pre
 3. TRAINING STRATEGY (how the model learns)
    - ETASR: Class weights → +0.79pp, LR scheduler → +0.21pp
    - Pretrained: BN unfreeze → enables P.3 breakthrough, gradual unfreeze → +5.7pp
+   - Progressive unfreeze (P.8): +0.65pp (diminishing returns)
    → Variable impact, depends on architecture quality
 
-4. INFRASTRUCTURE (speed/precision optimizations)
+4. LOSS FUNCTION (how errors are measured)
+   - Pretrained: Focal+Dice (P.9) → +0.03pp Pixel F1, AUC regressed
+   → Negligible or harmful; BCE+Dice remains optimal
+
+5. INFRASTRUCTURE (speed/precision optimizations)
    - ETASR: Not tested
    - Pretrained: AMP/TF32 → NEUTRAL (no quality impact)
    → Negligible quality impact, but saves time
@@ -260,6 +289,9 @@ P.3's NameError (`denormalize` vs `denormalize_ela`) is a trivial fix but it pre
 3. **Increase max_epochs conservatively.** P.3 was still improving at epoch 25. Use max_epochs=50 or even 100 with patience=10.
 4. **Test visualization code before training.** A 1-minute smoke test of all cells (with a single batch) catches bugs like P.3's NameError.
 5. **Run encoder experiments on the best input.** P.5/P.6 tested encoders on RGB. Testing them on ELA would provide more actionable insights.
+6. **Skip loss function experiments unless there's a clear signal.** P.9 showed Focal Loss is neutral/harmful for forensic segmentation — the default BCE+Dice is already well-suited.
+7. **Don't unfreeze encoder layers on small datasets.** P.8 confirmed that 12K images is insufficient for meaningful encoder fine-tuning beyond BN adaptation.
+8. **Always validate dataset integrity before training.** The Sagnik data leak would have been caught by a simple input visualization step.
 
 ---
 

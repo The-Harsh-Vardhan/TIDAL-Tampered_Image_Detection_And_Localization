@@ -5,7 +5,7 @@
 | **Date** | 2026-03-15 |
 | **Scope** | Cross-run impact analysis for all ETASR and Pretrained ablation experiments |
 | **Paper** | ETASR_9593 -- "Enhanced Image Tampering Detection using ELA and a CNN" |
-| **Versions Covered** | ETASR: vR.1.0--vR.1.7 (8 runs) / Pretrained: vR.P.0--vR.P.6 (8 runs) |
+| **Versions Covered** | ETASR: vR.1.0--vR.1.7 (8 runs) / Pretrained: vR.P.0--vR.P.9 (11 runs) / Standalone: 3 runs |
 
 ---
 
@@ -369,19 +369,89 @@ The encoder swap ceiling on RGB input is approximately **Pixel F1 = 0.52**. Brea
 | 3 | vR.P.6 | EfficientNet-B0 | +0.0671 | Encoder architecture |
 | 4 | vR.P.2 | Gradual unfreeze | +0.0571 | Freeze strategy |
 | 5 | vR.P.4 | 4ch RGB+ELA | +0.0133** | Input modality |
-| 6 | vR.P.1.5 | Speed opts | -0.0319 | Infrastructure |
+| 6 | **vR.P.8** | Progressive unfreeze | +0.0065*** | Freeze strategy |
+| 7 | vR.P.9 | Focal+Dice loss | +0.0003*** | Loss function |
+| 8 | vR.P.1.5 | Speed opts | -0.0319 | Infrastructure |
 
-*P.5 delta is from P.1.5, not P.1. **P.4 delta is from P.3, not P.1.
+*P.5 delta is from P.1.5, not P.1. **P.4 delta is from P.3, not P.1. ***P.8 and P.9 deltas are from P.3.
 
 ### The Pretrained Hierarchy
 
 ```
-INPUT REPRESENTATION >>> Encoder architecture > Freeze strategy > Input fusion
+INPUT REPRESENTATION >>> Encoder architecture > Freeze strategy > Loss function > Input fusion
 
-ELA input (+23.74pp) >> EffNet-B0 swap (+6.71pp) > ResNet-50 swap (+5.91pp) > Unfreeze (+5.71pp) >> 4ch fusion (+1.33pp)
+ELA input (+23.74pp) >> EffNet-B0 swap (+6.71pp) > ResNet-50 swap (+5.91pp) > Unfreeze (+5.71pp) >> 4ch fusion (+1.33pp) > Prog unfreeze (+0.65pp) > Focal loss (+0.03pp)
 ```
 
 This mirrors the ETASR finding that architecture changes beat training tricks, but at a grander scale: **changing what the model sees (ELA vs RGB) matters more than changing how the model sees it (encoder architecture).**
+
+---
+
+## 12. Pretrained Track: P.8 and P.9 Analysis
+
+### vR.P.8: Progressive Encoder Unfreeze — Diminishing Returns
+
+**Configuration:** 3-stage training (frozen→layer4→layer3+layer4), dual LR (1e-5 encoder, 1e-3 decoder), 32 epochs max.
+
+**Results:** Pixel F1: 0.6985 (+0.65pp from P.3), Image Acc: 87.59% (+0.80pp from P.3).
+
+**Key finding:** Stage 0 (frozen encoder, 23 epochs) produced the best results. Stage 1 (layer4 unfrozen) degraded performance — early stopped at epoch 32, never recovering the Stage 0 best. The progressive unfreeze strategy was counterproductive beyond the initial frozen stage.
+
+| Stage | Epochs | Encoder Trainable | Best Pixel F1 | Assessment |
+|-------|--------|------------------|---------------|------------|
+| Stage 0 (frozen) | 1-23 | BN only (17K) | **0.6985** | Best results here |
+| Stage 1 (layer4) | 24-32 | layer4 + BN (9.3M) | 0.6812 | Degraded, early stopped |
+
+**Why Stage 1 failed:**
+1. Unfreezing layer4 adds 9.3M trainable params — 3x more than the decoder
+2. Data:param ratio becomes dangerously low (~1:1,400)
+3. The already-adapted encoder features are disrupted by gradient updates
+4. Dual LR (1e-5 for encoder) may still be too aggressive for fine-tuned features
+
+**Implication:** For this dataset size (12,614 images), frozen encoder + BN unfreeze is optimal. Partial unfreezing requires significantly more data or more aggressive regularization.
+
+### vR.P.9: Focal Loss — Hypothesis Rejected
+
+**Configuration:** FocalLoss(alpha=0.25, gamma=2.0) + DiceLoss, replacing BCE + DiceLoss. Everything else identical to P.3.
+
+**Results:** Pixel F1: 0.6923 (+0.03pp from P.3, NEUTRAL), Pixel AUC: 0.9323 (-0.0205), Image ROC-AUC: 0.9076 (-0.0426).
+
+**Key finding:** Focal Loss does not improve forensic segmentation when combined with Dice Loss. The pixel-level binary predictions are essentially unchanged, while the probability calibration (AUC) significantly degrades.
+
+| Metric | P.3 (BCE+Dice) | P.9 (Focal+Dice) | Delta | Assessment |
+|--------|----------------|-------------------|-------|------------|
+| Pixel F1 | 0.6920 | 0.6923 | +0.03pp | Unchanged |
+| Pixel AUC | **0.9528** | 0.9323 | **-0.0205** | Regressed |
+| Image ROC-AUC | **0.9502** | 0.9076 | **-0.0426** | Regressed |
+| Training stability | Smooth | Volatile | — | Worse |
+
+**Why Focal Loss failed here:**
+1. Focal Loss was designed for object detection (rare objects vs background sea). In forensic segmentation, Dice Loss already handles the class imbalance.
+2. Focal Loss's (1-p)^gamma weighting concentrates predictions near extremes (0 and 1), reducing the dynamic range of intermediate probabilities → AUC drops.
+3. The alpha=0.25, gamma=2.0 hyperparameters are RetinaNet defaults, not tuned for forensic segmentation.
+
+**Implication:** BCE+Dice remains the optimal loss for this architecture. Future loss experiments should explore Lovász-Softmax or Boundary Loss rather than weighted cross-entropy variants.
+
+---
+
+## 13. Standalone Research Paper Architecture Assessment
+
+### Classification vs Localization: The Fundamental Gap
+
+Three standalone runs implemented the paper's CNN architecture outside the ablation framework:
+
+| Run | Test Acc | Macro F1 | Localization | Score |
+|-----|----------|----------|--------------|-------|
+| Deeper CNN (divg07) | **90.76%** | **0.9082** | NO | 66/100 |
+| Paper arch (divg07) | 90.33% | 0.9006 | NO | 56/100 |
+| Paper arch (sagnik) | ~~100%~~ | ~~1.0000~~ | NO (DATA LEAK) | 28/100 |
+
+### Why These Runs Matter for the Ablation Study
+
+1. **Validates the deeper CNN finding:** The standalone deeper CNN (90.76%) confirms that more convolutional depth helps classification, consistent with vR.1.6's finding (+1.27pp from deeper architecture).
+2. **Shows early stopping is critical:** Paper architecture without early stopping (test loss: 0.6185) vs deeper CNN with early stopping (test loss: 0.2178) — 3x better calibration.
+3. **Confirms dataset matters:** The Sagnik 100% accuracy proves that dataset validation is essential before drawing any conclusions.
+4. **Reinforces the localization gap:** Even the best classification model (90.76%) cannot produce pixel-level masks, making it irrelevant for assignment submission.
 
 ---
 
@@ -389,10 +459,12 @@ This mirrors the ETASR finding that architecture changes beat training tricks, b
 
 ### Cross-Track Insights
 
-1. **The ETASR track's best classification** (90.23% accuracy, vR.1.6) outperforms the pretrained track's best classification (86.79%, P.3). A purpose-built 128x128 ELA classifier with class weights and BN still beats a UNet designed for localization.
+1. **The ETASR track's best classification** (90.23% accuracy, vR.1.6) outperforms the pretrained track's best classification (87.59%, P.8). A purpose-built 128x128 ELA classifier with class weights and BN still beats a UNet designed for localization.
 
-2. **The pretrained track is essential for the assignment** because no ETASR version can produce pixel-level masks. P.3/P.4's Pixel F1 of 0.69-0.71 demonstrates that meaningful localization is achievable.
+2. **The pretrained track is essential for the assignment** because no ETASR version can produce pixel-level masks. P.4's Pixel F1 of 0.7053 demonstrates that meaningful localization is achievable, with P.8 close behind at 0.6985.
 
-3. **ELA is the common thread.** Both tracks use ELA: the ETASR track feeds ELA images to a classification CNN, while P.3 feeds ELA to a UNet for localization. The pretrained track's breakthrough came from recognising that ELA should replace RGB input, not supplement it.
+3. **ELA is the common thread.** Both tracks use ELA: the ETASR track feeds ELA images to a classification CNN, while P.3+ feeds ELA to a UNet for localization. The pretrained track's breakthrough came from recognising that ELA should replace RGB input, not supplement it.
 
-4. **The ablation methodology works.** Single-variable control identified the critical factors in both tracks. In ETASR: architecture (deeper CNN) > training tricks. In pretrained: input (ELA) > encoder > freeze strategy. Without strict ablation, these insights would be obscured by confounding changes.
+4. **The ablation methodology works.** Single-variable control identified the critical factors in both tracks. In ETASR: architecture (deeper CNN) > training tricks. In pretrained: input (ELA) > encoder > freeze strategy > loss function. Without strict ablation, these insights would be obscured by confounding changes.
+
+5. **Diminishing returns are setting in.** P.8 (+0.65pp) and P.9 (+0.03pp) show that incremental changes to the P.3 configuration yield diminishing gains. The next breakthrough likely requires a more fundamental change (extended training, higher resolution, or attention mechanisms).
