@@ -5,7 +5,7 @@
 | **Date** | 2026-03-15 |
 | **Scope** | Cross-run impact analysis for all ETASR and Pretrained ablation experiments |
 | **Paper** | ETASR_9593 -- "Enhanced Image Tampering Detection using ELA and a CNN" |
-| **Versions Covered** | ETASR: vR.1.0--vR.1.7 (8 runs) / Pretrained: vR.P.0--vR.P.15 (17 runs) / Standalone: 4 runs |
+| **Versions Covered** | ETASR: vR.1.0--vR.1.7 (8 runs) / Pretrained: vR.P.0--vR.P.18 (21 runs, 1 INVALID) / Standalone: 4 runs |
 
 ---
 
@@ -510,7 +510,7 @@ P.10 Run-02 was a reproducibility verification of the series-best model. Every s
 
 **Actionable insight:** TTA would benefit from threshold optimisation (e.g., find optimal threshold on validation set after TTA averaging). This is a potential free improvement for a future experiment.
 
-**Code failure:** Cell 18 crash (`test_probs` not defined) destroyed all image-level evaluation. This notebook needs a bugfix re-run.
+**Code failure:** Cell 18 crash (`test_probs` not defined) destroyed all image-level evaluation. **Superseded by P.14b** — see Section 17 for complete metrics including CM (TN=1111, FP=13, FN=225, TP=544) and FP Rate=1.2% (best in series).
 
 ### ELA-CNN-Forgery-sagnik: Data Leak Confirmed
 
@@ -618,3 +618,60 @@ Rank  Category                     Best Example              Delta (pp Pixel F1)
 ```
 
 **Updated conclusion:** Input representation remains the dominant factor. Within the input domain, P.15 proves that **how you construct the channels matters as much as what signal you use**. Multi-quality ELA (P.15, +4.09pp) outperformed attention mechanisms (P.10, +3.57pp) and training budget extension (P.7, +2.34pp), establishing input engineering as the #1 lever after the initial ELA switch.
+
+---
+
+## 17. vR.P.14b TTA Complete Evaluation & vR.P.18 JPEG Robustness Audit (2026-03-15)
+
+### P.14b: TTA Re-run with Complete Metrics
+
+P.14b is a clean re-run of P.14 (TTA experiment) with the cell 18 `NameError` fixed. All 25 epochs completed, all evaluation cells executed successfully. This provides the missing image-level metrics and confusion matrix that P.14 Run-01 lost.
+
+**Key findings:**
+
+| Metric | No-TTA Baseline | With TTA (4-view) | Delta |
+|--------|----------------|-------------------|-------|
+| Pixel F1 | 0.6919 | 0.6388 | **-5.32pp** |
+| Pixel IoU | 0.5290 | 0.4693 | -5.97pp |
+| Pixel Recall | 0.6840 | 0.6106 | -7.34pp |
+| Pixel Precision | 0.6999 | 0.7321 | +3.22pp |
+| Pixel AUC | 0.9528 | 0.9618 | **+0.90pp** |
+| Image Acc | -- | 87.43% | -- |
+| Image Macro F1 | -- | 0.8619 | -- |
+| Image ROC-AUC | -- | 0.9610 | -- |
+
+**Confusion matrix (image-level):** TN=1111, FP=13, FN=225, TP=544
+
+- **FP Rate = 1.2%** — best in entire series (previous best: P.10 at 2.0%)
+- FN Rate = 29.3% — higher than P.3's 28.6%, indicating TTA's recall penalty extends to image-level
+- The model flags very few authentic images as tampered, but misses more real forgeries
+
+**TTA paradox explained:** TTA averaging improves probability calibration (AUC +0.90pp) but hurts binary predictions at threshold=0.5. When 4 views are averaged, borderline pixels (prob ≈ 0.5-0.6) get pulled below 0.5, causing recall collapse. The fix would be threshold recalibration (e.g., threshold=0.35-0.40 to compensate for the averaging effect).
+
+**Why P.14b matters:** It proves TTA is not inherently useless for ELA segmentation — it produces better-calibrated probabilities. The problem is entirely threshold-related. A future experiment combining TTA + optimal threshold search could potentially improve over the no-TTA baseline.
+
+### P.18: JPEG Compression Robustness — INVALID
+
+P.18 was designed as a pure evaluation notebook: load P.3's trained checkpoint, recompress test images at Q=95/90/80/70, compute ELA on recompressed images, and measure degradation.
+
+**FATAL flaw:** The P.3 checkpoint file (`vR.P.3_checkpoint.pth`) was not uploaded to Kaggle. The notebook searched `/kaggle/input`, `.`, and `/content/drive/MyDrive` — all returned no match. It fell back to ImageNet pretrained weights with frozen body + unfrozen BN.
+
+**Result: ALL metrics are INVALID (untrained model predictions)**
+
+| Condition | Pixel F1 | Pixel AUC | Image Acc | FPR |
+|-----------|----------|-----------|-----------|-----|
+| Baseline (no recomp) | 0.0400 | 0.5050 | 40.62% | 100% |
+| Q=95 | 0.0399 | 0.5040 | 40.62% | 100% |
+| Q=90 | 0.0376 | 0.4997 | 40.62% | 100% |
+| Q=80 | 0.0339 | 0.4906 | 40.62% | 100% |
+| Q=70 | 0.0292 | 0.4797 | 40.62% | 100% |
+
+- Image Acc = 40.62% = 769/1893 = proportion of tampered class → model predicts EVERY image as tampered
+- Pixel F1 ≈ 0.03-0.04 → near-random pixel predictions
+- Pixel AUC ≈ 0.50 → coin flip discrimination
+- All 5 conditions produce identical confusion matrix: TN=0, FP=1124, FN=0, TP=769
+- 100% FPR, 100% TPR → model outputs all-positive, no discrimination at all
+
+**Diagnostic:** ImageNet features (mountains, dogs, faces) are completely irrelevant for ELA forensic patterns. Without the P.3 weights that adapted BN statistics to ELA distribution (mean≈0.05 vs ImageNet mean≈0.45), the encoder produces noise.
+
+**Action required:** Re-run P.18 with P.3 checkpoint uploaded as a Kaggle dataset input. The notebook framework (5 compression conditions, per-condition metrics, degradation curves) is well-designed; only the checkpoint is missing.

@@ -233,8 +233,10 @@ The ETASR ablation study (Section 3) optimizes a classification-only model. The 
 | vR.P.10 | Focal+Dice + CBAM attention | 0.7277 | 0.5719 | 0.9573 | 0.8615 | 0.8615 | 87.32% | 25 (24) | **POSITIVE (+3.57pp)** |
 | vR.P.10 r02 | Reproducibility re-run | 0.7277 | 0.5719 | 0.9573 | 0.8615 | 0.8615 | 87.32% | 25 (24) | Reproducibility ✅ |
 | **vR.P.12** | **Augmentation + Focal+Dice** | **0.6968** | **0.5347** | **0.9502** | **0.8756** | **0.8756** | **88.48%** | **45 (35)** | **NEUTRAL (+0.48pp)** |
-| **vR.P.14** | **Test-Time Augmentation (TTA)** | **0.6388*** | **0.4693*** | **0.9618*** | --** | --** | --** | **25 (25)** | **NEGATIVE (-5.32pp)** |
+| **vR.P.14** | **Test-Time Augmentation (TTA)** | **0.6388** | **0.4693** | **0.9618** | **0.8205** | **0.8619** | **87.43%** | **25 (25)** | **NEGATIVE (-5.32pp)** |
+| **vR.P.14b** | **P.14 re-run (bug fix, complete eval)** | **0.6388** | **0.4693** | **0.9618** | **0.8205** | **0.8619** | **87.43%** | **25 (25)** | **Supersedes P.14 Run-01** |
 | **vR.P.15** | **Multi-Quality ELA (Q=75/85/95)** | **0.7329** | **0.5785** | **0.9608** | **0.8660** | **0.8660** | **87.53%** | **25 (24)** | **POSITIVE (+4.09pp) — NEW SERIES BEST** |
+| **vR.P.18** | **JPEG Compression Robustness** | **INVALID** | **—** | **—** | **—** | **—** | **—** | **eval-only** | **INVALID (checkpoint not found)** |
 
 ### How the Two Tracks Relate
 

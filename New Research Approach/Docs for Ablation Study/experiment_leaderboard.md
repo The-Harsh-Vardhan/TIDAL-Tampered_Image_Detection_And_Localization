@@ -5,7 +5,7 @@
 | **Date** | 2026-03-15 |
 | **Scope** | Ranked results and scoring for all ETASR ablation runs |
 | **Paper** | ETASR_9593 -- "Enhanced Image Tampering Detection using ELA and a CNN" |
-| **Versions Covered** | ETASR: vR.1.0--vR.1.7 (8 runs) / Pretrained: vR.P.0--vR.P.18 (19 runs, 2 pending) / Standalone: 4 runs |
+| **Versions Covered** | ETASR: vR.1.0--vR.1.7 (8 runs) / Pretrained: vR.P.0--vR.P.18 (21 runs, 1 INVALID, 1 pending) / Standalone: 4 runs |
 
 ---
 
@@ -214,15 +214,16 @@ vR.1.7 is **214x more parameter-efficient** than vR.1.6.
 | 6 | **vR.P.12** | **Augmentation + Focal+Dice** | **0.6968** | **0.5347** | 0.9502 | **88.48%** | **NEUTRAL (NEW)** |
 | 7 | **vR.P.3** | ELA input | 0.6920 | 0.5291 | 0.9528 | 86.79% | STRONG POSITIVE |
 | 8 | vR.P.9 | Focal+Dice loss | 0.6923 | 0.5294 | 0.9323 | 87.16% | NEUTRAL |
-| 9 | **vR.P.14** | **TTA (4 views)** | **0.6388*** | **0.4693*** | **0.9618*** | --** | **NEGATIVE (NEW)** |
+| 9 | **vR.P.14b** | **TTA (4 views)** | **0.6388** | **0.4693** | **0.9618** | **87.43%** | **NEGATIVE** |
 | 10 | vR.P.6 | EfficientNet-B0 | 0.5217 | 0.3529 | 0.8708 | 70.68% | POSITIVE |
 | 11 | vR.P.5 | ResNet-50 | 0.5137 | 0.3456 | 0.8828 | 72.00% | POSITIVE |
 | 12 | vR.P.2 | Gradual unfreeze | 0.5117 | 0.3439 | 0.8688 | 69.04% | POSITIVE |
 | 13 | vR.P.1 | Dataset fix (baseline) | 0.4546 | 0.2942 | 0.8509 | 70.15% | Baseline |
 | 14 | vR.P.1.5 | Speed opts | 0.4227 | 0.2680 | 0.8560 | 71.05% | NEUTRAL |
 | 15 | vR.P.0 | Initial (no GT masks) | 0.3749 | 0.2307 | 0.8486 | 70.63% | Baseline (no GT) |
+| -- | **vR.P.18** | **JPEG Robustness** | INVALID | -- | -- | -- | **INVALID (checkpoint missing)** |
 
-*P.14 TTA metrics. Without TTA: Pixel F1=0.6919 (identical to P.3). **Image-level metrics not available (code bug).*
+*P.14b = P.14 Run-02 with complete evaluation (supersedes Run-01 which had cell 18 crash). Without TTA: Pixel F1=0.6919 (identical to P.3).*
 
 ### Ranked by Image Accuracy
 
@@ -231,7 +232,8 @@ vR.1.7 is **214x more parameter-efficient** than vR.1.6.
 | 1 | **vR.P.12** | ELA | **88.48%** | 0.6968 |
 | 2 | **vR.P.8** | ELA | 87.59% | 0.6985 |
 | 3 | **vR.P.15** | Multi-Q ELA | 87.53% | 0.7329 |
-| 4 | **vR.P.7** | ELA | 87.37% | 0.7154 |
+| 4 | **vR.P.14b** | ELA+TTA | 87.43% | 0.6388 |
+| 5 | **vR.P.7** | ELA | 87.37% | 0.7154 |
 | 5 | **vR.P.10** | ELA | 87.32% | 0.7277 |
 | 6 | vR.P.9 | ELA | 87.16% | 0.6923 |
 | 7 | **vR.P.3** | ELA | 86.79% | 0.6920 |
@@ -280,7 +282,9 @@ vR.1.7 is **214x more parameter-efficient** than vR.1.6.
 | vR.P.10 r02 | 15 | 14 | 16 | 19 | 10 | 14 | **88** |
 | **vR.P.12** | **13** | **14** | **13** | **19** | **12** | **13** | **84** |
 | **vR.P.14** | **12** | **14** | **10** | **10** | **10** | **8** | **64** |
+| **vR.P.14b** | **12** | **14** | **16** | **19** | **12** | **12** | **85** |
 | **vR.P.15** | **13** | **14** | **16** | **19** | **12** | **14** | **88** |
+| **vR.P.18** | **10** | **14** | **5** | **2** | **4** | **0** | **35** |
 
 ### Scoring Notes
 
@@ -302,7 +306,11 @@ vR.1.7 is **214x more parameter-efficient** than vR.1.6.
 
 **vR.P.12 (84/100):** Data augmentation experiment (Albumentations + Focal+Dice loss). Well-designed joint image+mask augmentation pipeline with 6 safe transforms. Pixel F1 gain marginal (+0.48pp from P.3). Methodology penalised for confounding (2 variables changed: augmentation AND loss). Training instability (val loss spikes at ep19/21) not investigated. Best image accuracy (88.48%) in pretrained track.
 
-**vR.P.14 (64/100):** TTA experiment with 4 geometric views. Clean experimental design isolating TTA's effect. **TTA degraded Pixel F1 by -5.32pp** — averaging pushes borderline pixels below 0.5 threshold. Critical code bug in cell 18 (`NameError: test_probs not defined`) crashed 40% of evaluation. Image-level metrics, confusion matrix, visualizations, and model save all MISSING. Interesting negative result poorly executed.
+**vR.P.14 (64/100):** TTA experiment with 4 geometric views. Clean experimental design isolating TTA's effect. **TTA degraded Pixel F1 by -5.32pp** — averaging pushes borderline pixels below 0.5 threshold. Critical code bug in cell 18 (`NameError: test_probs not defined`) crashed 40% of evaluation. Image-level metrics, confusion matrix, visualizations, and model save all MISSING. Interesting negative result poorly executed. **Superseded by P.14b.**
+
+**vR.P.14b (82/100):** Complete re-run of P.14 with cell 18 bug fixed. All metrics now available: Image Acc=87.43%, Macro F1=0.8619, ROC-AUC=0.9610. Confusion matrix: TN=1111, FP=13, FN=225, TP=544. FP Rate=1.2% (best in series). Clean execution, model saved. Score jump from 64→82 reflects complete evaluation suite. Methodology 16/20 (clean single-variable, but no threshold sweep for TTA). Important negative result — TTA hurts ELA segmentation at fixed threshold.
+
+**vR.P.18 (23/100):** JPEG compression robustness evaluation (eval-only, no training). **FATAL: P.3 checkpoint not found** — fell back to ImageNet weights, producing random predictions (Pixel F1=0.0362, 100% FPR). Framework well-designed (5 compression conditions, per-condition metrics, degradation curves) but all results invalid. Score: Research value 2/10, Implementation quality 5/10, Experimental validity 0/10. Must be re-run with P.3 checkpoint uploaded as Kaggle dataset.
 
 **vR.P.15 (88/100):** Multi-quality ELA experiment stacking Q=75/85/95 as 3 grayscale channels. **NEW SERIES BEST Pixel F1 = 0.7329** (+4.09pp from P.3, +0.52pp from P.10). Confirms quality-level diversity > color information. Clean execution, model saved, all metrics computed. Architecture 13/15 (standard encoder, no modifications). Methodology 16/20 (clean single-variable, but training budget exhausted at 25 epochs — model still improving). Assignment 14/15 (complete evaluation suite with visualizations).
 
@@ -370,6 +378,7 @@ These runs implement the original paper's CNN architecture (or a deeper variant)
 | ~~vR.P.10~~ | ELA + CBAM attention | Pixel F1: **0.7277** (SERIES BEST) | **+3.57pp from P.3** | **POSITIVE** |
 | ~~vR.P.12~~ | ELA + data augmentation + Focal+Dice | Pixel F1: 0.6968 | +0.48pp from P.3 | **NEUTRAL** |
 | ~~vR.P.14~~ | Test-Time Augmentation (TTA) | Pixel F1: 0.6388 (TTA) / 0.6919 (no-TTA) | **-5.32pp (TTA)** | **NEGATIVE** |
+| ~~vR.P.18~~ | JPEG Compression Robustness | **INVALID** (P.3 checkpoint not found) | INVALID | **INVALID** |
 
 ### Remaining / Future Experiments
 

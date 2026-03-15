@@ -5,7 +5,7 @@
 | **Date** | 2026-03-15 |
 | **Scope** | Retrospective insights from the complete ETASR and Pretrained ablation studies |
 | **Paper** | ETASR_9593 -- "Enhanced Image Tampering Detection using ELA and a CNN" |
-| **Versions Covered** | ETASR: vR.1.0--vR.1.7 / Pretrained: vR.P.0--vR.P.15 / Standalone: 3 runs |
+| **Versions Covered** | ETASR: vR.1.0--vR.1.7 / Pretrained: vR.P.0--vR.P.18 / Standalone: 3 runs |
 
 ---
 
@@ -381,3 +381,27 @@ P.15 reached epoch 25/25 with best epoch at 24 and LR never decaying. P.7 previo
 ### Lesson 42: Recall-driven improvements are more valuable than precision-driven ones for forgery detection
 
 P.15 gained +6.16pp recall but only +0.30pp precision over P.3, resulting in +4.09pp F1. In forensic applications, missing a real forgery (FN) is worse than flagging a clean image (FP). P.15's FN rate (24.7%) is competitive, while its FP rate (4.1%) remains excellent. **Lesson: For tampered image detection, optimizing recall is the higher-value objective. A model that finds more forgeries with slightly less precision is preferable to one that is very precise but misses many manipulations.**
+
+---
+
+## 13. Lessons from P.14b and P.18 Audit (2026-03-15)
+
+### Lesson 43: TTA improves calibration but hurts binary decisions at fixed thresholds
+
+P.14b's complete evaluation reveals the TTA paradox: Pixel AUC improved +0.90pp (better probability ranking) but Pixel F1 dropped -5.32pp (worse binary masks). The FP rate fell to 1.2% (best in series) while the FN rate rose to 29.3%. **Lesson: TTA is a calibration tool, not a free accuracy boost. For segmentation tasks with fixed thresholds, TTA requires threshold recalibration (e.g., lowering from 0.5 to ~0.35-0.40) to offset the probability compression from averaging. Never apply TTA without re-tuning the decision boundary.**
+
+### Lesson 44: Complete re-runs are worth the compute cost
+
+P.14 Run-01 lost 40% of its output (image-level metrics, CM, visualizations, model save) due to a single `NameError`. P.14b re-run cost ~30 minutes of GPU time but recovered: Image Acc=87.43%, Macro F1=0.8619, ROC-AUC=0.9610, and the best FP rate in the series (1.2%). **Lesson: When a run has a code crash that loses critical metrics, always re-run rather than trying to extrapolate the missing data. The cost of a re-run is tiny compared to operating with incomplete information.**
+
+### Lesson 45: Always verify checkpoint availability before running evaluation notebooks
+
+P.18's entire run was wasted because the P.3 checkpoint wasn't uploaded to Kaggle. The notebook searched 3 locations, found nothing, and silently fell back to ImageNet weights. All 5 compression conditions produced identical garbage results (Pixel F1=0.036, 100% FPR). **Lesson: Evaluation-only notebooks that depend on external checkpoints must include a hard assertion at the top: `assert os.path.exists(CHECKPOINT_PATH), f"Checkpoint not found: {CHECKPOINT_PATH}"`. Never allow silent fallback to unrelated weights.**
+
+### Lesson 46: Untrained model outputs have a distinctive signature
+
+P.18's invalid results were immediately identifiable: Image Acc = 40.62% = exact tampered class proportion (769/1893), Pixel AUC ≈ 0.50, identical confusion matrices across all conditions (TN=0, FP=1124). These are the hallmarks of a model that predicts the same thing for every input. **Lesson: Build a "sanity check" function that flags: (1) accuracy ≈ class proportion, (2) AUC ≈ 0.50, (3) identical predictions across conditions. Any of these signals should trigger an automatic INVALID verdict.**
+
+### Lesson 47: Well-designed frameworks survive implementation failures
+
+P.18's framework (5 JPEG compression conditions, per-condition metrics, degradation curves, same-seed determinism) is genuinely well-designed for robustness characterization. The only failure was operational (missing checkpoint), not methodological. **Lesson: Separate framework design quality from execution quality. A sound experimental framework that fails due to a missing file can be trivially fixed and re-run. A flawed experimental design cannot be salvaged regardless of execution quality.**

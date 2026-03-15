@@ -5,7 +5,7 @@
 | **Date** | 2026-03-15 |
 | **Scope** | Structural progression of the ETASR CNN and Pretrained UNet across all ablation versions |
 | **Paper** | ETASR_9593 -- "Enhanced Image Tampering Detection using ELA and a CNN" |
-| **Versions Covered** | ETASR: vR.1.0--vR.1.7 / Pretrained: vR.P.0--vR.P.15 / Standalone: 3 runs |
+| **Versions Covered** | ETASR: vR.1.0--vR.1.7 / Pretrained: vR.P.0--vR.P.18 / Standalone: 3 runs |
 
 ---
 
@@ -492,6 +492,49 @@ Root cause: Averaging pushes borderline probabilities below 0.5
 AUC improved +0.9pp → suggests threshold recalibration could help
 ```
 
+### Test-Time Augmentation — Complete Evaluation (vR.P.14b)
+
+```
+P.14b = P.14 re-run with cell 18 bug fixed.
+All metrics now available. Architecture/training identical to P.14.
+
+Complete image-level results:
+    Image Accuracy:  87.43%
+    Macro F1:        0.8619
+    ROC-AUC:         0.9610
+    CM: TN=1111, FP=13, FN=225, TP=544
+    FP Rate = 1.2% (BEST IN SERIES)
+
+TTA effect confirmed:
+    Pixel F1:   -5.32pp (averaging hurts at threshold=0.5)
+    Pixel AUC:  +0.90pp (better calibrated probabilities)
+    FP Rate:     1.2% (best ever — TTA reduces false positives)
+    FN Rate:    29.3% (worse — TTA suppresses borderline detections)
+
+Conclusion: TTA is a precision tool, not a recall tool.
+Threshold recalibration needed to unlock TTA's potential.
+```
+
+### JPEG Compression Robustness — INVALID (vR.P.18)
+
+```
+Evaluation-only notebook (no training):
+    Load P.3 checkpoint → recompress test images → measure degradation
+
+FATAL: P.3 checkpoint NOT FOUND on Kaggle
+    Searched: /kaggle/input, ., /content/drive/MyDrive
+    Fallback: ImageNet pretrained weights (frozen body + BN unfrozen)
+
+Result: ALL INVALID (untrained model)
+    Pixel F1 = 0.0362 (near-random)
+    Pixel AUC = 0.50 (coin flip)
+    Image Acc = 40.62% (= tampered class proportion)
+    FPR = 100% (predicts every image as tampered)
+
+Framework is sound (5 conditions, per-condition metrics, degradation curves)
+Only the checkpoint is missing — re-run with P.3 .pth uploaded as dataset
+```
+
 ### Combined Best-of (vR.P.13, pending)
 
 ```
@@ -545,5 +588,7 @@ Key insight: Quality-level diversity > color information
 | **P.10** | ResNet-34 | **+CBAM** | **ELA** | Frozen+BN | Focal+Dice | **0.7277** |
 | P.12 | ResNet-34 | Standard | ELA | Frozen+BN | Focal+Dice | 0.6968 |
 | P.14 | ResNet-34 | Standard+TTA | ELA | Frozen+BN | BCE+Dice | 0.6388* |
+| P.14b | ResNet-34 | Standard+TTA | ELA | Frozen+BN | BCE+Dice | 0.6388 |
 | **P.15** | ResNet-34 | Standard | **Multi-Q ELA** | Frozen+BN | BCE+Dice | **0.7329** |
+| ~~P.18~~ | ResNet-34 | Standard (eval) | ELA | Frozen+BN | BCE+Dice | INVALID |
 
