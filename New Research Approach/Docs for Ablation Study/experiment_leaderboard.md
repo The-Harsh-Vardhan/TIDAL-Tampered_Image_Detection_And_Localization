@@ -206,33 +206,37 @@ vR.1.7 is **214x more parameter-efficient** than vR.1.6.
 
 | Rank | Version | Change | Pixel F1 | IoU | Pixel AUC | Img Acc | Verdict |
 |------|---------|--------|----------|-----|-----------|---------|---------|
-| 1 | **vR.P.4** | 4ch RGB+ELA | **0.7053** | **0.5447** | 0.9433 | 84.42% | NEUTRAL |
-| 2 | **vR.P.8** | Progressive unfreeze | 0.6985 | 0.5367 | **0.9541** | **87.59%** | NEUTRAL |
-| 3 | vR.P.9 | Focal+Dice loss | 0.6923 | 0.5294 | 0.9323 | 87.16% | NEUTRAL |
-| 4 | **vR.P.3** | ELA input | 0.6920 | 0.5291 | 0.9528 | 86.79% | STRONG POSITIVE |
-| 5 | vR.P.6 | EfficientNet-B0 | 0.5217 | 0.3529 | 0.8708 | 70.68% | POSITIVE |
-| 6 | vR.P.5 | ResNet-50 | 0.5137 | 0.3456 | 0.8828 | 72.00% | POSITIVE |
-| 7 | vR.P.2 | Gradual unfreeze | 0.5117 | 0.3439 | 0.8688 | 69.04% | POSITIVE |
-| 8 | vR.P.1 | Dataset fix (baseline) | 0.4546 | 0.2942 | 0.8509 | 70.15% | Baseline |
-| 9 | vR.P.1.5 | Speed opts | 0.4227 | 0.2680 | 0.8560 | 71.05% | NEUTRAL |
-| 10 | vR.P.0 | Initial (no GT masks) | 0.3749 | 0.2307 | 0.8486 | 70.63% | Baseline (no GT) |
+| 1 | **vR.P.10** | **CBAM attention** | **0.7277** | **0.5719** | **0.9573** | 87.32% | **POSITIVE** |
+| 2 | **vR.P.7** | Extended training | 0.7154 | 0.5569 | 0.9504 | 87.37% | **POSITIVE** |
+| 3 | vR.P.4 | 4ch RGB+ELA | 0.7053 | 0.5447 | 0.9433 | 84.42% | NEUTRAL |
+| 4 | vR.P.8 | Progressive unfreeze | 0.6985 | 0.5367 | 0.9541 | **87.59%** | NEUTRAL |
+| 5 | vR.P.9 | Focal+Dice loss | 0.6923 | 0.5294 | 0.9323 | 87.16% | NEUTRAL |
+| 6 | **vR.P.3** | ELA input | 0.6920 | 0.5291 | 0.9528 | 86.79% | STRONG POSITIVE |
+| 7 | vR.P.6 | EfficientNet-B0 | 0.5217 | 0.3529 | 0.8708 | 70.68% | POSITIVE |
+| 8 | vR.P.5 | ResNet-50 | 0.5137 | 0.3456 | 0.8828 | 72.00% | POSITIVE |
+| 9 | vR.P.2 | Gradual unfreeze | 0.5117 | 0.3439 | 0.8688 | 69.04% | POSITIVE |
+| 10 | vR.P.1 | Dataset fix (baseline) | 0.4546 | 0.2942 | 0.8509 | 70.15% | Baseline |
+| 11 | vR.P.1.5 | Speed opts | 0.4227 | 0.2680 | 0.8560 | 71.05% | NEUTRAL |
+| 12 | vR.P.0 | Initial (no GT masks) | 0.3749 | 0.2307 | 0.8486 | 70.63% | Baseline (no GT) |
 
 ### Ranked by Image Accuracy
 
 | Rank | Version | Input | Img Acc | Pixel F1 |
 |------|---------|-------|---------|----------|
 | 1 | **vR.P.8** | ELA | **87.59%** | 0.6985 |
-| 2 | vR.P.9 | ELA | 87.16% | 0.6923 |
-| 3 | **vR.P.3** | ELA | 86.79% | 0.6920 |
-| 4 | vR.P.4 | RGB+ELA | 84.42% | 0.7053 |
-| 5 | vR.P.5 | RGB | 72.00% | 0.5137 |
-| 6 | vR.P.1.5 | RGB | 71.05% | 0.4227 |
-| 7 | vR.P.6 | RGB | 70.68% | 0.5217 |
-| 8 | vR.P.0 | RGB | 70.63% | 0.3749 |
-| 9 | vR.P.1 | RGB | 70.15% | 0.4546 |
-| 10 | vR.P.2 | RGB | 69.04% | 0.5117 |
+| 2 | **vR.P.7** | ELA | 87.37% | 0.7154 |
+| 3 | **vR.P.10** | ELA | 87.32% | 0.7277 |
+| 4 | vR.P.9 | ELA | 87.16% | 0.6923 |
+| 5 | **vR.P.3** | ELA | 86.79% | 0.6920 |
+| 6 | vR.P.4 | RGB+ELA | 84.42% | 0.7053 |
+| 7 | vR.P.5 | RGB | 72.00% | 0.5137 |
+| 8 | vR.P.1.5 | RGB | 71.05% | 0.4227 |
+| 9 | vR.P.6 | RGB | 70.68% | 0.5217 |
+| 10 | vR.P.0 | RGB | 70.63% | 0.3749 |
+| 11 | vR.P.1 | RGB | 70.15% | 0.4546 |
+| 12 | vR.P.2 | RGB | 69.04% | 0.5117 |
 
-**Key insight:** ELA-based inputs (P.3, P.4) dramatically outperform RGB inputs (70-72%) for image classification, reaching 84-87%.
+**Key insight:** ELA-based inputs dominate all top spots (84-87%). P.10's CBAM attention leads Pixel F1 while P.8 narrowly leads Image Accuracy.
 
 ---
 
@@ -264,6 +268,8 @@ vR.1.7 is **214x more parameter-efficient** than vR.1.6.
 | vR.P.3 r02 | 13 | 14 | 15 | 18 | 10 | 12 | **82** |
 | **vR.P.8** | **14** | **14** | **14** | **18** | **12** | **12** | **84** |
 | vR.P.9 | 13 | 14 | 12 | 17 | 11 | 11 | **78** |
+| **vR.P.7** | 13 | 14 | 17 | 19 | 12 | 13 | **88** |
+| **vR.P.10** | **15** | 14 | 14 | 19 | 11 | 14 | **87** |
 
 ### Scoring Notes
 
@@ -291,14 +297,14 @@ vR.1.7 is **214x more parameter-efficient** than vR.1.6.
 |--------|---------------------|-----------------|--------|
 | Image Accuracy | **90.23%** | 87.59% (P.8) | ETASR |
 | Image Macro F1 | **0.9004** | 0.8650 (P.8) | ETASR |
-| Image ROC-AUC | **0.9657** | 0.9578 (P.8) | ETASR |
-| Pixel F1 | N/A | **0.7053** (P.4) | Pretrained |
-| Pixel IoU | N/A | **0.5447** (P.4) | Pretrained |
-| Pixel AUC | N/A | **0.9541** (P.8) | Pretrained |
+| Image ROC-AUC | 0.9657 | **0.9633** (P.10) | ETASR (barely) |
+| Pixel F1 | N/A | **0.7277** (P.10) | Pretrained |
+| Pixel IoU | N/A | **0.5719** (P.10) | Pretrained |
+| Pixel AUC | N/A | **0.9573** (P.10) | Pretrained |
 | Localization masks | Not available | **Available** | Pretrained |
 | Assignment alignment | Partial | **Full** | Pretrained |
 
-**Conclusion:** ETASR wins classification, pretrained wins localization. The pretrained track is required for assignment submission.
+**Conclusion:** ETASR wins classification, pretrained wins localization and ROC-AUC is nearly tied. The pretrained track is required for assignment submission.
 
 ---
 
@@ -334,24 +340,21 @@ These runs implement the original paper's CNN architecture (or a deeper variant)
 
 ## 12. Future Experiment Proposals
 
-### Completed High Priority (from P.3 lineage)
+### Completed Experiments (from P.3 lineage)
 
 | ID | Experiment | Result | Actual Impact | Verdict |
 |----|-----------|--------|---------------|---------|
+| ~~vR.P.7~~ | ELA + extended training (50ep) | Pixel F1: 0.7154, best epoch 36 | **+2.34pp from P.3** | **POSITIVE** |
 | ~~vR.P.8~~ | ELA + progressive unfreeze | Pixel F1: 0.6985 | +0.65pp from P.3 | **NEUTRAL** |
 | ~~vR.P.9~~ | Focal+Dice loss | Pixel F1: 0.6923 | +0.03pp from P.3 | **NEUTRAL** |
+| ~~vR.P.10~~ | ELA + CBAM attention | Pixel F1: **0.7277** (SERIES BEST) | **+3.57pp from P.3** | **POSITIVE** |
 
-### Remaining High Priority
-
-| ID | Experiment | Rationale | Expected Impact |
-|----|-----------|-----------|-----------------|
-| vR.P.7 | ELA + more epochs (50+) | P.3 was still improving at epoch 25 (best=last) | +2-5pp Pixel F1 |
-
-### Medium Priority
+### Remaining / Future Experiments
 
 | ID | Experiment | Rationale | Expected Impact |
 |----|-----------|-----------|-----------------|
-| vR.P.10 | ELA + attention (CBAM/SE in decoder) | Add spatial attention to decoder for better boundary detection | +1-3pp Pixel F1 |
-| vR.P.11 | Higher resolution (512x512) | Test whether more pixels improve localization detail | +2-4pp Pixel F1, +memory |
+| vR.P.10+ | CBAM + extended training (50ep) | Combine P.10's best arch with P.7's training budget | +1-3pp Pixel F1 (est. 0.74-0.75) |
+| vR.P.11 | Higher resolution (512×512) | Test whether more pixels improve localization detail | +2-4pp Pixel F1, +memory |
 | vR.P.12 | ELA + data augmentation | Test augmentation compatibility with ELA input | +1-3pp or negative |
 | vR.P.13 | EfficientNet-B0 + ELA | Combine best encoder efficiency with best input | +1-3pp Pixel F1 |
+| vR.P.14 | JPEG-only dataset | Match paper methodology (9,501 images) | ±1-2pp Pixel F1 |

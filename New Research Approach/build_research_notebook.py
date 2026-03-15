@@ -1,0 +1,736 @@
+"""
+Build script: ELA CNN Image Forgery Detection notebook
+Generates a clean Jupyter notebook from scratch.
+DELETE THIS FILE after notebook generation.
+"""
+
+import json
+
+def make_md_cell(source):
+    return {
+        "cell_type": "markdown",
+        "metadata": {},
+        "source": source if isinstance(source, list) else [source]
+    }
+
+def make_code_cell(source):
+    return {
+        "cell_type": "code",
+        "execution_count": None,
+        "metadata": {},
+        "outputs": [],
+        "source": source if isinstance(source, list) else [source]
+    }
+
+cells = []
+
+# ============================================================
+# CELL 0 — Markdown: Title & Description
+# ============================================================
+cells.append(make_md_cell([
+    "# Research Experiment — ELA + CNN Image Forgery Detection\n",
+    "\n",
+    "This notebook implements an **image forgery detection pipeline** using:\n",
+    "- **Error Level Analysis (ELA)** for preprocessing\n",
+    "- A **custom CNN architecture** (3 conv blocks + dense layers) for binary classification\n",
+    "\n",
+    "**Task:** Classify images as **Authentic (Au)** or **Tampered (Tp)** using the CASIA v2.0 dataset.\n",
+    "\n",
+    "---\n",
+    "\n",
+    "| Parameter | Value |\n",
+    "|-----------|-------|\n",
+    "| **Image Size** | 150 × 150 |\n",
+    "| **ELA Quality** | 90 (JPEG recompression) |\n",
+    "| **Batch Size** | 8 |\n",
+    "| **Epochs** | 40 |\n",
+    "| **Optimizer** | Adam (lr=0.0001) |\n",
+    "| **Loss** | Binary Crossentropy |\n",
+    "| **Architecture** | Conv(64) → Conv(128) → Conv(256) → Dense(512) → Dense(2) |\n",
+    "| **Dataset** | CASIA v2.0 (Au + Tp) |"
+]))
+
+# ============================================================
+# SECTION 1 — Environment Setup
+# ============================================================
+cells.append(make_code_cell([
+    "# ============================================================\n",
+    "# 1. ENVIRONMENT SETUP\n",
+    "# ============================================================\n",
+    "\n",
+    "import os\n",
+    "import random\n",
+    "import numpy as np\n",
+    "import cv2\n",
+    "import matplotlib.pyplot as plt\n",
+    "\n",
+    "# Deep learning\n",
+    "import tensorflow as tf\n",
+    "from tensorflow.keras.models import Sequential\n",
+    "from tensorflow.keras.layers import (\n",
+    "    Dense, Dropout, Flatten, Conv2D, MaxPool2D, BatchNormalization\n",
+    ")\n",
+    "from tensorflow.keras.optimizers import Adam\n",
+    "from tensorflow.keras.callbacks import EarlyStopping\n",
+    "from tensorflow.keras.metrics import Precision, Recall\n",
+    "from tensorflow.keras.utils import to_categorical, plot_model\n",
+    "\n",
+    "# Scikit-learn\n",
+    "from sklearn.model_selection import train_test_split\n",
+    "from sklearn.metrics import (\n",
+    "    accuracy_score, f1_score, precision_score, recall_score,\n",
+    "    confusion_matrix, classification_report\n",
+    ")\n",
+    "from sklearn.utils import shuffle\n",
+    "\n",
+    "# Image processing\n",
+    "from PIL import Image, ImageChops, ImageEnhance\n",
+    "\n",
+    "# Reproducibility\n",
+    "SEED = 42\n",
+    "random.seed(SEED)\n",
+    "np.random.seed(SEED)\n",
+    "tf.random.set_seed(SEED)\n",
+    "\n",
+    "print(f'TensorFlow version: {tf.__version__}')\n",
+    "print(f'GPU available: {len(tf.config.list_physical_devices(\"GPU\")) > 0}')"
+]))
+
+# ============================================================
+# SECTION 2 — Dataset Setup
+# ============================================================
+cells.append(make_md_cell([
+    "## 2. Dataset Setup\n",
+    "\n",
+    "The **CASIA v2.0** dataset contains:\n",
+    "\n",
+    "```\n",
+    "dataset/\n",
+    " ├── Au/    # Authentic images\n",
+    " └── Tp/    # Tampered images\n",
+    "```\n",
+    "\n",
+    "- **Au (Authentic):** Unmanipulated original images → label `1`\n",
+    "- **Tp (Tampered):** Manipulated/forged images → label `0`"
+]))
+
+cells.append(make_code_cell([
+    "# ============================================================\n",
+    "# 2. DATASET CONFIGURATION\n",
+    "# ============================================================\n",
+    "\n",
+    "IMAGE_SIZE = (150, 150)\n",
+    "ELA_QUALITY = 90\n",
+    "BATCH_SIZE = 8\n",
+    "EPOCHS = 40\n",
+    "\n",
+    "# Kaggle dataset paths\n",
+    "DATASET_PATH = '/kaggle/input/casia-20-image-tampering-detection-dataset/CASIA2'\n",
+    "AU_PATH = os.path.join(DATASET_PATH, 'Au')  # Authentic\n",
+    "TP_PATH = os.path.join(DATASET_PATH, 'Tp')  # Tampered\n",
+    "\n",
+    "print(f'Image size: {IMAGE_SIZE}')\n",
+    "print(f'ELA quality: {ELA_QUALITY}')\n",
+    "print(f'Batch size: {BATCH_SIZE}')\n",
+    "print(f'Epochs: {EPOCHS}')\n",
+    "\n",
+    "# Verify dataset paths\n",
+    "if os.path.exists(AU_PATH):\n",
+    "    au_count = sum(1 for f in os.listdir(AU_PATH) if f.endswith(('.jpg', '.jpeg', '.png')))\n",
+    "    print(f'Authentic images found: {au_count}')\n",
+    "else:\n",
+    "    print(f'WARNING: Au path not found: {AU_PATH}')\n",
+    "\n",
+    "if os.path.exists(TP_PATH):\n",
+    "    tp_count = sum(1 for f in os.listdir(TP_PATH) if f.endswith(('.jpg', '.jpeg', '.png')))\n",
+    "    print(f'Tampered images found: {tp_count}')\n",
+    "else:\n",
+    "    print(f'WARNING: Tp path not found: {TP_PATH}')"
+]))
+
+# ============================================================
+# SECTION 3 — ELA Conversion
+# ============================================================
+cells.append(make_md_cell([
+    "## 3. ELA (Error Level Analysis) Conversion\n",
+    "\n",
+    "**Error Level Analysis** detects image manipulation by examining compression artifacts:\n",
+    "\n",
+    "1. Re-save the image at a known JPEG quality level\n",
+    "2. Compute the pixel-wise difference between original and re-saved\n",
+    "3. Normalize the difference to enhance visibility\n",
+    "\n",
+    "**Why it works:** Manipulated regions have different compression histories than the rest of the image, producing different error levels when re-compressed."
+]))
+
+cells.append(make_code_cell([
+    "# ============================================================\n",
+    "# 3. ELA CONVERSION FUNCTIONS\n",
+    "# ============================================================\n",
+    "\n",
+    "def convert_to_ela_image(path, quality):\n",
+    "    \"\"\"Convert an image to its ELA (Error Level Analysis) representation.\n",
+    "    \n",
+    "    Args:\n",
+    "        path: Path to the input image\n",
+    "        quality: JPEG recompression quality (0-100)\n",
+    "    \n",
+    "    Returns:\n",
+    "        PIL Image of the ELA result, or None on error\n",
+    "    \"\"\"\n",
+    "    temp_filename = 'temp_file.jpg'\n",
+    "    \n",
+    "    try:\n",
+    "        # Open and ensure RGB\n",
+    "        image = Image.open(path).convert('RGB')\n",
+    "        \n",
+    "        # Re-save at specified quality\n",
+    "        image.save(temp_filename, 'JPEG', quality=quality)\n",
+    "        temp_image = Image.open(temp_filename)\n",
+    "        \n",
+    "        # Compute pixel-wise difference\n",
+    "        ela_image = ImageChops.difference(image, temp_image)\n",
+    "        \n",
+    "        # Normalize brightness to [0, 255]\n",
+    "        extrema = ela_image.getextrema()\n",
+    "        max_diff = max([ex[1] for ex in extrema])\n",
+    "        if max_diff == 0:\n",
+    "            max_diff = 1\n",
+    "        scale = 255.0 / max_diff\n",
+    "        \n",
+    "        ela_image = ImageEnhance.Brightness(ela_image).enhance(scale)\n",
+    "        \n",
+    "        return ela_image\n",
+    "    except Exception as e:\n",
+    "        print(f'Could not convert {path} to ELA: {str(e)}')\n",
+    "        return None\n",
+    "\n",
+    "\n",
+    "def prepare_image(image_path):\n",
+    "    \"\"\"Convert an image to ELA, resize, flatten, and normalize.\"\"\"\n",
+    "    ela = convert_to_ela_image(image_path, ELA_QUALITY)\n",
+    "    if ela is None:\n",
+    "        return None\n",
+    "    return np.array(ela.resize(IMAGE_SIZE)).flatten() / 255.0\n",
+    "\n",
+    "\n",
+    "print('ELA functions defined.')"
+]))
+
+cells.append(make_code_cell([
+    "# ============================================================\n",
+    "# 3.1 ELA VISUALIZATION\n",
+    "# ============================================================\n",
+    "\n",
+    "# Find a sample image to visualize\n",
+    "sample_image = None\n",
+    "for dirname, _, filenames in os.walk(AU_PATH):\n",
+    "    for filename in filenames:\n",
+    "        if filename.endswith(('.jpg', '.jpeg', '.png')):\n",
+    "            sample_image = os.path.join(dirname, filename)\n",
+    "            break\n",
+    "    if sample_image:\n",
+    "        break\n",
+    "\n",
+    "if sample_image:\n",
+    "    original = Image.open(sample_image).convert('RGB')\n",
+    "    ela = convert_to_ela_image(sample_image, ELA_QUALITY)\n",
+    "    \n",
+    "    fig, axes = plt.subplots(1, 2, figsize=(12, 5))\n",
+    "    \n",
+    "    axes[0].imshow(original)\n",
+    "    axes[0].set_title('Original Image', fontsize=14)\n",
+    "    axes[0].axis('off')\n",
+    "    \n",
+    "    axes[1].imshow(ela)\n",
+    "    axes[1].set_title(f'ELA Image (Q={ELA_QUALITY})', fontsize=14)\n",
+    "    axes[1].axis('off')\n",
+    "    \n",
+    "    plt.suptitle(f'Error Level Analysis — {os.path.basename(sample_image)}', fontsize=16)\n",
+    "    plt.tight_layout()\n",
+    "    plt.show()\n",
+    "else:\n",
+    "    print('No sample image found for visualization.')"
+]))
+
+# ============================================================
+# SECTION 4 — Dataset Preparation
+# ============================================================
+cells.append(make_md_cell([
+    "## 4. Dataset Preparation\n",
+    "\n",
+    "Load images from both directories:\n",
+    "- **Au (Authentic)** → label `1`\n",
+    "- **Tp (Tampered)** → label `0`\n",
+    "\n",
+    "Each image is converted to its ELA representation, resized, flattened, and normalized to `[0, 1]`.\n",
+    "Labels are one-hot encoded: `[1, 0]` = Tampered, `[0, 1]` = Authentic."
+]))
+
+cells.append(make_code_cell([
+    "# ============================================================\n",
+    "# 4. LOAD AND PREPARE DATASET\n",
+    "# ============================================================\n",
+    "\n",
+    "X = []  # ELA-converted images (flattened)\n",
+    "Y = []  # Labels: 1 = authentic, 0 = tampered\n",
+    "\n",
+    "# --- Load Authentic images (label = 1) ---\n",
+    "print('Loading Authentic (Au) images...')\n",
+    "for dirname, _, filenames in os.walk(AU_PATH):\n",
+    "    for filename in filenames:\n",
+    "        if filename.endswith(('.jpg', '.jpeg', '.png')):\n",
+    "            full_path = os.path.join(dirname, filename)\n",
+    "            img = prepare_image(full_path)\n",
+    "            if img is not None:\n",
+    "                X.append(img)\n",
+    "                Y.append(1)\n",
+    "            if len(Y) % 500 == 0:\n",
+    "                print(f'  Processed {len(Y)} images...')\n",
+    "\n",
+    "au_loaded = len(Y)\n",
+    "print(f'Authentic images loaded: {au_loaded}')\n",
+    "\n",
+    "# --- Load Tampered images (label = 0) ---\n",
+    "print('\\nLoading Tampered (Tp) images...')\n",
+    "for dirname, _, filenames in os.walk(TP_PATH):\n",
+    "    for filename in filenames:\n",
+    "        if filename.endswith(('.jpg', '.jpeg', '.png')):\n",
+    "            full_path = os.path.join(dirname, filename)\n",
+    "            img = prepare_image(full_path)\n",
+    "            if img is not None:\n",
+    "                X.append(img)\n",
+    "                Y.append(0)\n",
+    "            if (len(Y) - au_loaded) % 500 == 0 and (len(Y) - au_loaded) > 0:\n",
+    "                print(f'  Processed {len(Y) - au_loaded} tampered images...')\n",
+    "\n",
+    "tp_loaded = len(Y) - au_loaded\n",
+    "print(f'Tampered images loaded: {tp_loaded}')\n",
+    "\n",
+    "# --- Shuffle dataset (X and Y together) ---\n",
+    "X, Y = shuffle(X, Y, random_state=SEED)\n",
+    "\n",
+    "# --- Convert to numpy arrays ---\n",
+    "X = np.array(X)\n",
+    "Y = to_categorical(Y, 2)  # One-hot encoding: [tampered, authentic]\n",
+    "X = X.reshape(-1, IMAGE_SIZE[0], IMAGE_SIZE[1], 3)\n",
+    "\n",
+    "# --- Print dataset distribution ---\n",
+    "print(f'\\n--- Dataset Summary ---')\n",
+    "print(f'Total samples: {len(X)}')\n",
+    "print(f'  Authentic: {au_loaded} ({au_loaded/len(X)*100:.1f}%)')\n",
+    "print(f'  Tampered:  {tp_loaded} ({tp_loaded/len(X)*100:.1f}%)')\n",
+    "print(f'X shape: {X.shape}')\n",
+    "print(f'Y shape: {Y.shape}')"
+]))
+
+# ============================================================
+# SECTION 5 — Train/Test Split
+# ============================================================
+cells.append(make_md_cell([
+    "## 5. Train / Validation / Test Split\n",
+    "\n",
+    "Split the dataset into three partitions:\n",
+    "- **70%** Training\n",
+    "- **15%** Validation\n",
+    "- **15%** Test"
+]))
+
+cells.append(make_code_cell([
+    "# ============================================================\n",
+    "# 5. TRAIN / VALIDATION / TEST SPLIT (70 / 15 / 15)\n",
+    "# ============================================================\n",
+    "\n",
+    "# First split: 70% train, 30% temp\n",
+    "X_train, X_temp, Y_train, Y_temp = train_test_split(\n",
+    "    X, Y, test_size=0.30, random_state=SEED\n",
+    ")\n",
+    "\n",
+    "# Second split: 50/50 on the 30% → 15% val, 15% test\n",
+    "X_val, X_test, Y_val, Y_test = train_test_split(\n",
+    "    X_temp, Y_temp, test_size=0.50, random_state=SEED\n",
+    ")\n",
+    "\n",
+    "# Free memory\n",
+    "del X, Y, X_temp, Y_temp\n",
+    "\n",
+    "print(f'Training set:   X={X_train.shape}, Y={Y_train.shape}')\n",
+    "print(f'Validation set: X={X_val.shape},   Y={Y_val.shape}')\n",
+    "print(f'Test set:       X={X_test.shape},   Y={Y_test.shape}')"
+]))
+
+# ============================================================
+# SECTION 6 — CNN Architecture
+# ============================================================
+cells.append(make_md_cell([
+    "## 6. CNN Architecture (Experimental)\n",
+    "\n",
+    "A deeper CNN with batch normalization for image-level forgery classification:\n",
+    "\n",
+    "```\n",
+    "Input (150×150×3)\n",
+    "    │\n",
+    "    ├── Conv2D(64, 3×3, ReLU) → BatchNorm → MaxPool(2×2)\n",
+    "    ├── Conv2D(128, 3×3, ReLU) → BatchNorm → MaxPool(2×2)\n",
+    "    ├── Conv2D(256, 3×3, ReLU) → BatchNorm → MaxPool(2×2)\n",
+    "    │\n",
+    "    ├── Dropout(0.5) → Flatten\n",
+    "    ├── Dense(512, ReLU) → Dropout(0.5)\n",
+    "    │\n",
+    "    └── Dense(2, Sigmoid) → [Tampered, Authentic]\n",
+    "```"
+]))
+
+cells.append(make_code_cell([
+    "# ============================================================\n",
+    "# 6. BUILD CNN MODEL\n",
+    "# ============================================================\n",
+    "\n",
+    "def build_model():\n",
+    "    model = Sequential()\n",
+    "    \n",
+    "    # Block 1\n",
+    "    model.add(Conv2D(filters=64, kernel_size=(3, 3), padding='valid',\n",
+    "                     activation='relu', input_shape=(IMAGE_SIZE[0], IMAGE_SIZE[1], 3)))\n",
+    "    model.add(BatchNormalization())\n",
+    "    model.add(MaxPool2D(pool_size=(2, 2)))\n",
+    "    \n",
+    "    # Block 2\n",
+    "    model.add(Conv2D(filters=128, kernel_size=(3, 3), padding='valid', activation='relu'))\n",
+    "    model.add(BatchNormalization())\n",
+    "    model.add(MaxPool2D(pool_size=(2, 2)))\n",
+    "    \n",
+    "    # Block 3\n",
+    "    model.add(Conv2D(filters=256, kernel_size=(3, 3), padding='valid', activation='relu'))\n",
+    "    model.add(BatchNormalization())\n",
+    "    model.add(MaxPool2D(pool_size=(2, 2)))\n",
+    "    \n",
+    "    # Regularization + Flatten\n",
+    "    model.add(Dropout(0.5))\n",
+    "    model.add(Flatten())\n",
+    "    \n",
+    "    # Fully connected\n",
+    "    model.add(Dense(512, activation='relu'))\n",
+    "    model.add(Dropout(0.5))\n",
+    "    \n",
+    "    # Output layer: 2 classes (tampered, authentic)\n",
+    "    model.add(Dense(2, activation='sigmoid'))\n",
+    "    \n",
+    "    return model\n",
+    "\n",
+    "\n",
+    "model = build_model()\n",
+    "\n",
+    "model.compile(\n",
+    "    optimizer=Adam(learning_rate=0.0001),\n",
+    "    loss='binary_crossentropy',\n",
+    "    metrics=['accuracy', Precision(name='precision'), Recall(name='recall')]\n",
+    ")\n",
+    "\n",
+    "model.summary()"
+]))
+
+# ============================================================
+# SECTION 7 — Training
+# ============================================================
+cells.append(make_md_cell([
+    "## 7. Training\n",
+    "\n",
+    "Train for up to **40 epochs** with early stopping on validation accuracy (patience=2)."
+]))
+
+cells.append(make_code_cell([
+    "# ============================================================\n",
+    "# 7. TRAIN THE MODEL\n",
+    "# ============================================================\n",
+    "\n",
+    "early_stopping = EarlyStopping(\n",
+    "    monitor='val_accuracy',\n",
+    "    patience=2,\n",
+    "    restore_best_weights=True,\n",
+    "    mode='max'\n",
+    ")\n",
+    "\n",
+    "history = model.fit(\n",
+    "    X_train, Y_train,\n",
+    "    epochs=EPOCHS,\n",
+    "    batch_size=BATCH_SIZE,\n",
+    "    validation_data=(X_val, Y_val),\n",
+    "    callbacks=[early_stopping],\n",
+    "    verbose=1\n",
+    ")\n",
+    "\n",
+    "print(f'\\nTraining complete. Stopped at epoch {len(history.history[\"loss\"])}/{EPOCHS}')"
+]))
+
+# ============================================================
+# SECTION 8 — Evaluation
+# ============================================================
+cells.append(make_md_cell([
+    "## 8. Evaluation\n",
+    "\n",
+    "Evaluate the trained model on the held-out test set.\n",
+    "\n",
+    "**Metrics computed:**\n",
+    "- Accuracy\n",
+    "- Precision\n",
+    "- Recall\n",
+    "- F1 Score\n",
+    "- Confusion Matrix"
+]))
+
+cells.append(make_code_cell([
+    "# ============================================================\n",
+    "# 8. EVALUATE ON TEST SET\n",
+    "# ============================================================\n",
+    "\n",
+    "# Keras evaluation\n",
+    "loss, accuracy, precision, recall = model.evaluate(X_test, Y_test, verbose=0)\n",
+    "\n",
+    "# Predictions\n",
+    "y_pred_proba = model.predict(X_test)\n",
+    "y_pred_labels = np.argmax(y_pred_proba, axis=1)\n",
+    "y_true_labels = np.argmax(Y_test, axis=1)\n",
+    "\n",
+    "# Sklearn metrics (more reliable for F1)\n",
+    "sk_accuracy = accuracy_score(y_true_labels, y_pred_labels)\n",
+    "sk_precision = precision_score(y_true_labels, y_pred_labels, average='weighted')\n",
+    "sk_recall = recall_score(y_true_labels, y_pred_labels, average='weighted')\n",
+    "sk_f1 = f1_score(y_true_labels, y_pred_labels, average='weighted')\n",
+    "\n",
+    "# Confusion matrix\n",
+    "cm = confusion_matrix(y_true_labels, y_pred_labels)\n",
+    "\n",
+    "# Print results\n",
+    "print('=' * 50)\n",
+    "print('         TEST SET EVALUATION RESULTS')\n",
+    "print('=' * 50)\n",
+    "print(f'  Loss:      {loss:.4f}')\n",
+    "print(f'  Accuracy:  {sk_accuracy:.4f} ({sk_accuracy*100:.2f}%)')\n",
+    "print(f'  Precision: {sk_precision:.4f}')\n",
+    "print(f'  Recall:    {sk_recall:.4f}')\n",
+    "print(f'  F1 Score:  {sk_f1:.4f}')\n",
+    "print('=' * 50)\n",
+    "\n",
+    "print('\\nClassification Report:')\n",
+    "print(classification_report(\n",
+    "    y_true_labels, y_pred_labels,\n",
+    "    target_names=['Tampered', 'Authentic']\n",
+    "))\n",
+    "\n",
+    "print('Confusion Matrix:')\n",
+    "print(cm)"
+]))
+
+# ============================================================
+# SECTION 9 — Visualization
+# ============================================================
+cells.append(make_md_cell([
+    "## 9. Visualization\n",
+    "\n",
+    "Training curves and confusion matrix."
+]))
+
+cells.append(make_code_cell([
+    "# ============================================================\n",
+    "# 9.1 TRAINING CURVES\n",
+    "# ============================================================\n",
+    "\n",
+    "fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8))\n",
+    "\n",
+    "# Accuracy\n",
+    "ax1.plot(history.history['accuracy'], 'b-', label='Training Accuracy')\n",
+    "ax1.plot(history.history['val_accuracy'], 'r-', label='Validation Accuracy')\n",
+    "ax1.set_title('Model Accuracy', fontsize=14)\n",
+    "ax1.set_xlabel('Epoch')\n",
+    "ax1.set_ylabel('Accuracy')\n",
+    "ax1.legend(loc='lower right')\n",
+    "ax1.grid(True, alpha=0.3)\n",
+    "\n",
+    "# Loss\n",
+    "ax2.plot(history.history['loss'], 'b-', label='Training Loss')\n",
+    "ax2.plot(history.history['val_loss'], 'r-', label='Validation Loss')\n",
+    "ax2.set_title('Model Loss', fontsize=14)\n",
+    "ax2.set_xlabel('Epoch')\n",
+    "ax2.set_ylabel('Loss')\n",
+    "ax2.legend(loc='upper right')\n",
+    "ax2.grid(True, alpha=0.3)\n",
+    "\n",
+    "plt.tight_layout()\n",
+    "plt.show()"
+]))
+
+cells.append(make_code_cell([
+    "# ============================================================\n",
+    "# 9.2 CONFUSION MATRIX HEATMAP\n",
+    "# ============================================================\n",
+    "\n",
+    "class_names = ['Tampered', 'Authentic']\n",
+    "\n",
+    "fig, ax = plt.subplots(figsize=(8, 6))\n",
+    "im = ax.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)\n",
+    "ax.set_title('Confusion Matrix', fontsize=16)\n",
+    "plt.colorbar(im, ax=ax)\n",
+    "\n",
+    "# Tick labels\n",
+    "tick_marks = np.arange(len(class_names))\n",
+    "ax.set_xticks(tick_marks)\n",
+    "ax.set_xticklabels(class_names, fontsize=12)\n",
+    "ax.set_yticks(tick_marks)\n",
+    "ax.set_yticklabels(class_names, fontsize=12)\n",
+    "\n",
+    "# Annotate cells with counts\n",
+    "thresh = cm.max() / 2.0\n",
+    "for i in range(cm.shape[0]):\n",
+    "    for j in range(cm.shape[1]):\n",
+    "        ax.text(j, i, format(cm[i, j], 'd'),\n",
+    "                ha='center', va='center', fontsize=14,\n",
+    "                color='white' if cm[i, j] > thresh else 'black')\n",
+    "\n",
+    "ax.set_xlabel('Predicted', fontsize=13)\n",
+    "ax.set_ylabel('True', fontsize=13)\n",
+    "plt.tight_layout()\n",
+    "plt.show()"
+]))
+
+# ============================================================
+# SECTION 10 — Model Export
+# ============================================================
+cells.append(make_md_cell([
+    "## 10. Model Export\n",
+    "\n",
+    "Save the trained model and export the architecture diagram."
+]))
+
+cells.append(make_code_cell([
+    "# ============================================================\n",
+    "# 10. SAVE MODEL & ARCHITECTURE\n",
+    "# ============================================================\n",
+    "\n",
+    "# Save full model (weights + architecture + optimizer state)\n",
+    "model.save('tampering_model.h5')\n",
+    "print('Model saved to: tampering_model.h5')\n",
+    "\n",
+    "# Export architecture diagram\n",
+    "try:\n",
+    "    plot_model(model, to_file='model_architecture.png', show_shapes=True, show_layer_names=True)\n",
+    "    print('Architecture diagram saved to: model_architecture.png')\n",
+    "except Exception as e:\n",
+    "    print(f'Could not export architecture diagram: {e}')\n",
+    "    print('(This requires pydot and graphviz to be installed)')"
+]))
+
+# ============================================================
+# BONUS — Experiment Comparison
+# ============================================================
+cells.append(make_md_cell([
+    "## Bonus: Experiment Comparison\n",
+    "\n",
+    "Log the results from this experiment for comparison across runs."
+]))
+
+cells.append(make_code_cell([
+    "# ============================================================\n",
+    "# BONUS: EXPERIMENT METRICS LOG\n",
+    "# ============================================================\n",
+    "\n",
+    "# Experiment metadata\n",
+    "experiment = {\n",
+    "    'name': 'ELA + Deeper CNN (3 Conv Blocks)',\n",
+    "    'image_size': IMAGE_SIZE,\n",
+    "    'ela_quality': ELA_QUALITY,\n",
+    "    'batch_size': BATCH_SIZE,\n",
+    "    'epochs_trained': len(history.history['loss']),\n",
+    "    'epochs_max': EPOCHS,\n",
+    "    'optimizer': 'Adam (lr=0.0001)',\n",
+    "    'loss_fn': 'binary_crossentropy',\n",
+    "    'architecture': 'Conv64-BN-Pool → Conv128-BN-Pool → Conv256-BN-Pool → Dense512 → Dense2',\n",
+    "    'test_accuracy': sk_accuracy,\n",
+    "    'test_precision': sk_precision,\n",
+    "    'test_recall': sk_recall,\n",
+    "    'test_f1': sk_f1,\n",
+    "    'test_loss': loss,\n",
+    "}\n",
+    "\n",
+    "# Pretty-print experiment log\n",
+    "print('\\n' + '=' * 60)\n",
+    "print('           EXPERIMENT RESULTS LOG')\n",
+    "print('=' * 60)\n",
+    "print(f'| {\"Metric\":<25} | {\"Value\":<28} |')\n",
+    "print(f'|{\"-\"*27}|{\"-\"*30}|')\n",
+    "for key, val in experiment.items():\n",
+    "    if isinstance(val, float):\n",
+    "        print(f'| {key:<25} | {val:<28.4f} |')\n",
+    "    else:\n",
+    "        print(f'| {key:<25} | {str(val):<28} |')\n",
+    "print('=' * 60)\n",
+    "\n",
+    "print('\\nTo compare with other experiments, run this notebook with ')\n",
+    "print('different hyperparameters and log results in a shared table.')"
+]))
+
+
+# ============================================================
+# ASSEMBLE NOTEBOOK
+# ============================================================
+notebook = {
+    "nbformat": 4,
+    "nbformat_minor": 4,
+    "metadata": {
+        "kernelspec": {
+            "display_name": "Python 3",
+            "language": "python",
+            "name": "python3"
+        },
+        "language_info": {
+            "name": "python",
+            "version": "3.10.12"
+        }
+    },
+    "cells": cells
+}
+
+output_path = "ELA CNN Image Forgery Detection.ipynb"
+with open(output_path, 'w', encoding='utf-8') as f:
+    json.dump(notebook, f, indent=1, ensure_ascii=False)
+
+print(f"Notebook created: {output_path}")
+print(f"Total cells: {len(cells)}")
+
+# Count by type
+md_count = sum(1 for c in cells if c['cell_type'] == 'markdown')
+code_count = sum(1 for c in cells if c['cell_type'] == 'code')
+print(f"  Markdown cells: {md_count}")
+print(f"  Code cells: {code_count}")
+
+# Verification checks
+print("\n--- Verification ---")
+
+all_source = ""
+for c in cells:
+    all_source += "".join(c['source'])
+
+checks = [
+    ("IMAGE_SIZE = (150, 150)", "IMAGE_SIZE = (150, 150)" in all_source),
+    ("No 128x128 remnant", "128, 128" not in all_source),
+    ("Dense(2, sigmoid)", "Dense(2, activation='sigmoid')" in all_source),
+    ("No Dense(1, softmax)", "Dense(1, activation='softmax')" not in all_source),
+    ("Adam import", "from tensorflow.keras.optimizers import Adam" in all_source),
+    ("sklearn shuffle", "from sklearn.utils import shuffle" in all_source),
+    ("F1 score", "f1_score" in all_source),
+    ("EarlyStopping val_accuracy", "monitor='val_accuracy'" in all_source),
+    ("No range(10) ticks", "range(10)" not in all_source),
+    ("70/15/15 split", "test_size=0.30" in all_source),
+]
+
+all_pass = True
+for name, passed in checks:
+    status = "PASS" if passed else "FAIL"
+    if not passed:
+        all_pass = False
+    print(f"  [{status}] {name}")
+
+if all_pass:
+    print("\nAll verification checks passed!")
+else:
+    print("\nSome checks FAILED — review the notebook.")
