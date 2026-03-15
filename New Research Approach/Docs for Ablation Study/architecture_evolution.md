@@ -3,9 +3,9 @@
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-03-15 |
-| **Scope** | Structural progression of the ETASR CNN across 8 ablation versions |
+| **Scope** | Structural progression of the ETASR CNN and Pretrained UNet across all ablation versions |
 | **Paper** | ETASR_9593 -- "Enhanced Image Tampering Detection using ELA and a CNN" |
-| **Versions Covered** | vR.1.0 through vR.1.7 |
+| **Versions Covered** | ETASR: vR.1.0--vR.1.7 / Pretrained: vR.P.0--vR.P.6 |
 
 ---
 
@@ -276,3 +276,85 @@ vR.1.6 slightly overfits but achieves the highest accuracy. vR.1.7 barely overfi
 | Claimed accuracy | 96.21% | 89.89% (val) | 89.17% (test) | -7.04pp gap |
 
 The final architecture (vR.1.7) diverges from the paper in 5+ ways, all intentional and documented as part of the ablation study. The paper's claimed 96.21% accuracy remains unreproducible -- the best honest test accuracy achieved is 90.23% (vR.1.6).
+
+---
+
+## 10. Pretrained Track Architecture Evolution
+
+### Base Architecture: UNet + ResNet-34
+
+All pretrained experiments use the **UNet** decoder from Segmentation Models PyTorch (SMP) with pretrained ImageNet encoders. The key structural elements:
+
+```
+Input (384x384x3 or 4ch)
+    |
+    v
+ENCODER (pretrained, frozen or partially unfrozen)
+    |-- Stage 1: 192x192 → [skip 1]
+    |-- Stage 2:  96x96  → [skip 2]
+    |-- Stage 3:  48x48  → [skip 3]
+    |-- Stage 4:  24x24  → [skip 4]
+    |-- Bottleneck: 12x12
+    v
+DECODER (trainable, ~500K-9M params)
+    |-- Up1: 12→24  + skip 4
+    |-- Up2: 24→48  + skip 3
+    |-- Up3: 48→96  + skip 2
+    |-- Up4: 96→192 + skip 1
+    v
+Segmentation Head (1x1 conv → 1 channel)
+    v
+Sigmoid → 384x384 binary mask
+```
+
+### Encoder Comparison
+
+| Property | ResNet-34 | ResNet-50 | EfficientNet-B0 |
+|----------|-----------|-----------|-----------------|
+| Block type | BasicBlock (3x3+3x3) | Bottleneck (1x1+3x3+1x1) | MBConv (expand+depthwise+SE+project) |
+| Encoder params | 21.3M | 23.5M | 4.0M |
+| ImageNet top-1 | 73.3% | 76.1% | 77.1% |
+| Skip channels | [64, 64, 128, 256, 512] | [64, 256, 512, 1024, 2048] | [16, 24, 40, 112, 320] |
+| Decoder params | ~3.15M | ~9.01M | ~2.24M |
+| Total trainable | 3.15M (decoder) | 9.01M (decoder) | 2.24M (decoder) |
+| Data:param ratio | 1:357 | 1:1,021 | 1:254 |
+| Attention | None | None | SE (per block) |
+| Best Pixel F1 (RGB) | 0.4546 (P.1) | 0.5137 (P.5) | 0.5217 (P.6) |
+
+**Key observation:** EfficientNet-B0 achieves the best RGB pixel F1 (0.5217) with the fewest trainable parameters (2.24M). ResNet-50's wider skip connections create a 3x larger decoder that doesn't proportionally improve results.
+
+### Input Modality Comparison
+
+| Input | Channels | Normalization | Best Version | Pixel F1 | Img Acc |
+|-------|----------|---------------|-------------|----------|---------|
+| **ELA** | 3 | ELA-specific (computed) | **vR.P.3** | **0.6920** | **86.79%** |
+| RGB+ELA | 4 | Dual (ImageNet + ELA) | vR.P.4 | 0.7053 | 84.42% |
+| RGB | 3 | ImageNet | vR.P.6 | 0.5217 | 72.00% |
+
+**ELA is the single biggest improvement in either track.** Switching from RGB to ELA input produced +23.74pp Pixel F1 (vs P.1 baseline) — 3x larger than any encoder swap or training trick.
+
+### Freeze Strategy Evolution
+
+```
+P.0/P.1/P.1.5:  All encoder FROZEN (conv + BN)
+                 Decoder only trainable (~3.15M)
+                 → Pixel F1: 0.37--0.45
+
+P.2:             Encoder layer3+layer4 UNFROZEN (differential LR)
+                 23M trainable, severe overfitting
+                 → Pixel F1: 0.51
+
+P.3:             Encoder FROZEN body + BN UNFROZEN
+                 3.17M trainable, best results
+                 → Pixel F1: 0.69
+
+P.4:             Encoder FROZEN body + conv1 UNFROZEN + BN UNFROZEN
+                 3.18M trainable, marginal over P.3
+                 → Pixel F1: 0.71
+
+P.5/P.6:        All encoder FROZEN (like P.1)
+                 Decoder only (9M / 2.24M)
+                 → Pixel F1: 0.51 / 0.52
+```
+
+**The BN unfreeze strategy (P.3) is the sweet spot:** only 17K extra trainable params for domain adaptation, but they allow the encoder's batch normalization to adapt running statistics to the ELA distribution. This is the key enabler of P.3's breakthrough result.

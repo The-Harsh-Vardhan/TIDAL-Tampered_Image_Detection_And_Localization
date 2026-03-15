@@ -5,7 +5,7 @@
 | **Date** | 2026-03-15 |
 | **Scope** | Ranked results and scoring for all ETASR ablation runs |
 | **Paper** | ETASR_9593 -- "Enhanced Image Tampering Detection using ELA and a CNN" |
-| **Versions Covered** | vR.1.0 through vR.1.7 (8 runs) |
+| **Versions Covered** | ETASR: vR.1.0--vR.1.7 (8 runs) / Pretrained: vR.P.0--vR.P.6 (8 runs) |
 
 ---
 
@@ -197,3 +197,112 @@ vR.1.7 is **214x more parameter-efficient** than vR.1.6.
 | 5 | vR.1.1 | 80 | Foundational (honest baseline) |
 | 6 | vR.1.2 | 79 | Well-executed failure |
 | 7 | vR.1.0 | 49 | Incomplete evaluation |
+
+---
+
+## 8. Pretrained Localization Track Leaderboard
+
+### Ranked by Pixel F1
+
+| Rank | Version | Change | Pixel F1 | IoU | Pixel AUC | Img Acc | Verdict |
+|------|---------|--------|----------|-----|-----------|---------|---------|
+| 1 | **vR.P.4** | 4ch RGB+ELA | **0.7053** | **0.5447** | 0.9433 | 84.42% | NEUTRAL |
+| 2 | **vR.P.3** | ELA input | 0.6920 | 0.5291 | **0.9528** | **86.79%** | STRONG POSITIVE |
+| 3 | vR.P.6 | EfficientNet-B0 | 0.5217 | 0.3529 | 0.8708 | 70.68% | POSITIVE |
+| 4 | vR.P.5 | ResNet-50 | 0.5137 | 0.3456 | 0.8828 | 72.00% | POSITIVE |
+| 5 | vR.P.2 | Gradual unfreeze | 0.5117 | 0.3439 | 0.8688 | 69.04% | POSITIVE |
+| 6 | vR.P.1 | Dataset fix (baseline) | 0.4546 | 0.2942 | 0.8509 | 70.15% | Baseline |
+| 7 | vR.P.1.5 | Speed opts | 0.4227 | 0.2680 | 0.8560 | 71.05% | NEUTRAL |
+| 8 | vR.P.0 | Initial (no GT masks) | 0.3749 | 0.2307 | 0.8486 | 70.63% | Baseline (no GT) |
+
+### Ranked by Image Accuracy
+
+| Rank | Version | Input | Img Acc | Pixel F1 |
+|------|---------|-------|---------|----------|
+| 1 | **vR.P.3** | ELA | **86.79%** | 0.6920 |
+| 2 | vR.P.4 | RGB+ELA | 84.42% | 0.7053 |
+| 3 | vR.P.5 | RGB | 72.00% | 0.5137 |
+| 4 | vR.P.1.5 | RGB | 71.05% | 0.4227 |
+| 5 | vR.P.6 | RGB | 70.68% | 0.5217 |
+| 6 | vR.P.0 | RGB | 70.63% | 0.3749 |
+| 7 | vR.P.1 | RGB | 70.15% | 0.4546 |
+| 8 | vR.P.2 | RGB | 69.04% | 0.5117 |
+
+**Key insight:** ELA-based inputs (P.3, P.4) dramatically outperform RGB inputs (70-72%) for image classification, reaching 84-87%.
+
+---
+
+## 9. Pretrained Track Score Breakdown (/100)
+
+### Scoring Rubric (Pretrained Track)
+
+| Category | Max | What It Measures |
+|----------|-----|------------------|
+| Architecture | /15 | Encoder choice, freeze strategy, input design |
+| Dataset | /15 | GT masks, normalization, preprocessing |
+| Methodology | /20 | Single-variable fidelity, execution quality, model saving |
+| Evaluation | /20 | Pixel + image metrics, visualizations, per-image analysis |
+| Documentation | /15 | Architecture diagrams, inline docs, change rationale |
+| Assignment Alignment | /15 | Localization masks, model weights, visual results |
+
+### Score Table
+
+| Version | Arch /15 | Data /15 | Method /20 | Eval /20 | Docs /15 | Assign /15 | **Total** |
+|---------|----------|----------|------------|----------|----------|------------|-----------|
+| vR.P.0 | 10 | 8 | 12 | 14 | 8 | 8 | **60** |
+| vR.P.1 | 11 | 13 | 15 | 16 | 10 | 10 | **75** |
+| vR.P.1.5 | 11 | 13 | 16 | 16 | 11 | 10 | **77** |
+| vR.P.2 | 12 | 13 | 13 | 15 | 10 | 8 | **71** |
+| **vR.P.3** | **13** | **14** | **14** | **16** | **11** | **10** | **78** |
+| **vR.P.4** | **14** | **14** | **17** | **19** | **12** | **10** | **86** |
+| **vR.P.5** | 12 | 14 | 14 | 17 | 10 | 10 | **77** |
+| **vR.P.6** | 13 | 14 | 13 | 18 | 12 | 8 | **78** |
+
+### Scoring Notes
+
+**vR.P.3 (78/100):** Best results in series but CRITICAL bug (model not saved) heavily penalises Methodology and Assignment Alignment. Score would be ~88 without the crash.
+
+**vR.P.4 (86/100):** Highest score despite NEUTRAL verdict. Best execution quality: all cells pass, model saved, comprehensive evaluation. Score reflects experiment quality, not result significance.
+
+**vR.P.5 (77/100):** Copy-paste bugs (resnet34 in filename and comparison table) penalise Documentation and Methodology.
+
+**vR.P.6 (78/100):** Methodology inconsistency (no AMP/TF32 unlike P.5) penalises from potential ~84.
+
+---
+
+## 10. Cross-Track Comparison
+
+### Best ETASR vs Best Pretrained
+
+| Metric | ETASR Best (vR.1.6) | Pretrained Best | Winner |
+|--------|---------------------|-----------------|--------|
+| Image Accuracy | **90.23%** | 86.79% (P.3) | ETASR |
+| Image Macro F1 | **0.9004** | 0.8560 (P.3) | ETASR |
+| Image ROC-AUC | **0.9657** | 0.9502 (P.3) | ETASR |
+| Pixel F1 | N/A | **0.7053** (P.4) | Pretrained |
+| Pixel IoU | N/A | **0.5447** (P.4) | Pretrained |
+| Pixel AUC | N/A | **0.9528** (P.3) | Pretrained |
+| Localization masks | Not available | **Available** | Pretrained |
+| Assignment alignment | Partial | **Full** | Pretrained |
+
+**Conclusion:** ETASR wins classification, pretrained wins localization. The pretrained track is required for assignment submission.
+
+---
+
+## 11. Future Experiment Proposals
+
+### High Priority (from P.3 lineage)
+
+| ID | Experiment | Rationale | Expected Impact |
+|----|-----------|-----------|-----------------|
+| vR.P.7 | ELA + more epochs (50+) | P.3 was still improving at epoch 25 (best=last) | +2-5pp Pixel F1 |
+| vR.P.8 | ELA + gradual unfreeze | Combine P.3's best input with P.2's unfreeze strategy | +3-8pp Pixel F1 |
+| vR.P.9 | Focal+Dice loss | Replace BCE+Dice with Focal+Dice for hard-example mining | +1-3pp Pixel F1 |
+
+### Medium Priority
+
+| ID | Experiment | Rationale | Expected Impact |
+|----|-----------|-----------|-----------------|
+| vR.P.10 | ELA + attention (CBAM/SE in decoder) | Add spatial attention to decoder for better boundary detection | +1-3pp Pixel F1 |
+| vR.P.11 | Higher resolution (512x512) | Test whether more pixels improve localization detail | +2-4pp Pixel F1, +memory |
+| vR.P.12 | ELA + data augmentation | Test augmentation compatibility with ELA input | +1-3pp or negative |

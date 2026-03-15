@@ -5,7 +5,7 @@
 | **Date** | 2026-03-15 |
 | **Scope** | Complete metrics reference for all experimental runs |
 | **Paper** | ETASR_9593 -- "Enhanced Image Tampering Detection using ELA and a CNN" |
-| **Versions Covered** | ETASR Track: vR.1.0--vR.1.7 (8 runs) / Pretrained Track: vR.P.0--vR.P.6 (7 planned) |
+| **Versions Covered** | ETASR Track: vR.1.0--vR.1.7 (8 runs) / Pretrained Track: vR.P.0--vR.P.6 (8 runs) |
 
 ---
 
@@ -32,18 +32,65 @@
 
 ## 2. Pretrained Localization Track (vR.P.x)
 
-| Version | Change | Encoder | Input | Pixel F1 | IoU | Pixel AUC | Img Acc | Epochs (Best) | Status |
-|---------|--------|---------|-------|----------|-----|-----------|---------|---------------|--------|
-| vR.P.0 | Baseline: ResNet-34 + UNet | ResNet-34 (frozen) | RGB | -- | -- | -- | -- | -- | Pending |
-| vR.P.1 | Dataset fix + GT mask detect | ResNet-34 (frozen) | RGB | -- | -- | -- | -- | -- | Pending |
-| vR.P.1.5 | Training speed optimizations | ResNet-34 (frozen) | RGB | -- | -- | -- | -- | -- | Pending |
-| vR.P.2 | Gradual unfreeze (layer3+4) | ResNet-34 (partial) | RGB | -- | -- | -- | -- | -- | Pending |
-| vR.P.3 | ELA as input (replace RGB) | ResNet-34 (frozen+BN) | ELA | -- | -- | -- | -- | -- | Pending |
-| vR.P.4 | 4-channel (RGB + ELA) | ResNet-34 (frozen) | RGB+ELA | -- | -- | -- | -- | -- | Pending |
-| vR.P.5 | ResNet-50 encoder | ResNet-50 (frozen) | RGB | -- | -- | -- | -- | -- | Pending |
-| vR.P.6 | EfficientNet-B0 encoder | EfficientNet-B0 (frozen) | RGB | -- | -- | -- | -- | -- | Pending |
+### Full Metrics Table
 
-*All pretrained track results pending Kaggle execution.*
+| Version | Change | Encoder | Input | Pixel F1 | IoU | Pixel AUC | Img Acc | Macro F1 | Img AUC | Epochs (Best) | Trainable | Verdict |
+|---------|--------|---------|-------|----------|-----|-----------|---------|----------|---------|---------------|-----------|---------|
+| **vR.P.0** | Baseline (divg07, ELA pseudo-masks) | ResNet-34 (frozen) | RGB | 0.3749 | 0.2307 | 0.8486 | 70.63% | 0.6814 | 0.7860 | 24 (17) | 3.15M | Baseline (no GT) |
+| **vR.P.1** | Dataset fix + GT masks | ResNet-34 (frozen) | RGB | 0.4546 | 0.2942 | 0.8509 | 70.15% | 0.6867 | 0.7785 | 25 (18) | 3.15M | Proper baseline |
+| **vR.P.1.5** | Speed opts (AMP, TF32) | ResNet-34 (frozen) | RGB | 0.4227 | 0.2680 | 0.8560 | 71.05% | 0.7016 | 0.7980 | 23 (16) | 3.15M | NEUTRAL (speed) |
+| **vR.P.2** | Gradual unfreeze (L3+L4) | ResNet-34 (partial) | RGB | 0.5117 | 0.3439 | 0.8688 | 69.04% | 0.6673 | 0.7196 | 14 (7) | 23.1M | POSITIVE (pixel) |
+| **vR.P.3** | **ELA input (BN unfrozen)** | ResNet-34 (frozen+BN) | **ELA** | **0.6920** | **0.5291** | **0.9528** | **86.79%** | **0.8560** | **0.9502** | 25 (25) | 3.17M | **STRONG POSITIVE** |
+| **vR.P.4** | 4ch RGB+ELA (conv1+BN) | ResNet-34 (frozen+conv1+BN) | RGB+ELA | **0.7053** | **0.5447** | 0.9433 | 84.42% | 0.8322 | 0.9229 | 25 (24) | 3.18M | NEUTRAL |
+| **vR.P.5** | ResNet-50 encoder | ResNet-50 (frozen) | RGB | 0.5137 | 0.3456 | 0.8828 | 72.00% | 0.7143 | 0.8126 | 25 (19) | 9.01M | POSITIVE |
+| **vR.P.6** | EfficientNet-B0 encoder | EffNet-B0 (frozen) | RGB | 0.5217 | 0.3529 | 0.8708 | 70.68% | 0.6950 | 0.7801 | 23 (16) | 2.24M | POSITIVE |
+
+**Bold** values = best in series for that metric.
+
+---
+
+### Pretrained Delta Table (vs vR.P.1 Proper Baseline)
+
+| Version | Change | Pixel F1 Delta | IoU Delta | Pixel AUC Delta | Img Acc Delta | Assessment |
+|---------|--------|----------------|-----------|-----------------|---------------|------------|
+| vR.P.1 | (baseline) | 0.0000 | 0.0000 | 0.0000 | 0.00pp | Reference |
+| vR.P.1.5 | Speed opts | -0.0319 | -0.0262 | +0.0051 | +0.90pp | AMP noise, not causal |
+| vR.P.2 | Gradual unfreeze | +0.0571 | +0.0497 | +0.0179 | -1.11pp | Pixel positive, image negative |
+| **vR.P.3** | **ELA input** | **+0.2374** | **+0.2349** | **+0.1019** | **+16.64pp** | **Breakthrough** |
+| vR.P.4 | 4ch RGB+ELA | +0.2507 | +0.2505 | +0.0924 | +14.27pp | Best absolute, marginal over P.3 |
+| vR.P.5 | ResNet-50 | +0.0591 | +0.0514 | +0.0319 | +1.85pp | Encoder depth helps modestly |
+| vR.P.6 | EffNet-B0 | +0.0671 | +0.0587 | +0.0199 | +0.53pp | Best param efficiency |
+
+### Pretrained Confusion Matrix Summary
+
+| Version | TN | FP | FN | TP | FP Rate | FN Rate |
+|---------|----|----|----|----|---------|---------|
+| vR.P.0 | 831 | 293 | 263 | 506 | 26.1% | 34.2% |
+| vR.P.1 | 870 | 254 | 311 | 458 | 22.6% | 40.4% |
+| vR.P.1.5 | 836 | 288 | 260 | 509 | 25.6% | 33.8% |
+| vR.P.2 | 903 | 221 | 365 | 404 | 19.7% | 47.5% |
+| **vR.P.3** | **1,094** | **30** | 220 | 549 | **2.7%** | 28.6% |
+| vR.P.4 | 1,052 | 72 | 223 | 546 | 6.4% | 29.0% |
+| vR.P.5 | 816 | 308 | 222 | **547** | 27.4% | 28.9% |
+| vR.P.6 | 855 | 269 | 286 | 483 | 23.9% | 37.2% |
+
+### Pretrained Per-Metric Champions
+
+| Metric | Best Version | Value | Runner-Up | Value |
+|--------|-------------|-------|-----------|-------|
+| Pixel F1 | **vR.P.4** | 0.7053 | vR.P.3 | 0.6920 |
+| Pixel IoU | **vR.P.4** | 0.5447 | vR.P.3 | 0.5291 |
+| Pixel AUC | **vR.P.3** | 0.9528 | vR.P.4 | 0.9433 |
+| Pixel Precision | **vR.P.4** | 0.8452 | vR.P.3 | 0.8356 |
+| Pixel Recall | **vR.P.4** | 0.6051 | vR.P.3 | 0.5905 |
+| Image Accuracy | **vR.P.3** | 86.79% | vR.P.4 | 84.42% |
+| Image Macro F1 | **vR.P.3** | 0.8560 | vR.P.4 | 0.8322 |
+| Image ROC-AUC | **vR.P.3** | 0.9502 | vR.P.4 | 0.9229 |
+| Lowest FP Rate | **vR.P.3** | 2.7% | vR.P.4 | 6.4% |
+| Lowest FN Rate | **vR.P.3** | 28.6% | vR.P.5 | 28.9% |
+| Param Efficiency | **vR.P.6** | 2.24M trainable | vR.P.3 | 3.17M |
+
+**vR.P.3 dominates** 7 of 11 metrics. **vR.P.4** wins pixel F1/IoU/precision/recall (marginal). **vR.P.6** wins param efficiency.
 
 ---
 
@@ -117,4 +164,9 @@
 
 ### Pretrained Track
 
-All 8 versions pending Kaggle execution.
+| Verdict | Count | Versions |
+|---------|-------|----------|
+| STRONG POSITIVE | 1 | vR.P.3 (+23.74pp from P.1) |
+| POSITIVE | 3 | vR.P.2 (+5.71pp), vR.P.5 (+9.10pp), vR.P.6 (+6.71pp) |
+| NEUTRAL | 2 | vR.P.1.5 (speed only), vR.P.4 (+1.33pp from P.3) |
+| Baseline | 2 | vR.P.0 (no GT), vR.P.1 (proper baseline) |

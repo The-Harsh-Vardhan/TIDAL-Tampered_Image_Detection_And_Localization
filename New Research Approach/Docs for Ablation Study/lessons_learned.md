@@ -3,9 +3,9 @@
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-03-15 |
-| **Scope** | Retrospective insights from the complete ETASR ablation study |
+| **Scope** | Retrospective insights from the complete ETASR and Pretrained ablation studies |
 | **Paper** | ETASR_9593 -- "Enhanced Image Tampering Detection using ELA and a CNN" |
-| **Versions Covered** | vR.1.0 through vR.1.7 (8 runs, 7 ablations) |
+| **Versions Covered** | ETASR: vR.1.0--vR.1.7 / Pretrained: vR.P.0--vR.P.6 |
 
 ---
 
@@ -184,6 +184,82 @@ The FN rate trajectory (11.7% → 5.3%) shows steady improvement in catching tam
 5. **How does pretrained localization compare?** The vR.P.x track uses ResNet-34/50 encoders that dwarf the ETASR CNN in representational power. Direct comparison of detection accuracy would reveal whether the ETASR architecture is fundamentally limited.
 
 6. **Would ensemble methods help?** Combining vR.1.6 (best accuracy, spatial features) with vR.1.7 (best Tp recall, channel features) could exploit both representations.
+
+---
+
+## 9. Pretrained Track Lessons
+
+### Lesson 17: Input representation dominates encoder architecture
+
+The single most impactful variable in the pretrained series was switching from RGB to ELA input (P.3: +23.74pp Pixel F1). By comparison, swapping from ResNet-34 to ResNet-50 (P.5: +5.91pp) or EfficientNet-B0 (P.6: +6.71pp) produced 3-4x less improvement. **What the model sees matters more than how it sees it.**
+
+### Lesson 18: BN unfreeze enables domain adaptation without overfitting
+
+P.3's "frozen body + BN unfrozen" strategy unfreezes only 17K BatchNorm parameters while keeping 21.3M conv weights frozen. This allows the encoder's running statistics to adapt to ELA's distribution (mean ~0.05, very different from ImageNet's ~0.45) without the overfitting risk of unfreezing conv weights. P.2's aggressive unfreeze (layer3+layer4, 23M trainable) produced worse results than P.3's conservative approach (3.17M trainable).
+
+### Lesson 19: Larger decoders don't proportionally improve results
+
+ResNet-50 (P.5) forced SMP to create a 9M-parameter decoder (vs ResNet-34's 3.15M) due to 4x wider skip connections [256,512,1024,2048]. Despite 2.86x more trainable parameters, P.5's Pixel F1 (0.5137) barely exceeded P.1's (0.4546). The data:param ratio (1:1,021 vs 1:357) makes the larger decoder a net negative for generalization.
+
+### Lesson 20: ELA-specific normalization is critical
+
+P.3 computed the ELA distribution from 500 training samples: mean=[0.0497, 0.0418, 0.0590], std=[0.0663, 0.0570, 0.0756]. These values are ~10x smaller than ImageNet stats. Using ImageNet normalization on ELA images would push activations far outside the encoder's expected range, degrading feature quality. Always compute domain-specific normalization when input distribution differs from pretraining.
+
+### Lesson 21: 4-channel fusion provides marginal benefit at high complexity cost
+
+P.4 concatenated RGB (3ch) + ELA grayscale (1ch) into a 4-channel input with dual normalization. Despite this complexity (conv1 unfreeze, dual stats, training instability), the Pixel F1 gain over ELA-only (P.3) was only +1.33pp — below the ±2pp significance threshold. The FP rate more than doubled (2.7% → 6.4%). **Simpler is better: ELA-only provides 98% of the benefit.**
+
+### Lesson 22: Copy-paste bugs undermine trust in experimental notebooks
+
+P.5's model save filename says "resnet34" instead of "resnet50", and the comparison table prints the wrong encoder name. These cosmetic bugs don't affect training results but they signal insufficient review. In a series where single-variable control is paramount, output errors raise doubt about whether the right variable was actually changed. **Always diff your notebook against the parent before execution.**
+
+### Lesson 23: Methodology consistency matters for cross-experiment comparison
+
+P.6 omits AMP, TF32, and drop_last (branching from P.1), while P.5 includes them (branching from P.1.5). This confounds the ResNet-50 vs EfficientNet-B0 comparison. A rigorous encoder ablation would hold infrastructure constant. **When designing parallel experiments, ensure they share the same baseline infrastructure.**
+
+### Lesson 24: Test your visualization code before long training runs
+
+P.3's NameError (`denormalize` vs `denormalize_ela`) is a trivial fix but it prevented saving the best model in the series. A 1-minute pre-run test of visualization cells would have caught this. **The cost of a test cell is negligible; the cost of losing a trained model is enormous.**
+
+---
+
+## 10. Cross-Track Synthesis
+
+### The Hierarchy of Impact (Both Tracks Combined)
+
+```
+1. INPUT REPRESENTATION (what the model sees)
+   - ETASR: ELA at 128x128 is the foundation (never changed)
+   - Pretrained: ELA input → +23.7pp Pixel F1 over RGB
+   → Largest single-variable impact in either track
+
+2. ARCHITECTURE (how the model processes input)
+   - ETASR: Deeper CNN → +1.27pp accuracy
+   - Pretrained: Encoder swap → +6.7pp Pixel F1
+   → Second most impactful
+
+3. TRAINING STRATEGY (how the model learns)
+   - ETASR: Class weights → +0.79pp, LR scheduler → +0.21pp
+   - Pretrained: BN unfreeze → enables P.3 breakthrough, gradual unfreeze → +5.7pp
+   → Variable impact, depends on architecture quality
+
+4. INFRASTRUCTURE (speed/precision optimizations)
+   - ETASR: Not tested
+   - Pretrained: AMP/TF32 → NEUTRAL (no quality impact)
+   → Negligible quality impact, but saves time
+```
+
+### The Central Lesson
+
+**Both tracks converge on the same conclusion: fix the signal before fixing the model.** In the ETASR track, the model was stuck at ~89% until the architecture was restructured (vR.1.6). In the pretrained track, the model was stuck at ~0.45 Pixel F1 until the input was changed to ELA (P.3). In both cases, training tricks produced diminishing returns on a fundamentally constrained setup.
+
+### What We'd Do Differently (Both Tracks)
+
+1. **Start with input experiments.** Test ELA vs RGB vs ELA+RGB before any encoder or training experiments.
+2. **Hold infrastructure constant.** All experiments should share the same AMP/TF32/workers settings.
+3. **Increase max_epochs conservatively.** P.3 was still improving at epoch 25. Use max_epochs=50 or even 100 with patience=10.
+4. **Test visualization code before training.** A 1-minute smoke test of all cells (with a single batch) catches bugs like P.3's NameError.
+5. **Run encoder experiments on the best input.** P.5/P.6 tested encoders on RGB. Testing them on ELA would provide more actionable insights.
 
 ---
 
