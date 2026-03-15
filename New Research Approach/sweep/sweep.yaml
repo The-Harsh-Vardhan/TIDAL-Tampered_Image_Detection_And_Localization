@@ -9,7 +9,7 @@
 
 program: sweep_runner.py
 method: grid
-project: tamper-detection-ablation
+project: Tampered Image Detection & Localization
 
 metric:
   name: pixel_f1

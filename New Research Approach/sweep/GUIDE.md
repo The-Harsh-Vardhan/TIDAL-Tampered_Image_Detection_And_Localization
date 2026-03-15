@@ -2,7 +2,7 @@
 
 ## Overview
 
-This sweep system runs all 30 ablation experiments (vR.P.0 through vR.P.28) and tracks them in a single Weights & Biases project: **`tamper-detection-ablation`**.
+This sweep system runs all 30 ablation experiments (vR.P.0 through vR.P.28) and tracks them in a single Weights & Biases project: **`Tampered Image Detection & Localization`**.
 
 All notebooks already have W&B integration built in. The sweep infrastructure orchestrates their execution.
 
@@ -35,7 +35,8 @@ For each experiment (P.0 through P.28):
 5. Click **Run All**
 
 Each notebook automatically:
-- Calls `wandb.init(project='tamper-detection-ablation')`
+- Calls `wandb.init(project='Tampered Image Detection & Localization')`
+- Each run is named after its version (e.g., `vR.P.3`, `vR.P.15`)
 - Logs per-epoch metrics (train_loss, val_loss, val_pixel_f1, val_pixel_iou, lr)
 - Logs final test metrics (pixel_f1, pixel_iou, pixel_auc, image_accuracy, etc.)
 - Uploads the best model as a W&B artifact
@@ -58,7 +59,7 @@ Phase 2 (extensions):    P.19 through P.28  (all branch from P.3, can run in par
 
 Go to your W&B dashboard:
 ```
-https://wandb.ai/<YOUR_USERNAME>/tamper-detection-ablation
+https://wandb.ai/<YOUR_USERNAME>/Tampered Image Detection & Localization
 ```
 
 All runs from all notebooks appear in the same project. You can:
@@ -104,7 +105,7 @@ wandb sweep sweep.yaml
 # Output: Created sweep with ID: XXXXXXXX
 
 # Run all experiments sequentially
-wandb agent <YOUR_USERNAME>/tamper-detection-ablation/<SWEEP_ID>
+wandb agent <YOUR_USERNAME>/Tampered Image Detection & Localization/<SWEEP_ID>
 ```
 
 The agent picks up each experiment in order and runs it to completion.
@@ -191,5 +192,5 @@ Each run uploads `best_model.pt` as a W&B artifact for reproducibility.
 | Dataset not found | Ensure CASIA v2.0 dataset is attached; check **Add Data** in Kaggle sidebar |
 | `ModuleNotFoundError: segmentation_models_pytorch` | The `!pip install` line is in cell 2 of each notebook; ensure internet is enabled |
 | P.18 fails (checkpoint not found) | P.18 loads P.3's trained model; run P.3 first and make the checkpoint available |
-| W&B runs appear in wrong project | All notebooks use `project='tamper-detection-ablation'`; verify in cell 2 |
+| W&B runs appear in wrong project | All notebooks use `project='Tampered Image Detection & Localization'`; verify in cell 2 |
 | `USE_WANDB` is False after init | W&B init failed (usually missing API key or no internet); check the printed error |

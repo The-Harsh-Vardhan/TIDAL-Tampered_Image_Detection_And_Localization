@@ -79,7 +79,7 @@ DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # --- Weights & Biases Experiment Tracking ---
 USE_WANDB = True
-WANDB_PROJECT = 'tamper-detection-ablation'
+WANDB_PROJECT = 'Tampered Image Detection & Localization'
 DATASET_NAME = 'CASIA2'
 
 import re as _re
@@ -115,7 +115,7 @@ if USE_WANDB:
         wandb.login()
         wandb.init(
         project=WANDB_PROJECT,
-        name=f'{EXPERIMENT_ID}_{RUN_ID}',
+        name=VERSION,
         config={
         'experiment': EXPERIMENT_ID, 'version': VERSION, 'change': CHANGE,
         'run': RUN_ID, 'dataset': DATASET_NAME, 'feature_set': FEATURE_SET,
