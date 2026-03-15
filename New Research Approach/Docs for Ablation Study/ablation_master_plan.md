@@ -190,6 +190,7 @@ The ETASR ablation study (Section 3) optimizes a classification-only model. The 
 | **vR.P.4** | 4-channel (RGB + ELA) | RGB+ELA 384×384 | ResNet-34 (frozen) | — | Test combined signal |
 | **vR.P.5** | ResNet-50 encoder | RGB 384×384 | ResNet-50 (frozen) | — | Test deeper features |
 | **vR.P.6** | EfficientNet-B0 encoder | RGB 384×384 | EfficientNet-B0 (frozen) | — | Test parameter efficiency |
+| **vR.P.7** | Extended training (50 epochs, patience 10) | ELA 384×384 | ResNet-34 (frozen, BN unfrozen) | — | P.3 was still improving at epoch 25; test longer training |
 
 ### Pretrained Track Design Principles
 
@@ -225,6 +226,7 @@ The ETASR ablation study (Section 3) optimizes a classification-only model. The 
 | **vR.P.4** | **4ch RGB+ELA (conv1+BN unfrozen)** | **0.7053** | **0.5447** | **0.9433** | **0.7873** | **0.8322** | **84.42%** | **25 (24)** | **NEUTRAL** |
 | **vR.P.5** | **ResNet-50 encoder (frozen)** | **0.5137** | **0.3456** | **0.8828** | **0.6736** | **0.7143** | **72.00%** | **25 (19)** | **POSITIVE ✅** |
 | **vR.P.6** | **EfficientNet-B0 encoder (frozen)** | **0.5217** | **0.3529** | **0.8708** | **0.6351** | **0.6950** | **70.68%** | **23 (16)** | **POSITIVE ✅** |
+| vR.P.7 | Extended training (50 epochs, patience 10) | — | — | — | — | — | — | — | Pending |
 
 ### How the Two Tracks Relate
 
@@ -241,9 +243,10 @@ vR.1.0 -> vR.1.1 -> vR.1.2(X)
                      |                      vR.P.2 (gradual unfreeze)
                      v                        |
                   vR.1.7 (NEUTRAL)          vR.P.3 ✅✅ (ELA input, BEST F1=0.6920)
-                                              |
-                                            vR.P.4 ✅ (4ch RGB+ELA, NEUTRAL)
-                                              |
+                                              |         \
+                                            vR.P.4 ✅    vR.P.7 (ELA + extended training)
+                                            (4ch)          |
+                                              |          PENDING
                                          FINAL SUBMISSION NOTEBOOK
 ```
 
