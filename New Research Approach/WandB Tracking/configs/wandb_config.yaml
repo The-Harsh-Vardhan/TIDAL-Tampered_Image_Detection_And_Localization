@@ -1,0 +1,11 @@
+wandb:
+  project: "Tampered Image Detection & Localization"
+  entity: null  # Uses default from WANDB_API_KEY owner
+  secrets:
+    api_key: "WANDB_API_KEY"
+    username: "WAND_USERNAME"
+
+kaggle:
+  source_dataset: "vrpx-source-notebooks"
+  source_path: "/kaggle/input/vrpx-source-notebooks"
+  output_dir: "/kaggle/working/executed"

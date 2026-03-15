@@ -1,0 +1,23 @@
+runner_id: 5
+# 5 Medium
+experiments:
+  - file: "vR.P.10 Image Detection and Localisation.ipynb"
+    version: "vR.P.10"
+    desc: "CBAM Attention"
+    run_id: "run01"
+  - file: "vR.P.10 Image Detection and Localisation.ipynb"
+    version: "vR.P.10"
+    desc: "CBAM Attention (reproducibility)"
+    run_id: "run02"
+  - file: "vR.P.14 Image Detection and Localisation.ipynb"
+    version: "vR.P.14"
+    desc: "Test-Time Augmentation"
+    run_id: "run01"
+  - file: "vR.P.14 Image Detection and Localisation.ipynb"
+    version: "vR.P.14"
+    desc: "TTA (P.14b complete)"
+    run_id: "run02"
+  - file: "vR.P.15 Image Detection and Localisation.ipynb"
+    version: "vR.P.15"
+    desc: "Multi-Quality ELA (BEST)"
+    run_id: "run01"

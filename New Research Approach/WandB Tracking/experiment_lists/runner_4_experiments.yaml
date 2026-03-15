@@ -1,0 +1,19 @@
+runner_id: 4
+# Heavy (P.11 50ep) + 3 Medium
+experiments:
+  - file: "vR.P.11 Image Detection and Localisation.ipynb"
+    version: "vR.P.11"
+    desc: "512x512 High-Res (50ep)"
+    run_id: "run01"
+  - file: "vR.P.9 Image Detection and Localisation.ipynb"
+    version: "vR.P.9"
+    desc: "Focal + Dice Loss"
+    run_id: "run01"
+  - file: "vR.P.16 Image Detection and Localisation.ipynb"
+    version: "vR.P.16"
+    desc: "DCT Spatial Map Baseline"
+    run_id: "run01"
+  - file: "vR.P.17 Image Detection and Localisation.ipynb"
+    version: "vR.P.17"
+    desc: "ELA+DCT Fusion (6ch)"
+    run_id: "run01"
