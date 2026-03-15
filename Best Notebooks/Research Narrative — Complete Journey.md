@@ -16,7 +16,23 @@ The project began with a literature survey of the image forgery detection landsc
 
 Eighteen reference notebooks were collected from Kaggle covering a range of approaches: ELA+CNN classification, copy-move detection, UNet segmentation, and various dataset variants. Two standalone Python implementations were audited in detail, revealing 16 bugs including fatal issues (incorrect loss functions, missing data splits, evaluation on training data).
 
-Early notebook versions (v1 through v9) were created manually, iterating on architecture and training. These form the "legacy vK track" — useful as stepping stones but ultimately outperformed by later systematic work.
+### The "image-detection-with-mask" Reference Notebook
+
+Among the collected references, one notebook proved particularly influential: `image-detection-with-mask (1).ipynb` — a PyTorch dual-head notebook that attempted both classification and segmentation on the CASIA Splicing dataset. It introduced the `UNetWithClassifier` architecture that would become the foundation for the entire vK track: a vanilla UNet encoder (64-128-256-512-1024 channels) with skip connections, a segmentation head (Conv2d 1x1), and a classification head (AdaptiveAvgPool + Linear layers). No pretrained encoder — all 31.6M parameters trained from scratch on RGB input at 256x256.
+
+The notebook ran two training configurations:
+- **Run 1** (BCE loss, 30 epochs): 71.88% accuracy, Dice = 0.5949
+- **Run 2** (FocalLoss + Dice, 50 epochs): **89.75% accuracy**, Dice = 0.5673
+
+The classification improvement from Run 1 to Run 2 was genuine — FocalLoss with class weights addressed the class imbalance effectively. But the segmentation Dice of ~0.57 was deceptive: on a dataset where ~40% of images are authentic (all-zero masks), a model predicting all-zero masks for everything scores roughly Dice = 0.58 because empty masks contribute perfect scores. **The segmentation head was essentially not learning.**
+
+The audit uncovered a critical data leak: `TEST_CSV` pointed to `val_metadata.csv`, not the test set. The reported 89.75% "test" accuracy was actually validation accuracy wearing a test name tag. The real test performance was never evaluated.
+
+This notebook served as both a template and a cautionary tale. It demonstrated that dual-head UNet could achieve strong classification, but that training 31.6M parameters from scratch on ~8,800 RGB images was insufficient for meaningful segmentation. The diagnosis — **no pretrained features, no ELA signal, insufficient data:param ratio** — directly motivated the pretrained localization track (vR.P.x) that would ultimately solve the problem.
+
+### Early Notebook Iterations
+
+Early notebook versions (v1 through v9) were created manually, iterating on the `UNetWithClassifier` architecture from `image-detection-with-mask`. These form the "legacy vK track" — useful as stepping stones but ultimately outperformed by later systematic work.
 
 ---
 
@@ -204,7 +220,7 @@ The model's best epoch was 24 of 25 — it hit the epoch ceiling again, strongly
 
 ## Phase 6: The Legacy vK Track
 
-The older notebook series (v1 through vK.12.0) from `Notebooks/Runs/` was evaluated for completeness. These notebooks used a custom `UNetWithClassifier` architecture — a vanilla UNet (no pretrained encoder) with a classification head.
+The older notebook series (v1 through vK.12.0) from `Notebooks/Runs/` was evaluated for completeness. These notebooks all descended from the `image-detection-with-mask` reference notebook's `UNetWithClassifier` architecture — a vanilla UNet (no pretrained encoder, 31.6M params) with a classification head, trained from scratch on RGB at 256x256. The reference notebook's segmentation failure (Dice ~0.57, essentially predicting all-zeros) and data leak (`TEST_CSV` pointing to val set) were the starting conditions that needed to be overcome.
 
 **Best results:**
 - **v6.5:** Tampered F1 = 0.4101, Image accuracy = 82.46%. Best localization from this track but far below vR.P.x.
@@ -276,4 +292,4 @@ Beyond that, potential directions include:
 
 ---
 
-*This document was compiled from 30 audit reports, 2 experiment tracking documents, and 26+ experiment runs across 3 research tracks.*
+*This document was compiled from 30+ audit reports (including reference notebook audits), 2 experiment tracking documents, and 26+ experiment runs across 3 research tracks.*
