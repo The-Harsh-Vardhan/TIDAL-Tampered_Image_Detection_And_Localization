@@ -227,8 +227,14 @@ The ETASR ablation study (Section 3) optimizes a classification-only model. The 
 | **vR.P.4** | **4ch RGB+ELA (conv1+BN unfrozen)** | **0.7053** | **0.5447** | **0.9433** | **0.7873** | **0.8322** | **84.42%** | **25 (24)** | **NEUTRAL** |
 | **vR.P.5** | **ResNet-50 encoder (frozen)** | **0.5137** | **0.3456** | **0.8828** | **0.6736** | **0.7143** | **72.00%** | **25 (19)** | **POSITIVE ✅** |
 | **vR.P.6** | **EfficientNet-B0 encoder (frozen)** | **0.5217** | **0.3529** | **0.8708** | **0.6351** | **0.6950** | **70.68%** | **23 (16)** | **POSITIVE ✅** |
-| vR.P.7 | Extended training (50 epochs, patience 10) | — | — | — | — | — | — | — | Pending |
-| vR.P.10 | Focal+Dice + CBAM attention | — | — | — | — | — | — | — | Pending |
+| vR.P.7 | Extended training (50 epochs, patience 10) | 0.7154 | 0.5569 | 0.9504 | 0.8637 | 0.8637 | 87.37% | 46 (36) | **POSITIVE (+2.34pp)** |
+| **vR.P.8** | **Progressive unfreeze (layer4 only)** | **0.6985** | **0.5367** | **0.9541** | **0.8650** | **0.8650** | **87.59%** | **32 (23)** | **NEUTRAL (+0.65pp)** |
+| vR.P.9 | Focal+Dice loss (replacing BCE+Dice) | 0.6923 | 0.5294 | 0.9323 | 0.8606 | 0.8606 | 87.16% | 25 (21) | NEUTRAL (+0.03pp) |
+| vR.P.10 | Focal+Dice + CBAM attention | 0.7277 | 0.5719 | 0.9573 | 0.8615 | 0.8615 | 87.32% | 25 (24) | **POSITIVE (+3.57pp)** |
+| vR.P.10 r02 | Reproducibility re-run | 0.7277 | 0.5719 | 0.9573 | 0.8615 | 0.8615 | 87.32% | 25 (24) | Reproducibility ✅ |
+| **vR.P.12** | **Augmentation + Focal+Dice** | **0.6968** | **0.5347** | **0.9502** | **0.8756** | **0.8756** | **88.48%** | **45 (35)** | **NEUTRAL (+0.48pp)** |
+| **vR.P.14** | **Test-Time Augmentation (TTA)** | **0.6388*** | **0.4693*** | **0.9618*** | --** | --** | --** | **25 (25)** | **NEGATIVE (-5.32pp)** |
+| **vR.P.15** | **Multi-Quality ELA (Q=75/85/95)** | **0.7329** | **0.5785** | **0.9608** | **0.8660** | **0.8660** | **87.53%** | **25 (24)** | **POSITIVE (+4.09pp) — NEW SERIES BEST** |
 
 ### How the Two Tracks Relate
 
