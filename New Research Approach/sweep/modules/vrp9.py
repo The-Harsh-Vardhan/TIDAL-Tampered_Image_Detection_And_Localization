@@ -73,7 +73,7 @@ RESULTS_DIR = '/kaggle/working/results'
 LOGS_DIR = '/kaggle/working/logs'
 for _d in [CHECKPOINT_DIR, RESULTS_DIR, LOGS_DIR]:
     os.makedirs(_d, exist_ok=True)
-RESUME = True
+RESUME = True  # Kaggle persistence: auto-resume from checkpoints
 LATEST_CHECKPOINT = os.path.join(CHECKPOINT_DIR, 'latest_checkpoint.pt')
 BEST_MODEL_PATH = os.path.join(CHECKPOINT_DIR, 'best_model.pt')
 
