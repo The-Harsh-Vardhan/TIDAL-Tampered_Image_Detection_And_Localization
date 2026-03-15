@@ -1,0 +1,16 @@
+{
+  "title": "vRPx Source Notebooks",
+  "id": "INSERT_USERNAME/vrpx-source-notebooks",
+  "licenses": [
+    {
+      "name": "CC0-1.0"
+    }
+  ],
+  "keywords": [
+    "image-forgery-detection",
+    "ablation-study",
+    "wandb",
+    "notebooks"
+  ],
+  "resources": []
+}

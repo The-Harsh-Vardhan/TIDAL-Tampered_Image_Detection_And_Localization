@@ -1,0 +1,15 @@
+{
+  "title": "WandB Runner 1 Config",
+  "id": "INSERT_USERNAME/wandb-runner-1-config",
+  "licenses": [
+    {
+      "name": "CC0-1.0"
+    }
+  ],
+  "keywords": [
+    "wandb",
+    "runner-config",
+    "ablation-study"
+  ],
+  "resources": []
+}
