@@ -368,6 +368,8 @@ These runs implement the original paper's CNN architecture (or a deeper variant)
 
 ### Remaining / Future Experiments
 
+#### Phase 1: In-Progress (P.13--P.18)
+
 | ID | Experiment | Rationale | Expected Impact | Status |
 |----|-----------|-----------|-----------------|--------|
 | vR.P.13 | CBAM + augmentation + 50ep (combined best) | Combine P.10's CBAM + P.12's augmentation + P.7's training budget | +1-3pp Pixel F1 (est. 0.74-0.76) | Notebook created, pending Kaggle run |
@@ -376,10 +378,55 @@ These runs implement the original paper's CNN architecture (or a deeper variant)
 | vR.P.17 | ELA + DCT fusion (6ch) | Combine ELA (3ch) + DCT features (3ch) | +2-5pp Pixel F1 | Docs created |
 | vR.P.18 | Compression robustness evaluation | Test P.3 under Q=70/80/90/95 JPEG recompression | Robustness characterization | Docs created |
 
+#### Phase 2: Research Analysis Extensions (P.19--P.28)
+
+**Feature Domain — ELA Variants:**
+
+| ID | Experiment | Rationale | Expected Impact | Status |
+|----|-----------|-----------|-----------------|--------|
+| vR.P.19 | Multi-Quality RGB ELA (9ch, Q=75/85/95) | Full-color multi-quality ELA preserves chrominance artifacts | +2-5pp Pixel F1 | Docs + notebook created |
+| vR.P.20 | ELA Magnitude Decomposition (Mag/ChromaDir) | Magnitude + chrominance direction channels isolate tampering signal | +1-3pp Pixel F1 | Docs + notebook created |
+| vR.P.21 | ELA Residual Learning (Laplacian high-pass) | High-frequency residuals emphasize edge artifacts | +2-4pp Pixel F1 | Docs + notebook created |
+
+**Feature Domain — Noise-Based:**
+
+| ID | Experiment | Rationale | Expected Impact | Status |
+|----|-----------|-----------|-----------------|--------|
+| vR.P.22 | SRM Noise Maps (3 SRM filters) | Steganalysis Rich Model filters capture noise inconsistencies | +1-4pp Pixel F1 | Docs + notebook created |
+| vR.P.23 | Chrominance Analysis (YCbCr Y/Cb/Cr) | Chrominance quantization misalignment at splice boundaries | +0-3pp Pixel F1 | Docs + notebook created |
+| vR.P.24 | Noiseprint Forensic Features (DnCNN residual) | Camera-model noise fingerprint reveals cross-source splicing | +2-6pp Pixel F1 | Docs + notebook created |
+
+**Architecture:**
+
+| ID | Experiment | Rationale | Expected Impact | Status |
+|----|-----------|-----------|-----------------|--------|
+| vR.P.25 | Edge Supervision Loss (Sobel edge BCE) | Boundary-aware loss sharpens tampered region edges | +1-3pp Pixel F1 | Docs + notebook created |
+| vR.P.26 | Dual-Task Segmentation + Classification | Shared encoder with seg + cls heads for multi-task learning | +1-2pp Pixel F1 | Docs + notebook created |
+
+**Training:**
+
+| ID | Experiment | Rationale | Expected Impact | Status |
+|----|-----------|-----------|-----------------|--------|
+| vR.P.27 | JPEG Compression Augmentation (training-time) | Train with random JPEG recompression for robustness | +1-3pp standard, +5-10pp robustness | Docs + notebook created |
+| vR.P.28 | Cosine Annealing LR Scheduler | CosineAnnealingWarmRestarts with 50-epoch budget | +1-2pp Pixel F1 | Docs + notebook created |
+
 ### Priority Order
 
+**Phase 1 (next to run):**
 1. **vR.P.13** (combined best) — High confidence, builds on proven components
 2. **vR.P.15** (multi-quality ELA) — Input representation experiment, historically highest impact category
 3. **vR.P.16** (DCT baseline) — New feature domain, could unlock frequency-based detection
 4. **vR.P.17** (ELA+DCT fusion) — If P.16 shows promise, fusion could be the best-of-both
 5. **vR.P.18** (robustness) — Evaluation experiment, important for real-world deployment claims
+
+**Phase 2 (research extensions):**
+6. **vR.P.21** (ELA residual) — High-impact input experiment, simple implementation
+7. **vR.P.22** (SRM noise) — Novel forensic feature, orthogonal to ELA
+8. **vR.P.19** (Multi-Q RGB ELA) — Extends P.15's multi-quality idea with color
+9. **vR.P.25** (Edge supervision) — Improves boundary precision, loss-only change
+10. **vR.P.28** (Cosine annealing) — Training improvement, pairs well with 50-epoch budget
+11. **vR.P.20** (ELA magnitude) — Interesting decomposition, low implementation cost
+12. **vR.P.26** (Dual-task) — Unifies classification + segmentation
+13. **vR.P.27** (JPEG compression aug) — Robustness training
+14. **vR.P.23** (YCbCr chrominance) — Lower expected impact for CASIA
+15. **vR.P.24** (Noiseprint) — Highest potential but hardest implementation (needs DnCNN)

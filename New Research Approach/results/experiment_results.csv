@@ -1,0 +1,32 @@
+experiment_id,input_channels,model,loss,IoU,F1,pixel_auc,training_time,status,verdict
+vR.P.0,3,UNet+ResNet34,BCE+Dice,0.2307,0.3749,0.8486,,completed,Baseline (no GT)
+vR.P.1,3,UNet+ResNet34,BCE+Dice,0.2942,0.4546,0.8509,,completed,Baseline
+vR.P.1.5,3,UNet+ResNet34,BCE+Dice,0.2680,0.4227,0.8560,,completed,NEUTRAL
+vR.P.2,3,UNet+ResNet34,BCE+Dice,0.3439,0.5117,0.8688,,completed,POSITIVE
+vR.P.3,3,UNet+ResNet34,BCE+Dice,0.5291,0.6920,0.9528,,completed,STRONG POSITIVE
+vR.P.3.r02,3,UNet+ResNet34,BCE+Dice,0.5291,0.6920,0.9528,,completed,Reproducibility
+vR.P.4,4,UNet+ResNet34,BCE+Dice,0.5447,0.7053,0.9433,,completed,NEUTRAL
+vR.P.5,3,UNet+ResNet50,BCE+Dice,0.3456,0.5137,0.8828,,completed,POSITIVE
+vR.P.6,3,UNet+EffNetB0,BCE+Dice,0.3529,0.5217,0.8708,,completed,POSITIVE
+vR.P.7,3,UNet+ResNet34,BCE+Dice,0.5569,0.7154,0.9504,,completed,POSITIVE
+vR.P.8,3,UNet+ResNet34,BCE+Dice,0.5367,0.6985,0.9541,,completed,NEUTRAL
+vR.P.9,3,UNet+ResNet34,Focal+Dice,0.5294,0.6923,0.9323,,completed,NEUTRAL
+vR.P.10,3,UNet+ResNet34+CBAM,Focal+Dice,0.5719,0.7277,0.9573,,completed,POSITIVE
+vR.P.10.r02,3,UNet+ResNet34+CBAM,Focal+Dice,0.5719,0.7277,0.9573,,completed,Reproducibility
+vR.P.12,3,UNet+ResNet34,Focal+Dice,0.5347,0.6968,0.9502,,completed,NEUTRAL
+vR.P.14,3,UNet+ResNet34,BCE+Dice,0.4693,0.6388,0.9618,,completed,NEGATIVE
+vR.P.13,3,UNet+ResNet34+CBAM,Focal+Dice,,,,,pending,
+vR.P.15,3,UNet+ResNet34,BCE+Dice,,,,,pending,
+vR.P.16,3,UNet+ResNet34,BCE+Dice,,,,,pending,
+vR.P.17,6,UNet+ResNet34,BCE+Dice,,,,,pending,
+vR.P.18,3,UNet+ResNet34,BCE+Dice,,,,,pending,
+vR.P.19,9,UNet+ResNet34,BCE+Dice,,,,,pending,
+vR.P.20,3,UNet+ResNet34,BCE+Dice,,,,,pending,
+vR.P.21,3,UNet+ResNet34,BCE+Dice,,,,,pending,
+vR.P.22,3,UNet+ResNet34,BCE+Dice,,,,,pending,
+vR.P.23,3,UNet+ResNet34,BCE+Dice,,,,,pending,
+vR.P.24,3,UNet+ResNet34,BCE+Dice,,,,,pending,
+vR.P.25,3,UNet+ResNet34,BCE+Dice+EdgeBCE,,,,,pending,
+vR.P.26,3,DualTaskUNet+ResNet34,BCE+Dice+ClsBCE,,,,,pending,
+vR.P.27,3,UNet+ResNet34,BCE+Dice,,,,,pending,
+vR.P.28,3,UNet+ResNet34,BCE+Dice,,,,,pending,

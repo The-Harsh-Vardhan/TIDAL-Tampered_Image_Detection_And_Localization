@@ -428,3 +428,133 @@ If vR.1.3 through vR.1.7 complete and time permits:
 | vR.1.10 | Alternative ELA (cv2 vs PIL) | vK.12.0 cell 43 |
 
 These are tentative and subject to results from vR.1.3–1.7.
+
+---
+
+## 9. Additional Experiments from Research Analysis and Forensic Feature Exploration
+
+### Overview
+
+The following 10 experiments extend the pretrained localization track (vR.P.x) with new forensic feature inputs, architectural improvements, and training enhancements identified through research analysis and internal experimentation. These start at vR.P.19 (continuing from the existing P.18 DCT robustness experiment).
+
+### Duplicate Detection Summary
+
+Before adding new experiments, each proposed technique was checked against ALL existing experiments (P.0--P.18):
+
+| Proposed Technique | Existing Coverage | Decision |
+|---|---|---|
+| Multichannel ELA for RGB | P.3 (ELA RGB 3ch) | SKIP -- duplicate |
+| RGB ELA (color artifact) | P.3 (same) | SKIP -- duplicate |
+| **Multi-quality RGB ELA** | P.15 uses grayscale only | **ADD as P.19** -- RGB variant is distinct |
+| **ELA magnitude channel** | Not covered | **ADD as P.20** |
+| **ELA residual learning** | Not covered | **ADD as P.21** |
+| **Noiseprint features** | Not covered | **ADD as P.24** |
+| **SRM noise maps** | Not covered | **ADD as P.22** |
+| **Chrominance analysis** | Not covered | **ADD as P.23** |
+| Frequency-domain (DCT) | P.16 (DCT spatial maps) | SKIP -- duplicate |
+| RGB + ELA fusion | P.4 (4ch RGB+ELA) | SKIP -- duplicate |
+| **Edge supervision loss** | Not covered | **ADD as P.25** |
+| Lightweight attention (SE/CBAM) | P.10 (CBAM) | SKIP -- covered |
+| **Dual-task seg+classification** | Not covered | **ADD as P.26** |
+| **JPEG compression augmentation** | P.18 tests but doesn't train | **ADD as P.27** -- training-time aug is distinct |
+| Photometric augmentation | P.12 (partly covered) | SKIP -- sufficiently covered |
+| **Cosine annealing LR** | Not covered | **ADD as P.28** |
+| Pixel-level AUC ROC | Already in all P.x notebooks | SKIP -- duplicate |
+
+### New Experiment Roadmap (vR.P.19--P.28)
+
+#### Group A: Feature Domain Experiments (ELA Variants)
+
+| Version | Technique | Parent | Single Variable | Expected Impact |
+|---------|-----------|--------|-----------------|-----------------|
+| **vR.P.19** | Multi-Quality RGB ELA (9ch, Q=75/85/95) | P.3 | Input representation (9ch conv1) | +2-5pp Pixel F1 |
+| **vR.P.20** | ELA Magnitude + Chrominance Decomposition | P.3 | Input representation (3ch) | +1-3pp Pixel F1 |
+| **vR.P.21** | ELA Residual Learning (Laplacian high-pass) | P.3 | Input representation (3ch) | +2-4pp Pixel F1 |
+
+#### Group B: Feature Domain Experiments (Noise-Based Features)
+
+| Version | Technique | Parent | Single Variable | Expected Impact |
+|---------|-----------|--------|-----------------|-----------------|
+| **vR.P.22** | SRM Noise Maps (3 SRM filters) | P.3 | Input representation (3ch) | +1-4pp Pixel F1 |
+| **vR.P.23** | Chrominance Channel Analysis (YCbCr) | P.3 | Input representation (3ch) | +0-3pp Pixel F1 |
+| **vR.P.24** | Noiseprint Forensic Features (DnCNN residual) | P.3 | Input representation (3ch) | +2-6pp Pixel F1 |
+
+#### Group C: Architecture Experiments
+
+| Version | Technique | Parent | Single Variable | Expected Impact |
+|---------|-----------|--------|-----------------|-----------------|
+| **vR.P.25** | Edge Supervision Loss (Sobel edge BCE) | P.3 | Loss function (add edge term) | +1-3pp Pixel F1 |
+| **vR.P.26** | Dual-Task Segmentation + Classification | P.3 | Architecture (add cls head) | +1-2pp Pixel F1 |
+
+#### Group D: Training Experiments
+
+| Version | Technique | Parent | Single Variable | Expected Impact |
+|---------|-----------|--------|-----------------|-----------------|
+| **vR.P.27** | JPEG Compression Augmentation (training-time) | P.3 | Augmentation (JPEG recompress) | +1-3pp standard, +5-10pp robustness |
+| **vR.P.28** | Cosine Annealing LR Scheduler | P.3 | LR scheduler + 50 epochs | +1-2pp Pixel F1 |
+
+### Execution Priority
+
+1. **vR.P.21** (ELA residual) -- High-impact input experiment, simple implementation
+2. **vR.P.22** (SRM noise) -- Novel forensic feature, orthogonal to ELA
+3. **vR.P.19** (Multi-Q RGB ELA) -- Extends P.15's multi-quality idea with color
+4. **vR.P.25** (Edge supervision) -- Improves boundary precision, loss-only change
+5. **vR.P.28** (Cosine annealing) -- Training improvement, pairs well with 50-epoch budget
+6. **vR.P.20** (ELA magnitude) -- Interesting decomposition, low implementation cost
+7. **vR.P.26** (Dual-task) -- Unifies classification + segmentation
+8. **vR.P.27** (JPEG compression aug) -- Robustness training
+9. **vR.P.23** (YCbCr chrominance) -- Lower expected impact for CASIA
+10. **vR.P.24** (Noiseprint) -- Highest potential but hardest implementation (needs DnCNN)
+
+### Documentation
+
+All 10 experiments have complete documentation in `Docs vR.P.x/docs-vR.P.{19-28}/`:
+- `experiment_description.md` -- Hypothesis, motivation, pipeline, configuration
+- `implementation_plan.md` -- Cell modification map, key code, verification checklist
+- `expected_outcomes.md` -- Metric targets, success criteria, failure modes
+
+### Relation to Existing Experiments
+
+```
+Feature Domain Experiments:
+    ELA Variants:
+        P.3  (ELA RGB baseline)
+        P.15 (Multi-Q grayscale ELA)
+        P.19 (Multi-Q RGB ELA)        ← NEW
+        P.20 (ELA magnitude decomp)   ← NEW
+        P.21 (ELA Laplacian residual)  ← NEW
+
+    Noise-Based Features:
+        P.22 (SRM noise maps)         ← NEW
+        P.24 (Noiseprint DnCNN)       ← NEW
+
+    Frequency-Domain Features:
+        P.16 (DCT spatial maps)
+        P.17 (ELA + DCT fusion)
+
+    Color-Space Features:
+        P.23 (YCbCr chrominance)       ← NEW
+        P.4  (RGB + ELA fusion)
+
+Architecture Experiments:
+    Attention:
+        P.10 (CBAM in decoder)
+    Edge Supervision:
+        P.25 (Sobel edge loss)         ← NEW
+    Dual-Task Models:
+        P.26 (Seg + Classification)    ← NEW
+
+Training Experiments:
+    Augmentation:
+        P.12 (Albumentations geometric+photo)
+        P.27 (JPEG compression aug)    ← NEW
+    Compression Robustness:
+        P.18 (robustness evaluation)
+    LR Scheduling:
+        P.28 (Cosine annealing)        ← NEW
+
+Evaluation Experiments:
+    P.14 (TTA -- negative result)
+    P.18 (compression robustness)
+```
+
