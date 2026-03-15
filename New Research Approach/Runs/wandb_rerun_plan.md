@@ -83,21 +83,89 @@ Each Kaggle account gets ~30h GPU quota. Each 25-epoch run takes ~25-35min, each
 
 ---
 
+## How It Works
+
+Each Kaggle account runs ONE runner notebook (`wandb_runner_X.ipynb`) that:
+1. Reads source notebooks from a shared Kaggle dataset (`vrpx-source-notebooks`)
+2. Executes each assigned notebook sequentially via **papermill**
+3. Each notebook's W&B `wandb.init()` / `wandb.finish()` cycle creates a separate W&B run
+4. Results appear **sequentially** in the W&B dashboard as each experiment completes
+5. GPU memory is cleared between experiments with `torch.cuda.empty_cache()` + `gc.collect()`
+
+```
+Runner 1 (single Kaggle session)
+  ├── papermill → vR.P.7.ipynb  → wandb run 1 appears in dashboard
+  ├── GPU cleanup
+  ├── papermill → vR.P.0.ipynb  → wandb run 2 appears in dashboard
+  ├── GPU cleanup
+  ├── papermill → vR.P.1.ipynb  → wandb run 3 appears in dashboard
+  ├── GPU cleanup
+  └── papermill → vR.P.1.5.ipynb → wandb run 4 appears in dashboard
+```
+
+---
+
+## Runner Files
+
+| File | Account | Experiments |
+|------|---------|-------------|
+| `wandb_runner_1.ipynb` | Account 1 | P.7, P.0, P.1, P.1.5 |
+| `wandb_runner_2.ipynb` | Account 2 | P.8, P.2, P.3 r01, P.3 r02 |
+| `wandb_runner_3.ipynb` | Account 3 | P.12, P.4, P.5, P.6 |
+| `wandb_runner_4.ipynb` | Account 4 | P.11, P.9, P.16, P.17 |
+| `wandb_runner_5.ipynb` | Account 5 | P.10 r01, P.10 r02, P.15 |
+| `wandb_runner_6.ipynb` | Account 6 | P.14 r01, P.14b r02, P.18 |
+
+---
+
 ## Setup Instructions
 
-### 1. W&B API Key
-All 6 Kaggle accounts must have the same W&B API key set as a Kaggle Secret:
-- Go to Kaggle > Account > Secrets
-- Add secret: key=`WANDB_API_KEY`, value=`<your-wandb-api-key>`
+### Step 1: Create Kaggle Dataset (once)
 
-### 2. Upload Source Notebooks
-Each account uploads its assigned source notebooks (the W&B-patched versions from the main dir).
+Upload ALL W&B-patched source notebooks as a single Kaggle dataset:
 
-### 3. Run Overnight
-Start all 6 runners. Each will execute its experiments sequentially.
+1. Go to https://www.kaggle.com/datasets > **New Dataset**
+2. Name it: `vrpx-source-notebooks`
+3. Upload all `vR.P.* Image Detection and Localisation.ipynb` files from the main directory
+4. Make the dataset **public** (or share with all 6 accounts)
 
-### 4. Monitor
-Check https://wandb.ai/<team>/tamper-detection-ablation for live metrics.
+This gives each runner access to ALL source notebooks at `/kaggle/input/vrpx-source-notebooks/`.
 
-### 5. After Completion
-Run the leaderboard notebook (wandb_leaderboard.ipynb) to generate comparison tables.
+### Step 2: W&B API Key (all accounts)
+
+All 6 Kaggle accounts must have the SAME W&B API key:
+1. Go to https://wandb.ai/authorize to get your API key
+2. On each Kaggle account: **Settings > Secrets > Add Secret**
+   - Key: `WANDB_API_KEY`
+   - Value: `<your-wandb-api-key>`
+
+### Step 3: Upload Runner Notebooks
+
+On each Kaggle account:
+1. **Import notebook** > upload the assigned `wandb_runner_X.ipynb`
+2. **Add data source**: attach both:
+   - `vrpx-source-notebooks` (the dataset from Step 1)
+   - `casia-2-0-dataset-for-image-forgery-detection` (the CASIA2 dataset)
+3. **Settings**: GPU accelerator ON, Internet ON
+4. **Run All** > let it execute overnight
+
+### Step 4: Monitor Dashboard
+
+Watch results appear one-by-one at:
+```
+https://wandb.ai/<your-entity>/tamper-detection-ablation
+```
+
+Each completed experiment creates a separate W&B run with:
+- Per-epoch training curves (loss, F1, IoU, LR)
+- Final pixel metrics (F1, IoU, AUC, precision, recall)
+- Final image metrics (accuracy, macro F1, ROC-AUC)
+- Prediction visualization
+- Model artifact
+
+### Step 5: Generate Leaderboard
+
+After all 22 runs complete, run `wandb_leaderboard.ipynb` to:
+- Generate Pixel F1 and Image Accuracy leaderboards
+- Compare feature sets across experiments
+- Export `leaderboard.csv` and `all_experiment_results.csv`
