@@ -221,10 +221,10 @@ The ETASR ablation study (Section 3) optimizes a classification-only model. The 
 | **vR.P.1** | **Dataset fix + GT masks (sagnikkayalcse52)** | **0.4546** | **0.2942** | **0.8509** | **0.6185** | **0.6867** | **70.15%** | **25 (18)** | **Proper baseline ✅** |
 | **vR.P.1.5** | **Speed optimizations (from P.1)** | **0.4227** | **0.2680** | **0.8560** | **0.6501** | **0.7016** | **71.05%** | **23 (16)** | **NEUTRAL (speed only)** |
 | **vR.P.2** | **Gradual unfreeze (layer3+layer4)** | **0.5117** | **0.3439** | **0.8688** | **0.5796** | **0.6673** | **69.04%** | **14 (7)** | **POSITIVE ✅ (pixel)** |
-| vR.P.3 | ELA input | — | — | — | — | — | — | — | Pending |
-| vR.P.4 | RGB + ELA 4ch | — | — | — | — | — | — | — | Pending |
-| vR.P.5 | ResNet-50 | — | — | — | — | — | — | — | Pending |
-| vR.P.6 | EfficientNet-B0 | — | — | — | — | — | — | — | Pending |
+| **vR.P.3** | **ELA input (replace RGB, BN unfrozen)** | **0.6920** | **0.5291** | **0.9528** | **0.8145** | **0.8560** | **86.79%** | **25 (25)** | **STRONG POSITIVE ✅✅** |
+| **vR.P.4** | **4ch RGB+ELA (conv1+BN unfrozen)** | **0.7053** | **0.5447** | **0.9433** | **0.7873** | **0.8322** | **84.42%** | **25 (24)** | **NEUTRAL** |
+| **vR.P.5** | **ResNet-50 encoder (frozen)** | **0.5137** | **0.3456** | **0.8828** | **0.6736** | **0.7143** | **72.00%** | **25 (19)** | **POSITIVE ✅** |
+| **vR.P.6** | **EfficientNet-B0 encoder (frozen)** | **0.5217** | **0.3529** | **0.8708** | **0.6351** | **0.6950** | **70.68%** | **23 (16)** | **POSITIVE ✅** |
 
 ### How the Two Tracks Relate
 
@@ -235,14 +235,14 @@ vR.1.0 -> vR.1.1 -> vR.1.2(X)
            |                                vR.P.0 (divg07, ELA pseudo-masks)
            v                                 |
          vR.1.3 -> vR.1.4 -> vR.1.5        vR.P.1 (sagnikkayalcse52, GT masks)
-                               |              |
-                               v            vR.P.1.5 (speed optimizations)
-                  vR.1.6 (BEST: 90.23%)       |
-                     |                      vR.P.2 (gradual unfreeze) [BEST pixel F1]
+                               |              |          \              \
+                               v            vR.P.1.5     vR.P.6 ✅     vR.P.5 ✅
+                  vR.1.6 (BEST: 90.23%)       |         (EffNet-B0)   (ResNet-50)
+                     |                      vR.P.2 (gradual unfreeze)
                      v                        |
-                  vR.1.7 (NEUTRAL)          vR.P.3 -> vR.P.4 -> vR.P.5 -> vR.P.6
-                                              |         |         |          |
-                                            [training on Kaggle ...]
+                  vR.1.7 (NEUTRAL)          vR.P.3 ✅✅ (ELA input, BEST F1=0.6920)
+                                              |
+                                            vR.P.4 ✅ (4ch RGB+ELA, NEUTRAL)
                                               |
                                          FINAL SUBMISSION NOTEBOOK
 ```
