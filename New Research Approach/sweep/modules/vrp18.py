@@ -1016,10 +1016,10 @@ try:
     # 7.1 Prediction Comparison Across Conditions
     # ============================================================
     
-    # Pick 3 tampered and 2 authentic from test set
+    # Pick 14 tampered and 6 authentic from test set (20 total)
     tampered_indices = [i for i, l in enumerate(test_labels) if l == 1]
     authentic_indices = [i for i, l in enumerate(test_labels) if l == 0]
-    sample_indices = tampered_indices[:3] + authentic_indices[:2]
+    sample_indices = tampered_indices[:14] + authentic_indices[:6]
     
     conditions_list_all = list(robustness_results.keys())
     n_cond = len(conditions_list_all)

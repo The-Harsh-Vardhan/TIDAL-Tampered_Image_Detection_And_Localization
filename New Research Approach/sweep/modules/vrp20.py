@@ -1179,8 +1179,8 @@ try:
     tampered_indices = [i for i, l in enumerate(test_labels) if l == 1]
     authentic_indices = [i for i, l in enumerate(test_labels) if l == 0]
     
-    sample_tp = tampered_indices[:4]
-    sample_au = authentic_indices[:2]
+    sample_tp = tampered_indices[:14]
+    sample_au = authentic_indices[:6]
     
     print('--- Tampered Image Predictions ---')
     visualize_predictions(model, test_dataset, sample_tp, DEVICE, 'Tampered Images')
