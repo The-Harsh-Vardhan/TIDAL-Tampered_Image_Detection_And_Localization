@@ -5,7 +5,7 @@
 | **Date** | 2026-03-15 |
 | **Scope** | Complete metrics reference for all experimental runs |
 | **Paper** | ETASR_9593 -- "Enhanced Image Tampering Detection using ELA and a CNN" |
-| **Versions Covered** | ETASR Track: vR.1.0--vR.1.7 (8 runs) / Pretrained Track: vR.P.0--vR.P.10 (13 runs) / Standalone: 3 runs |
+| **Versions Covered** | ETASR Track: vR.1.0--vR.1.7 (8 runs) / Pretrained Track: vR.P.0--vR.P.18 (19 runs, 3 pending) / Standalone: 4 runs |
 
 ---
 
@@ -49,6 +49,14 @@
 | vR.P.9 | Focal+Dice loss | ResNet-34 (frozen+BN) | ELA | 0.6923 | 0.5294 | 0.9323 | 87.16% | 0.8606 | 0.9076 | 25 (21) | 3.17M | NEUTRAL (+0.03pp) |
 | **vR.P.7** | **Extended training (50ep)** | ResNet-34 (frozen+BN) | **ELA** | **0.7154** | **0.5569** | 0.9504 | 87.37% | 0.8637 | 0.9433 | 46 (36) | 3.17M | **POSITIVE (+2.34pp)** |
 | **vR.P.10** | **CBAM attention + Focal** | ResNet-34 (frozen+BN) | **ELA** | **0.7277** | **0.5719** | **0.9573** | 87.32% | 0.8615 | **0.9633** | 25 (24) | 3.18M | **POSITIVE (+3.57pp)** |
+| vR.P.10 r02 | Reproducibility re-run | ResNet-34 (frozen+BN) | ELA | 0.7277 | 0.5719 | 0.9573 | 87.32% | 0.8615 | 0.9633 | 25 (24) | 3.18M | BASELINE (re-run) |
+| **vR.P.12** | **Augmentation + Focal+Dice** | ResNet-34 (frozen+BN) | **ELA** | 0.6968 | 0.5347 | 0.9502 | **88.48%** | **0.8756** | 0.9427 | 45 (35) | 3.17M | **NEUTRAL (+0.48pp)** |
+| **vR.P.14** | **Test-Time Augmentation (TTA)** | ResNet-34 (frozen+BN) | **ELA** | 0.6388* | 0.4693* | 0.9618* | --** | --** | --** | 25 (25) | 3.17M | **NEGATIVE (-5.32pp)** |
+| vR.P.16 | DCT spatial feature maps | ResNet-34 (frozen+BN) | **DCT** | *pending* | *pending* | *pending* | *pending* | *pending* | *pending* | — | 3.17M | *pending* |
+| vR.P.17 | ELA + DCT fusion (6ch) | ResNet-34 (frozen+conv1+BN) | **ELA+DCT** | *pending* | *pending* | *pending* | *pending* | *pending* | *pending* | — | 3.18M | *pending* |
+| vR.P.18 | Compression robustness test | ResNet-34 (frozen+BN) | **ELA** | *eval-only* | *eval-only* | *eval-only* | *eval-only* | *eval-only* | *eval-only* | — (P.3 model) | 3.17M | *measurement* |
+
+*P.14 TTA metrics; without TTA: Pixel F1=0.6919, IoU=0.5290 (identical to P.3). **Image-level metrics unavailable due to code bug (cell 18 crash).*
 
 **Bold** values = best in series for that metric.
 
@@ -68,6 +76,10 @@
 | vR.P.3 r02 | Reproducibility re-run | +0.2374 | +0.2349 | +0.1019 | +16.64pp | Confirms P.3 result |
 | **vR.P.8** | **Progressive unfreeze** | **+0.2439** | **+0.2425** | **+0.1032** | **+17.44pp** | Best overall Pixel F1 |
 | vR.P.9 | Focal+Dice loss | +0.2377 | +0.2352 | +0.0814 | +17.01pp | AUC regression |
+| **vR.P.12** | **Augmentation + Focal+Dice** | **+0.2422** | **+0.2405** | **+0.0993** | **+18.33pp** | Marginal over P.3; instability |
+| **vR.P.14** | **TTA (4 views)** | **+0.1842*** | **+0.1751*** | **+0.1109*** | --** | TTA hurts at threshold=0.5 |
+
+*P.14 TTA metrics. Without TTA: identical to P.3 baseline. **Image-level metrics not available (code crash).*
 
 ### Pretrained Confusion Matrix Summary
 
@@ -86,6 +98,11 @@
 | vR.P.9 | 1,088 | 36 | 207 | 562 | 3.2% | 26.9% |
 | **vR.P.7** | 1,084 | 40 | 199 | 570 | 3.6% | **25.9%** |
 | **vR.P.10** | **1,102** | **22** | 218 | 551 | **2.0%** | 28.3% |
+| vR.P.10 r02 | 1,102 | 22 | 218 | 551 | 2.0% | 28.3% |
+| **vR.P.12** | 1,095 | 29 | 189 | **580** | 2.6% | **24.6%** |
+| vR.P.14* | -- | -- | -- | -- | -- | -- |
+
+*P.14 image-level confusion matrix not available (code bug crashed cell 18).*
 
 ### Pretrained Per-Metric Champions
 
@@ -95,15 +112,15 @@
 | Pixel IoU | **vR.P.10** | 0.5719 | vR.P.7 | 0.5569 |
 | Pixel AUC | **vR.P.10** | 0.9573 | vR.P.8 | 0.9541 |
 | Pixel Precision | **vR.P.8** | 0.8857 | vR.P.10 | 0.8611 |
-| Pixel Recall | **vR.P.7** | 0.6245 | vR.P.10 | 0.6300 |
-| Image Accuracy | **vR.P.8** | 87.59% | vR.P.7 | 87.37% |
-| Image Macro F1 | **vR.P.8** | 0.8650 | vR.P.7 | 0.8637 |
+| Pixel Recall | **vR.P.10** | 0.6300 | vR.P.7 | 0.6245 |
+| Image Accuracy | **vR.P.12** | 88.48% | vR.P.8 | 87.59% |
+| Image Macro F1 | **vR.P.12** | 0.8756 | vR.P.8 | 0.8650 |
 | Image ROC-AUC | **vR.P.10** | 0.9633 | vR.P.8 | 0.9578 |
 | Lowest FP Rate | **vR.P.10** | 2.0% | vR.P.8 | 2.3% |
-| Lowest FN Rate | **vR.P.7** | 25.9% | vR.P.9 | 26.9% |
+| Lowest FN Rate | **vR.P.12** | 24.6% | vR.P.7 | 25.9% |
 | Param Efficiency | **vR.P.6** | 2.24M trainable | vR.P.3 | 3.17M |
 
-**vR.P.10 dominates** 5 of 11 metrics (Pixel F1, IoU, AUC, Image ROC-AUC, FP rate). **vR.P.8** wins 3 (Pixel Precision, Image Acc, Image F1). **vR.P.7** wins 2 (Pixel Recall, FN rate). **vR.P.6** wins param efficiency.
+**vR.P.10 dominates** 5 of 11 metrics (Pixel F1, IoU, AUC, Pixel Recall, FP rate). **vR.P.12** wins 3 (Image Acc, Image F1, FN rate). **vR.P.8** wins Pixel Precision. **vR.P.7** is runner-up in multiple categories. **vR.P.6** wins param efficiency.
 
 ---
 
@@ -181,7 +198,8 @@
 |---------|-------|----------|
 | STRONG POSITIVE | 1 | vR.P.3 (+23.74pp from P.1) |
 | POSITIVE | 5 | vR.P.2 (+5.71pp), vR.P.5 (+9.10pp), vR.P.6 (+6.71pp), vR.P.7 (+2.34pp), vR.P.10 (+3.57pp) |
-| NEUTRAL | 4 | vR.P.1.5 (speed only), vR.P.4 (+1.33pp from P.3), vR.P.8 (+0.65pp from P.3), vR.P.9 (+0.03pp from P.3) |
+| NEUTRAL | 5 | vR.P.1.5 (speed only), vR.P.4 (+1.33pp from P.3), vR.P.8 (+0.65pp from P.3), vR.P.9 (+0.03pp from P.3), vR.P.12 (+0.48pp from P.3) |
+| NEGATIVE | 1 | vR.P.14 (-5.32pp TTA, code bug) |
 | Baseline | 3 | vR.P.0 (no GT), vR.P.1 (proper baseline), vR.P.3 r02 (reproducibility) |
 
 ---
@@ -195,6 +213,7 @@
 | Paper CNN (divg07) | 2×Conv32(5x5) + Dense(150) | 24.2M | divg07 (standard) | 90.33% | 0.9006 | 0.6185 | 40 (no ES) | NO | Not assignment-viable |
 | Paper CNN (sagnik) | 2×Conv32(5x5) + Dense(150) | 24.2M | sagnik (**LEAKED**) | 100.00% | 1.0000 | 0.0000 | 40 (no ES) | NO | **INVALID — DATA LEAK** |
 | **Deeper CNN (divg07)** | **3×Conv(64/128/256) + BN + Dense(512)** | **38.2M** | **divg07** | **90.76%** | **0.9082** | **0.2178** | 7 (ES) | NO | Best classification |
+| **Deeper CNN (sagnik)** | **3×Conv(64/128/256) + BN + Dense(512)** | **38.3M** | **sagnik (LEAKED)** | **99.95%** | 0.9995 | 0.0071 | 6 (ES) | NO | **INVALID — DATA LEAK** |
 
 ### Paper Claims vs Reproduction
 
