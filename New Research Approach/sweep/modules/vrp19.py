@@ -1164,7 +1164,7 @@ try:
     
             # Denormalize and take Q=85 RGB slice (channels 3-5) for display
             ela_full = denormalize_ela(img_tensor)
-            img_display = ela_full[3:6].permute(1, 2, 0).numpy()
+            rgb_display = ela_full[3:6].permute(1, 2, 0).numpy()
             gt_display = gt_mask.squeeze(0).numpy()
     
             # Col 0: ELA (Q=85)
