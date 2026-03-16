@@ -638,7 +638,7 @@ def validate(model, loader, criterion, device):
         num_batches += 1
 
         # Collect predictions for metrics
-        probs = torch.sigmoid(predictions)
+        probs = torch.sigmoid(predictions[0] if isinstance(predictions, tuple) else predictions)
         all_preds.append(probs.cpu().numpy())
         all_masks.append(masks.cpu().numpy())
 
@@ -796,7 +796,7 @@ def evaluate_test(model, loader, device):
     for images, masks, labels in tqdm(loader, desc='Test Eval'):
         images = images.to(device)
         predictions = model(images)
-        probs = torch.sigmoid(predictions)
+        probs = torch.sigmoid(predictions[0] if isinstance(predictions, tuple) else predictions)
 
         all_probs.append(probs.cpu().numpy())
         all_masks.append(masks.cpu().numpy())
