@@ -4,8 +4,10 @@
 
 **Project:** Big Vision Internship Assignment
 **Author:** Harsh Vardhan
-**Duration:** Multi-version development across 20+ experiment iterations
-**Latest Version:** vK.12.0
+**Duration:** Multi-version development across 60+ experiment iterations
+**Latest Version:** vR.P.41 (Pretrained Track) / vK.12.0 (Kaggle Track) / vR.1.7 (ETASR Track)
+**Best Model:** vR.P.19 — Multi-Quality RGB ELA 9-Channel (Pixel F1 = 0.7965)
+**W&B Dashboard:** [Tampered Image Detection & Localization](https://wandb.ai/tampered-image-detection-and-localization/Tampered%20Image%20Detection%20&%20Localization/reports/Tampered-Image-Detection-Localization--VmlldzoxNjIyMjMxNg?accessToken=35b8v807ums5jnxtg6z8wieul1ylpetxrv2x4n7k9tr39mwf79ngtqs8w6d6tuaa)
 
 ---
 
@@ -27,7 +29,7 @@ Image tampering (copy-move, splicing, inpainting) is increasingly difficult to d
 | Output | Format | Description |
 |--------|--------|-------------|
 | Classification label | Binary (0/1) | Authentic vs tampered |
-| Segmentation mask | 256x256 single-channel | Pixel-level tamper probability map |
+| Segmentation mask | 384x384 single-channel | Pixel-level tamper probability map |
 | Visual overlays | RGB image | Original / GT / Predicted / Overlay comparison |
 
 ### Assignment Requirements
@@ -78,14 +80,7 @@ From the Big Vision Internship Assignment specification:
 | **Training set** | 8,829 images |
 | **Validation set** | 1,892 images |
 | **Test set** | 1,893 images |
-| **Input resolution** | Resized to 256x256 (vK.x series) or 384x384 (v6.5/v8) |
-
-### Reference Datasets (Not Used in Training)
-
-| Dataset | Type | Status |
-|---------|------|--------|
-| CoMoFoD | Copy-move forgery detection | Referenced in assignment; audited via reference notebook |
-| Coverage | Copy-move specific | Mentioned as future cross-dataset evaluation target |
+| **Input resolution** | 384x384 (vR.P track) / 256x256 (vK track) / 128x128 (vR ETASR track) |
 
 ### Dataset Challenges
 
@@ -96,256 +91,228 @@ From the Big Vision Internship Assignment specification:
 
 ---
 
-## 4. Model Architecture Evolution
+## 4. Research Tracks Overview
 
-### Architecture Comparison Table
+The project evolved through four parallel research tracks, each addressing different aspects of the problem:
 
-| Version | Model | Encoder | Pretrained | Input | Params | Decoder | Classifier | Loss | Key Change |
-|---------|-------|---------|------------|-------|--------|---------|------------|------|------------|
-| vK.1–vK.3 | Custom UNet | 5-layer CNN | No (scratch) | 256x256x3 | 15.7M | Transposed Conv | GAP+FC (1024→512→2) | CE + BCE | Initial baseline |
-| vK.7.x | Custom UNet | 5-layer CNN | No (scratch) | 256x256x3 | 15.7M | Transposed Conv | GAP+FC (1024→512→2) | Focal + BCE+Dice | Documentation improvements |
-| v6.5 | SMP UNet | ResNet34 | ImageNet | 384x384x3 | 24.4M | SMP Decoder | None (max pixel prob) | BCEDice | Pretrained encoder leap |
-| v8 | SMP UNet | ResNet34 | ImageNet | 384x384x3 | 24.4M | SMP Decoder | None (max pixel prob) | BCEDice (pw=30) | Scheduler + augmentation |
-| vK.10.x | Custom UNet | 5-layer CNN (wider) | No (scratch) | 256x256x3 | 31.6M | Transposed Conv | GAP+FC (1024→2) | Focal + BCE+Dice | Engineering overhaul |
-| **vK.11.0+** | **TamperDetector** | **ResNet34 (SMP)** | **ImageNet** | **256x256x4** | **~24.5M** | **SMP UNet Decoder** | **GAP+FC (512→256→2)** | **Focal+BCE+Dice+Edge** | **Architecture synthesis** |
-| vK.12.0 | TamperDetector | ResNet34 (SMP) | ImageNet | 256x256x4 | ~24.5M | SMP UNet Decoder | GAP+FC (512→256→2) | Focal+BCE+Dice+Edge | Extended evaluation |
+| Track | Versions | Architecture | Best Metric | Experiments | Status |
+|-------|----------|-------------|-------------|-------------|--------|
+| **Track A: vK (Kaggle Baseline)** | vK.1–vK.12.0 | Custom UNet → TamperDetector | Tam-F1 = 0.4101 (v6.5) | 25 source + 22 runs | Superseded |
+| **Track B: vR (ETASR Paper)** | vR.0–vR.1.7 | ETASR CNN (classification) | Test Acc = 90.23% (vR.1.6) | 11 source + 16 runs | Completed |
+| **Track C: vR.P (Pretrained Ablation)** | vR.P.0–vR.P.41 | UNet + ResNet-34 (SMP) | **Pixel F1 = 0.7965 (vR.P.19)** | 41 source + 37 W&B runs | **Primary track** |
+| **Track D: v0x (Early Exploration)** | Approaches 1–5 | Various | N/A | 5 approaches | Completed |
 
-### Architecture Evolution Rationale
-
-**Phase 1 → Phase 2 (Custom UNet → SMP UNet):**
-The custom UNet trained from scratch struggled to learn meaningful features from only ~8.8K training images. Switching to a pretrained ResNet34 encoder via SMP provided ImageNet-learned edge/texture features critical for detecting manipulation artifacts. This single change improved tampered F1 from ~0.20 to 0.41.
-
-**Phase 2 → Phase 3 (v6.5/v8 → vK.10.x):**
-Despite v6.5's superior metrics, the vK.x track continued with the custom UNet to improve engineering quality (CONFIG management, AMP, proper evaluation). The custom UNet needed 100 epochs to reach Tam-F1=0.22 (vs v6.5's 0.41 in 25 epochs), proving pretrained encoders are essential.
-
-**Phase 3 → Phase 4 (vK.10.6 → vK.11.0):**
-The synthesis point. vK.11.0 combined: v6.5's pretrained encoder, vK.10.6's engineering excellence, v8's training improvements, plus new features (ELA 4th channel, edge loss, encoder freeze). This is the project's recommended architecture.
-
-### TamperDetector Architecture (vK.11.0+)
+### Track Lineage
 
 ```
-Input (256x256x4: RGB + ELA)
-         │
-    ┌────▼────┐
-    │ ResNet34 │  (ImageNet pretrained, first conv modified for 4 channels)
-    │ Encoder  │
-    └────┬────┘
-         │
-    ┌────┴────┐
-    │         │
-    ▼         ▼
-┌────────┐  ┌──────────────┐
-│  UNet  │  │ Classification│
-│Decoder │  │    Head       │
-│(skip   │  │ GAP→512→256  │
-│ conn.) │  │ →ReLU→Drop   │
-└───┬────┘  │ →256→2       │
-    │       └──────┬───────┘
-    ▼              ▼
+v0x (Exploration)
+ |-- Approach 1: Literature Review
+ |-- Approach 2: Kaggle Baseline ---------> vK track (vK.1 -> vK.12)
+ |-- Approach 3: Research Paper CNN ------> vR track (vR.0 -> vR.1.7)
+ |-- Approach 4: Pretrained Model --------> vR.P track (vR.P.0 -> vR.P.41)
+ |-- Approach 5: FakeShield (abandoned)
+
+vK track:  vK.1 -> vK.3 -> vK.7 -> vK.10 -> vK.11 -> vK.12
+vR track:  vR.0 -> vR.1.1 -> vR.1.3 -> vR.1.4 -> vR.1.5 -> vR.1.6(BEST) -> vR.1.7
+vR.P track: P.0 -> P.1 -> P.3(ELA) -> P.7 -> P.10(CBAM) -> P.15(Multi-Q)
+            -> P.19(BEST) -> P.20-P.28 -> P.30-P.30.4 -> P.40-P.41
+```
+
+---
+
+## 5. Model Architecture Evolution
+
+### Best Architecture: UNet + ResNet-34 + Multi-Quality RGB ELA (vR.P.19)
+
+```
+Input Image (384x384x3 RGB)
+    |
+    v
+ELA Preprocessing (3 quality levels: Q=75, Q=85, Q=95)
+    |-- Each quality produces an RGB ELA map (384x384x3)
+    |-- Concatenate: 3 qualities x 3 channels = 9 channels
+    |
+    v
+Input Tensor (384x384x9)
+    |
+    v
++------------------+
+| ResNet-34 Encoder |  (ImageNet pretrained, frozen, BN unfrozen)
+| (first conv       |   Modified for 9 input channels
+|  adapted for 9ch) |
++--------+---------+
+         |
+    +----+----+
+    |         |
+    v         v
++--------+  +-------------+
+| UNet   |  | Max pixel   |
+| Decoder|  | probability |
+| (skip  |  | -> Image    |
+| conn.) |  | classification
++---+----+  +------+------+
+    |              |
+    v              v
 Seg Mask       Class Label
-(256x256x1)   (Authentic/Tampered)
+(384x384x1)   (Auth/Tampered)
 ```
 
----
+### Architecture Across All Tracks
 
-## 5. Experiment Version History
-
-### Chronological Version Log
-
-| Version | Date Era | Description | Key Changes | Run Status |
-|---------|----------|-------------|-------------|------------|
-| **vK.1** | Early | Original Kaggle notebook | Baseline custom UNet, dual-block training, no documentation | No run output |
-| **vK.2** | Early | Documentation added | Markdown cells, W&B integration stubs, IoU/F1 reporting | No run output |
-| **vK.3** | Early | Code comments improved | English docstrings, inline comments | Run completed |
-| **vK.4** | Early | Merge attempt (vK.3 + v8) | Attempted to merge custom and SMP approaches | Source only |
-| **v6.5** | Mid | SMP architecture leap | Pretrained ResNet34, AdamW, differential LR, AMP, DataParallel, comprehensive eval | **Run completed — Best segmentation** |
-| **v8** | Mid | Training refinements | ReduceLROnPlateau, per-sample Dice, expanded augmentations; pos_weight bug caused regression | Run completed — Regressed |
-| v9 | Mid | Feature additions (unexecuted) | ELA channel, pHash guard, learned classifier, boundary F1 | **Never executed** |
-| **vK.6** | Mid | Restructured by Codex | Subsection reorganization | Source only |
-| **vK.7** | Mid | Restructured by Opus | Improved subsection organization | Source only |
-| **vK.7.1** | Mid | Documentation refresh | Updated docs over vK.7 base | Run completed (same as vK.3) |
-| **vK.7.5** | Mid | Clean execution attempt | Two W&B runs started, neither finished | Incomplete |
-| **vK.10** | Late | Engineering overhaul begins | New single-block structure, CONFIG dict, data leak removed | Source only |
-| **vK.10.1** | Late | Refinements | Structure improvements | Source only |
-| **vK.10.2** | Late | Refinements | Further structure changes | Source only |
-| **vK.10.3b** | Late | First full engineering run | AMP, seeding, early stopping (patience=10), checkpoints | Run collapsed (Tam-F1=0.0004) |
-| **vK.10.4** | Late | Data visualization added | Sample grids, class distribution | Run collapsed (Tam-F1=0.0000) |
-| **vK.10.5** | Late | Multi-GPU support | DataParallel, get_base_model() unwrapper | Run collapsed (Tam-F1=0.0006) |
-| **vK.10.3b-run-03** | Late | Extended training test | 100 epochs, patience=50 | Recovered (Tam-F1=0.2196) |
-| **vK.10.6** | Late | Comprehensive evaluation | 100 epochs, 12-feature eval suite, confusion matrix, Grad-CAM, robustness | **Best vK.x run (Tam-F1=0.2213)** |
-| **vK.11.0** | Latest | Architecture synthesis | SMP+ResNet34+ELA+EdgeLoss+DiffLR+GradAccum+EncoderFreeze | Source only (awaiting run) |
-| **vK.11.1** | Latest | Model Card section added | Experiment report documentation | Source only |
-| **vK.11.2** | Latest | Reproducibility section | Seed verification, split stability, checkpoint integrity | Source only |
-| **vK.11.3** | Latest | Inference demo added | Single-image prediction pipeline with ELA | Source only |
-| **vK.11.4** | Latest | Executive summary added | High-level project overview for reviewers | Source only |
-| **vK.11.5** | Latest | Results dashboard added | Quick metrics overview with live/placeholder logic | Source only |
-| **vK.12.0** | Latest | Extended analysis | 16 new cells: arch diagram, FP/FN, robustness enhancement, speed test | Source only |
-
-### Three Parallel Architecture Tracks
-
-| Track | Versions | Architecture | Best Tam-F1 | Status |
-|-------|----------|-------------|-------------|--------|
-| **Track A: Custom UNet** | vK.1–vK.10.6 | UNetWithClassifier (from scratch) | 0.2213 | Superseded |
-| **Track B: SMP Pretrained** | v6.5, v8 | smp.Unet + ResNet34 (ImageNet) | **0.4101** | Best result |
-| **Track C: Synthesis** | vK.11.0–vK.12.0 | TamperDetector (SMP+ELA+Edge) | Pending | Awaiting execution |
+| Track | Model | Encoder | Pretrained | Input | Resolution | Loss | Best Result |
+|-------|-------|---------|------------|-------|------------|------|-------------|
+| vK.1–vK.3 | Custom UNet | 5-layer CNN | No | RGB 3ch | 256x256 | CE+BCE | Tam-F1=0.20 |
+| v6.5 | SMP UNet | ResNet-34 | ImageNet | RGB 3ch | 384x384 | BCEDice | Tam-F1=0.41 |
+| vK.11+ | TamperDetector | ResNet-34 (SMP) | ImageNet | RGB+ELA 4ch | 256x256 | Focal+BCE+Dice+Edge | Pending |
+| vR.0–vR.1.7 | ETASR CNN | Custom 3-layer | No | ELA 3ch | 128x128 | CrossEntropy | Acc=90.23% |
+| **vR.P.0–P.6** | **SMP UNet** | **ResNet-34** | **ImageNet** | **RGB/ELA 3ch** | **384x384** | **BCEDice** | **F1=0.7053** |
+| **vR.P.7–P.18** | **SMP UNet** | **ResNet-34** | **ImageNet** | **ELA 3ch** | **384x384** | **BCEDice/Focal** | **F1=0.7329** |
+| **vR.P.19** | **SMP UNet** | **ResNet-34** | **ImageNet** | **Multi-Q RGB ELA 9ch** | **384x384** | **BCEDice** | **F1=0.7965** |
+| vR.P.20–P.28 | SMP UNet | ResNet-34 | ImageNet | Various experimental | 384x384 | BCEDice | F1=0.7762 |
+| vR.P.30–P.30.4 | SMP UNet | ResNet-34 | ImageNet | Multi-Q ELA + CBAM | 384x384 | Various | F1=0.7762 |
+| vR.P.40–P.41 | SMP UNet | Custom Inception | No | Multi-Q RGB ELA 9ch | 384x384 | BCEDice | Not yet run |
 
 ---
 
-## 6. Training Pipeline Improvements
+## 6. Experiment Version History
 
-### Chronological Pipeline Evolution
+### Track C: vR.P Pretrained Ablation (Primary Track)
 
-| Feature | First Introduced | Versions | Impact |
-|---------|-----------------|----------|--------|
-| **Basic training loop** | vK.1 | vK.1–vK.3 | Functional but no optimization |
-| **AMP (Mixed Precision)** | v6.5 | v6.5, v8, vK.10.3b+ | ~2x memory efficiency, faster training |
-| **DataParallel (Multi-GPU)** | v6.5 | v6.5, v8, vK.10.5+ | Utilizes 2 GPUs on Kaggle |
-| **Gradient Accumulation** | v6.5 | v6.5 (eff=16), v8 (eff=256), vK.11.0 (eff=32) | Larger effective batch without VRAM increase |
-| **Early Stopping** | v6.5 | v6.5 (p=10), vK.10.3b (p=10), vK.10.6 (p=30), vK.11.0 (p=10) | Prevents overfitting |
-| **Checkpoint System** | vK.10.3b | vK.10.3b+ | 3-file system: best, last, periodic |
-| **VRAM Auto-Batch-Scaling** | vK.10.3b | vK.10.3b+ | Auto-adjusts batch size to GPU VRAM |
-| **Centralized CONFIG** | vK.10 | vK.10+ | Single dictionary for all hyperparameters |
-| **Reproducibility Seeding** | v6.5 | v6.5, v8, vK.10.3b+ | Python, NumPy, PyTorch, CUDA, cuDNN |
-| **Differential Learning Rates** | v6.5 | v6.5, v8, vK.11.0+ | Encoder: 1e-4, Decoder: 1e-3 |
-| **ReduceLROnPlateau** | v8 | v8, vK.11.0+ | Adaptive LR reduction on metric stall |
-| **Encoder Freeze Warmup** | vK.11.0 | vK.11.0+ | Protects pretrained BatchNorm for 2 epochs |
-| **Edge Supervision Loss** | vK.11.0 | vK.11.0+ | Sobel-based boundary BCE for sharp masks |
-| **ELA 4th Input Channel** | vK.11.0 | vK.11.0+ | Error Level Analysis for forensic features |
-| **W&B Comprehensive Logging** | vK.11.0 (patched) | vK.11.0+ | All visualizations logged to W&B dashboard |
+| Version | Change | Pixel F1 | IoU | Pixel AUC | Test Acc | Epochs | Verdict |
+|---------|--------|----------|-----|-----------|----------|--------|---------|
+| **vR.P.0** | ResNet-34 frozen, RGB (divg07, no GT) | 0.3749 | 0.2307 | 0.8486 | 70.63% | 24 | Baseline (no GT) |
+| **vR.P.1** | Dataset fix + GT masks (sagnikkayalcse52) | 0.4546 | 0.2942 | 0.8509 | 70.15% | 25 | Proper baseline |
+| **vR.P.1.5** | Speed optimizations | 0.4227 | 0.2680 | 0.8560 | 71.05% | 23 | NEUTRAL |
+| **vR.P.2** | Gradual unfreeze (layer3+layer4) | 0.5117 | 0.3439 | 0.8688 | 69.04% | 14 | POSITIVE |
+| **vR.P.3** | ELA input (replace RGB, BN unfrozen) | 0.6920 | 0.5291 | 0.9528 | 86.79% | 25 | STRONG POSITIVE |
+| **vR.P.4** | 4-channel RGB+ELA | 0.7053 | 0.5447 | 0.9433 | 84.42% | 25 | NEUTRAL |
+| **vR.P.5** | ResNet-50 encoder | 0.5137 | 0.3456 | 0.8828 | 72.00% | 25 | POSITIVE |
+| **vR.P.6** | EfficientNet-B0 encoder | 0.5217 | 0.3529 | 0.8708 | 70.68% | 23 | POSITIVE |
+| **vR.P.7** | Extended training (50 epochs) | 0.7154 | 0.5569 | 0.9504 | 87.37% | 46 | POSITIVE |
+| **vR.P.8** | Progressive unfreeze (layer4 only) | 0.6985 | 0.5367 | 0.9541 | 87.59% | 32 | NEUTRAL |
+| **vR.P.9** | Focal+Dice loss | 0.6923 | 0.5294 | 0.9323 | 87.16% | 25 | NEUTRAL |
+| **vR.P.10** | Focal+Dice + CBAM attention | 0.7277 | 0.5719 | 0.9573 | 87.32% | 25 | POSITIVE |
+| **vR.P.12** | Augmentation + Focal+Dice | 0.6968 | 0.5347 | 0.9502 | 88.48% | 45 | NEUTRAL |
+| **vR.P.14/14b** | Test-Time Augmentation (TTA) | 0.6388 | 0.4693 | 0.9618 | 87.43% | 25 | NEGATIVE |
+| **vR.P.15** | Multi-Quality ELA (Q=75/85/95, gray) | 0.7329 | 0.5785 | 0.9608 | 87.53% | 25 | POSITIVE |
+| **vR.P.16** | DCT spatial map baseline | 0.3209 | 0.1911 | 0.7778 | 61.60% | 18 | NEGATIVE |
+| **vR.P.17** | ELA + DCT spatial fusion (6ch) | 0.7302 | 0.5751 | 0.9431 | 87.06% | 25 | POSITIVE |
+| **vR.P.18** | JPEG compression robustness | INVALID | — | — | — | — | INVALID |
+| **vR.P.19** | **Multi-Q RGB ELA (9ch)** | **0.7965** | **0.6615** | **0.9665** | **—** | **25** | **SERIES BEST** |
+| vR.P.20 | ELA magnitude + chrominance direction | 0.7439 | 0.5923 | 0.9571 | — | 25 | POSITIVE |
+| vR.P.23 | Chrominance channel analysis | 0.5981 | 0.4268 | 0.9211 | — | 25 | NEGATIVE |
+| vR.P.24 | Noiseprint forensic features | 0.6285 | 0.4583 | 0.9012 | — | 25 | NEGATIVE |
+| vR.P.26 | Segmentation + classification head | — | — | — | — | — | Experimental |
+| vR.P.27 | JPEG compression augmentation | 0.7523 | 0.6029 | 0.9581 | — | 25 | POSITIVE |
+| vR.P.28 | Cosine annealing LR scheduler | 0.7601 | 0.6132 | 0.9623 | — | 25 | POSITIVE |
+| vR.P.30 | Multi-Q ELA + CBAM attention | 0.7714 | 0.6280 | 0.9641 | — | 25 | POSITIVE |
+| **vR.P.30.1** | Multi-Q ELA + CBAM (50 epochs) | **0.7762** | **0.6344** | **0.9651** | **—** | **50** | **2nd BEST** |
+| vR.P.30.2 | Multi-Q ELA + CBAM + unfreeze | 0.7721 | 0.6289 | 0.9638 | — | 25 | POSITIVE |
+| vR.P.30.3 | Multi-Q ELA + CBAM + Focal+Dice | 0.7698 | 0.6258 | 0.9629 | — | 25 | POSITIVE |
+| vR.P.30.4 | Multi-Q ELA + CBAM + augmentation | 0.7745 | 0.6321 | 0.9645 | — | 25 | POSITIVE |
+| vR.P.40.1–41 | Custom Inception encoders | — | — | — | — | — | Not yet run |
 
-### Key Training Configurations Across Versions
+### Track B: vR ETASR Classification
 
-| Parameter | vK.3 | v6.5 | v8 | vK.10.6 | vK.11.0+ |
-|-----------|-------|------|-----|---------|----------|
-| Optimizer | Adam | AdamW | AdamW | Adam | AdamW |
-| Learning Rate | 1e-4 | Diff (1e-4/1e-3) | Diff (1e-4/1e-3) | 1e-4 | Diff (1e-4/1e-3) |
-| Effective Batch | 8 | 16 | 256 | 32 | 32 (8x4 accum) |
-| Max Epochs | 50 | 50 (ES at 25) | 50 (ES at 27) | 100 | 50 |
-| AMP | No | Yes | Yes | Yes | Yes |
-| Scheduler | None | None | ReduceLROnPlateau | CosineAnnealing | ReduceLROnPlateau |
-| Image Size | 256 | 384 | 384 | 256 | 256 |
-| Input Channels | 3 (RGB) | 3 (RGB) | 3 (RGB) | 3 (RGB) | 4 (RGB+ELA) |
+| Version | Change | Test Accuracy | Status |
+|---------|--------|--------------|--------|
+| **vR.0** | Baseline paper reproduction | — | Initial |
+| **vR.1.1** | Proper 70/15/15 split + fixed metrics | 88.38% | Honest baseline |
+| **vR.1.2** | Data augmentation | REJECTED | Incompatible with architecture |
+| **vR.1.3** | Class weights | 88.59% | Marginal improvement |
+| **vR.1.4** | BatchNormalization | 89.12% | Stable training |
+| **vR.1.5** | ReduceLROnPlateau | 89.75% | Better convergence |
+| **vR.1.6** | Deeper CNN (3rd Conv2D) | **90.23%** | **ETASR BEST** |
+| **vR.1.7** | GlobalAveragePooling | 89.91% | NEUTRAL |
 
----
+### Track A: vK Kaggle Baseline
 
-## 7. Evaluation Strategy
-
-### Evaluation Metrics
-
-| Metric | Type | Description | First Used |
-|--------|------|-------------|------------|
-| **Tampered Dice** | Segmentation | Overlap coefficient on tampered-only images | vK.3 |
-| **Tampered IoU** | Segmentation | Intersection-over-Union on tampered-only | v6.5 |
-| **Tampered F1** | Segmentation | Harmonic mean of precision/recall on tampered-only | v6.5 |
-| **Precision** | Segmentation | True positive rate among predicted tampered pixels | vK.12.0 |
-| **Recall** | Segmentation | Detection rate of truly tampered pixels | vK.12.0 |
-| **Pixel Accuracy** | Segmentation | Overall pixel correctness (TP+TN)/total | vK.12.0 |
-| **Image Accuracy** | Classification | Correct tampered/authentic classification | vK.1 |
-| **AUC-ROC** | Classification | Threshold-independent classification quality | v6.5 |
-| **Pixel-Level AUC** | Segmentation | Threshold-independent segmentation quality | vK.10.6 |
-
-### Critical Insight: Mixed-Set vs Tampered-Only Metrics
-
-A major lesson learned during development was that **mixed-set metrics are inflated** because authentic images have all-zero ground truth masks, scoring perfect Dice/IoU/F1 automatically. The authentic images (59.4% of data) inflate mixed-set metrics significantly.
-
-**Example:** Mixed-set F1 of 0.5761 in vK.3 → estimated tampered-only F1 of only ~0.15–0.25.
-
-From vK.10.6 onward, tampered-only metrics are the primary evaluation criterion.
-
-### Evaluation Suite Evolution
-
-| Feature | v6.5 | v8 | vK.10.6 | vK.11.0+ | vK.12.0 |
-|---------|------|-----|---------|----------|---------|
-| Threshold optimization | Yes | Yes | Yes (50-point sweep) | Yes | Yes |
-| Confusion matrix | No | No | Yes | Yes | Yes |
-| ROC/PR curves | No | No | Yes | Yes | Yes |
-| Forgery-type breakdown | Yes | Yes | Yes | Yes | Yes |
-| Mask-size stratification | No | Yes | Yes | Yes | Yes |
-| Shortcut learning checks | No | Yes | Yes | Yes | Yes |
-| Grad-CAM | Yes | No | Yes | Yes | Yes |
-| Robustness testing | Yes | No | Yes | Yes | Enhanced |
-| Failure case analysis | Yes | No | Yes | Yes | Yes |
-| Data leakage verification | No | No | Yes | Yes | Yes |
-| Pixel-level AUC | No | No | Yes | Yes | Yes |
-| Precision/Recall/PixAcc | No | No | No | No | **Yes** |
-| FP/FN error analysis | No | No | No | No | **Yes** |
-| Experiment comparison | No | No | No | No | **Yes** |
-| Inference speed benchmark | No | No | No | No | **Yes** |
+| Version | Architecture | Tam-F1 | Status |
+|---------|-------------|--------|--------|
+| vK.3 | Custom UNet (scratch) | ~0.20 (est.) | Completed |
+| **v6.5** | **SMP ResNet-34** | **0.4101** | **Best vK segmentation** |
+| v8 | SMP ResNet-34 | 0.2949 | Regressed (pos_weight bug) |
+| **vK.10.6** | Custom UNet (scratch) | 0.2213 | Best from-scratch |
+| vK.11.0–12.0 | TamperDetector (SMP+ELA) | Pending | Not yet run |
 
 ---
 
-## 8. Experiment Results Tracking
+## 7. Key Findings and Insights
 
-### Master Performance Table
+### Input Preprocessing Impact (Most Important Finding)
 
-| Version | Architecture | Params | Img Acc | AUC-ROC | Tam F1 | Tam IoU | Tam Dice | Epochs | Status |
-|---------|-------------|--------|---------|---------|--------|---------|----------|--------|--------|
-| vK.3 run-01 | Custom UNet (scratch) | 15.7M | 0.8986 | — | ~0.20 (est.) | — | 0.5761 (mixed) | 50 | Completed |
-| **v6.5 run-01** | **SMP ResNet34** | **24.4M** | **0.8246** | **0.8703** | **0.4101** | **0.3563** | — | **25 (ES)** | **Best Seg** |
-| v8 run-01 | SMP ResNet34 | 24.4M | 0.7190 | 0.8170 | 0.2949 | 0.2321 | — | 27 (ES) | Regressed |
-| vK.7.1 run-01 | Custom UNet (scratch) | 15.7M | 0.8986 | — | ~0.20 (est.) | — | 0.5761 (mixed) | 50 | Same as vK.3 |
-| vK.10.3b run-01 | Custom UNet (scratch) | 31.6M | 0.5061 | 0.6069 | 0.0004 | 0.0002 | — | ~10 (ES) | Collapsed |
-| vK.10.4 run-01 | Custom UNet (scratch) | 31.6M | 0.4675 | 0.6534 | 0.0000 | 0.0000 | — | 10 (ES) | Collapsed |
-| vK.10.5 run-01 | Custom UNet (scratch) | 31.6M | 0.4791 | 0.6201 | 0.0006 | 0.0003 | — | ~10 (ES) | Collapsed |
-| vK.10.3b run-03 | Custom UNet (scratch) | 31.6M | — | — | 0.2196 | — | — | 100 | Recovered |
-| **vK.10.6 run-01** | **Custom UNet (scratch)** | **31.6M** | **0.8357** | **0.9057** | **0.2213** | **0.1554** | — | **100** | **Best vK.x** |
-| vK.11.0–11.5 | TamperDetector (SMP+ELA) | ~24.5M | — | — | — | — | — | — | Not yet run |
-| vK.12.0 | TamperDetector (SMP+ELA) | ~24.5M | — | — | — | — | — | — | Not yet run |
+| Input Type | Best F1 | Example Version | Improvement vs RGB |
+|------------|---------|-----------------|-------------------|
+| Raw RGB (frozen encoder) | 0.4546 | vR.P.1 | Baseline |
+| ELA single-quality (Q=90) | 0.6920 | vR.P.3 | **+23.74pp** |
+| 4-channel RGB+ELA | 0.7053 | vR.P.4 | +25.07pp |
+| Multi-Quality ELA grayscale (Q=75/85/95) | 0.7329 | vR.P.15 | +27.83pp |
+| **Multi-Quality RGB ELA 9ch (Q=75/85/95)** | **0.7965** | **vR.P.19** | **+34.19pp** |
+| DCT spatial map alone | 0.3209 | vR.P.16 | -13.37pp |
+| Noiseprint features | 0.6285 | vR.P.24 | +17.39pp |
 
-### Key Performance Observations
+**Conclusion:** ELA preprocessing is the single most impactful variable. Multi-quality RGB ELA at 9 channels (vR.P.19) outperforms every other input configuration by a significant margin.
 
-- **Best segmentation**: v6.5 (Tam-F1 = 0.4101) — pretrained encoder was the decisive factor
-- **Best classification**: vK.10.6 (AUC = 0.9057) — 100-epoch training with comprehensive eval
-- **Worst regression**: v8 (Tam-F1 dropped 28% from v6.5) — caused by pos_weight=30.01 bug
-- **vK.10.x collapse**: Early stopping at ~10 epochs killed from-scratch training before model could learn; 100-epoch run recovered to Tam-F1=0.22
-- **Forgery-type flip**: v6.5 excelled at splicing (F1=0.59) but struggled with copy-move (F1=0.31); vK.10.6 reversed this pattern (copy-move F1=0.41, splicing F1=0.12)
+### Encoder Architecture
+
+- ResNet-34 is sufficient — neither ResNet-50 (+5.91pp over RGB baseline but below ELA) nor EfficientNet-B0 improved over ResNet-34 when combined with ELA
+- Pretrained encoders are essential for small datasets (8,829 training images)
+- Frozen encoder with unfrozen BatchNorm is the optimal strategy
+
+### Training Strategy
+
+- Extended training (50 epochs) provides +2-3pp improvement over 25 epochs
+- CBAM attention helps +3-5pp but is secondary to input quality
+- Focal+Dice loss does not consistently outperform BCE+Dice
+- TTA actually hurts (vR.P.14: -5.32pp) — averaging smooths out precise localization
+- Data augmentation gives marginal benefits for segmentation (+0.48pp)
+
+### Diminishing Returns
+
+After Pixel F1 ~0.78, combining improvements shows diminishing returns:
+- vR.P.30.1 (Multi-Q ELA + CBAM + 50ep) = 0.7762 (did not surpass P.19's 0.7965)
+- This suggests the model approaches the ceiling of what the dataset/architecture can support
 
 ---
 
-## 9. Visualization & Monitoring
+## 8. Evaluation Strategy
 
-### Prediction Visualizations
+### Primary Metrics (vR.P Track)
 
-| Visualization | Panels | Purpose | Introduced |
-|---------------|--------|---------|------------|
-| Standard 4-panel | Original, GT, Predicted, Overlay | Core prediction quality assessment | vK.3 |
-| Submission grid | 8 samples in grid layout | Quick visual summary for reviewers | v6.5 |
-| ELA visualization | Original, ELA map, Prediction | Verify ELA channel contribution | vK.11.0 |
-| Enhanced 6-panel | Original, GT, Predicted, Overlay, Diff Map, Contour | Detailed disagreement analysis | vK.12.0 |
+| Metric | Type | Description |
+|--------|------|-------------|
+| **Pixel F1** | Segmentation | Primary metric — harmonic mean of pixel precision and recall |
+| **IoU (Jaccard)** | Segmentation | Intersection-over-Union of predicted vs GT mask |
+| **Pixel AUC** | Segmentation | Threshold-independent pixel-level quality |
+| **Image Accuracy** | Classification | Correct tampered/authentic classification |
+| **Tampered F1 (cls)** | Classification | F1 for the tampered class |
+| **Macro F1 (cls)** | Classification | Average F1 across both classes |
 
-### Evaluation Plots
+### Critical Insight: Tampered-Only Metrics
 
-| Plot | Description | Introduced |
-|------|-------------|------------|
-| Training curves | Loss and metrics per epoch | vK.3 |
-| Threshold sweep | F1 vs threshold (50-point) | v6.5 |
-| Confusion matrix | TP/FP/TN/FN at optimal threshold | vK.10.6 |
-| ROC and PR curves | Classification performance curves | vK.10.6 |
-| Forgery-type breakdown | Per-forgery-type F1 comparison | v6.5 |
-| Mask-size stratified F1 | Performance by tampered region size | v8 |
-| Failure cases | 10 worst predictions by Dice | v6.5 |
-| Grad-CAM heatmaps | Encoder attention visualization | v6.5 |
-| Robustness bar chart | Metrics under degradation conditions | vK.10.6 |
-| Architecture diagram | Model flow chart (Matplotlib) | vK.12.0 |
-| Mask coverage histogram | Distribution of tampered region sizes | vK.12.0 |
-| Degradation visualization | Side-by-side degraded image grid | vK.12.0 |
+Mixed-set metrics are inflated because authentic images have all-zero GT masks, scoring perfect Dice/IoU/F1. From vR.P.3 onward, all metrics are computed on tampered images only.
 
-### Weights & Biases Dashboard
+---
 
-W&B integration tracks the following across all vK.11.x+ notebooks:
+## 9. Reproducibility
 
-| W&B Key | Type | Description |
-|---------|------|-------------|
-| `train/loss`, `train/accuracy` | Scalar/epoch | Training metrics |
-| `val/loss`, `val/accuracy`, `val/dice`, `val/iou`, `val/f1` | Scalar/epoch | Validation metrics |
-| `val/tampered_dice`, `val/tampered_iou`, `val/tampered_f1` | Scalar/epoch | Tampered-only validation |
-| `val/roc_auc`, `lr/encoder`, `lr/decoder` | Scalar/epoch | AUC and learning rates |
-| `val_predictions` | Images | Prediction samples every 5 epochs |
-| `test/*`, `best_epoch` | Summary | Final test metrics |
-| `final_test_metrics_table` | Table | Structured test results |
-| `best-model` | Artifact | Model checkpoint |
-| `evaluation/*` | Images + Tables | All evaluation visualizations |
-| `dashboard/*` | Images + Table | Results dashboard (vK.11.5+) |
+### Constants Across All vR.P Experiments
+
+| Parameter | Value |
+|-----------|-------|
+| Dataset | CASIA v2.0 (sagnikkayalcse52, from P.1 onward) |
+| Random seed | 42 |
+| Split | 70/15/15 stratified by label |
+| Resolution | 384x384 |
+| Decoder | UNet (SMP default, skip connections from all 4 encoder stages) |
+| Batch size | 16 |
+| Max epochs | 25 (unless explicitly ablated) |
+| Early stopping | patience=7, monitor=val_loss |
+| Framework | PyTorch + SMP |
+
+### Single-Variable Ablation Methodology
+
+Every experiment changes exactly **one variable** from its parent version. This isolates the effect of each modification and enables clear causal attribution.
 
 ---
 
@@ -353,243 +320,144 @@ W&B integration tracks the following across all vK.11.x+ notebooks:
 
 ### Common Failure Modes
 
-| Failure Mode | Severity | Description | Mitigation Attempts |
-|-------------|----------|-------------|---------------------|
-| **Very small tampered regions** | High | Images with <2% tampered area are nearly impossible to detect | Mask-size stratified evaluation added in v8; focal loss gamma=2.0 to focus on hard examples |
-| **Copy-move artifacts** | High | Subtle copy-move manipulations where source and target textures are similar | v6.5 struggled (F1=0.31); vK.10.6 improved (F1=0.41) with longer training |
-| **Low contrast manipulations** | Medium | Tampered regions that blend seamlessly with surrounding content | ELA channel added in vK.11.0 to detect compression inconsistencies |
-| **JPEG compression artifacts** | Medium | Double-JPEG compression creates artifacts that can mask or mimic tampering | Robustness testing with QF50/QF70; ELA specifically targets compression traces |
-| **Mask boundary imprecision** | Medium | Predicted masks have blurry or misaligned boundaries | Edge supervision loss (Sobel-based) added in vK.11.0 |
-| **Authentic false positives** | Low-Medium | High-frequency textures in authentic images triggering false tamper detection | FP/FN analysis added in vK.12.0 to identify systematic patterns |
-| **Metric inflation** | Critical (methodological) | Mixed-set Dice/F1 inflated by authentic samples scoring perfect | Fixed by switching to tampered-only metrics from vK.10.6 onward |
+| Failure Mode | Severity | Mitigation |
+|-------------|----------|------------|
+| Very small tampered regions (<2% area) | High | Focal loss, mask-size stratified eval |
+| Copy-move with similar textures | High | Multi-quality ELA captures compression artifacts |
+| Low contrast manipulations | Medium | ELA preprocessing highlights compression inconsistencies |
+| JPEG double compression artifacts | Medium | Multi-quality ELA at Q=75/85/95 |
+| Mask boundary imprecision | Medium | CBAM attention in decoder |
+| DCT features catastrophic failure | Critical | vR.P.16 proved DCT alone is insufficient |
 
-### Debugging History
+### Key Debugging History
 
-| Issue | Version Affected | Root Cause | Resolution |
-|-------|-----------------|------------|------------|
-| Block 1 data leakage | vK.1–vK.7.x | Dual-block training where Block 1 trained on test set | Removed Block 1 in vK.10 |
-| v8 regression (-28% F1) | v8 | `pos_weight=30.01` computed from all pixels including authentic images; effective batch=256 without LR scaling | Identified in audit; not propagated to vK.11.0 |
-| vK.10.3b–10.5 collapse | vK.10.3b–10.5 | Early stopping (patience=10) killed training at ~10 epochs before from-scratch model could learn | Extended to patience=30 and 100 epochs in vK.10.6 |
-| Dice inflation | vK.1–vK.7.x | Authentic images with all-zero masks score perfect Dice, inflating averages | Switched to tampered-only metrics in vK.10.6 |
-| v6.5 robustness bug | v6.5 | Identical F1=0.5938 for all degradation conditions (suspicious) | Flagged in audit; vK.11.0+ uses Albumentations-based robustness |
-| SMP decoder(*features) bug | vK.11.0 (initial) | SMP decoder expects positional args, not keyword | Fixed via `fix_denorm.py` patch |
-| 4-channel _denorm bug | vK.11.0 (initial) | Denormalization assumed 3 channels, failed on 4-channel RGB+ELA | Fixed in patch script |
-| W&B version string hardcoding | vK.11.0–11.5 (initial) | All notebooks hardcoded "vK.11.0" in W&B project/tags | Fixed via `fix_wandb_logging.py` (13 patches) |
-| W&B patch idempotency | fix_wandb_logging.py | For vK.11.0, version replacement was a no-op, duplicating config lines | Added `wandb.config.update` presence check |
+| Issue | Root Cause | Resolution |
+|-------|------------|------------|
+| v8 regression (-28% F1) | pos_weight=30.01 bug | Identified in audit; not propagated |
+| vK.10.3b collapse | Early stopping killed from-scratch training | Extended to 100 epochs |
+| vR.P.18 INVALID | Checkpoint not found during evaluation | Run invalidated |
+| Mixed-set metric inflation | Authentic images score perfect masks | Switched to tampered-only metrics |
+| TTA degradation (P.14) | Averaging smooths precise boundaries | TTA abandoned for localization |
 
 ---
 
-## 11. Robustness Testing
-
-### Test Conditions
-
-| Condition | Description | Transform |
-|-----------|-------------|-----------|
-| `clean` | No degradation (baseline) | Resize + Normalize only |
-| `jpeg_qf70` | JPEG compression, quality 70 | `A.ImageCompression(quality_lower=70, quality_upper=70)` |
-| `jpeg_qf50` | JPEG compression, quality 50 | `A.ImageCompression(quality_lower=50, quality_upper=50)` |
-| `noise_s10` | Gaussian noise, mild | `A.GaussNoise(var_limit=(10.0, 50.0))` |
-| `noise_s25` | Gaussian noise, strong | `A.GaussNoise(var_limit=(100.0, 100.0))` |
-| `blur_k3` | Gaussian blur, kernel 3 | `A.GaussianBlur(blur_limit=(3, 3))` |
-| `blur_k5` | Gaussian blur, kernel 5 | `A.GaussianBlur(blur_limit=(5, 5))` |
-| `resize_0.75` | Downscale to 75%, then restore | Resize down + resize back up |
-
-### Robustness Metrics Evolution
-
-| Version | Metrics Reported | Conditions | Visualization |
-|---------|-----------------|------------|---------------|
-| v6.5 | F1 only | 8 conditions | Bar chart (suspicious — identical values) |
-| v8 | F1 only | 8 conditions | Bar chart (plausible variation) |
-| vK.10.6 | F1 only | 8 conditions | Bar chart + delta from clean |
-| **vK.12.0** | **Dice + IoU + F1** | **8 conditions** | **3-panel bar chart + delta table + degradation viz** |
-
-### Key Robustness Findings (from vK.10.6 run)
-
-- `blur_k5` is the most destructive degradation — near-catastrophic F1 drop
-- JPEG compression (QF50/QF70) causes moderate degradation
-- Gaussian noise has variable impact depending on intensity
-- The model's reliance on high-frequency features makes it vulnerable to blur
-
----
-
-## 12. Performance Optimization
-
-### Memory and Speed Optimizations
-
-| Optimization | Version | Description | Impact |
-|-------------|---------|-------------|--------|
-| **AMP (FP16)** | v6.5+ | `torch.cuda.amp.autocast` + `GradScaler` | ~2x memory savings, ~1.5x speed |
-| **DataParallel** | v6.5, vK.10.5+ | 2 GPU utilization on Kaggle P100/T4 | ~1.6x throughput |
-| **Gradient Accumulation** | v6.5+ | Accumulate gradients over N steps before optimizer step | Larger effective batch without VRAM increase |
-| **VRAM Auto-Scaling** | vK.10.3b+ | Batch size: 8 (base), 16 (≥15GB), 24 (≥20GB), 32 (≥28GB) | Automatic GPU adaptation |
-| **Pin Memory** | vK.10+ | `pin_memory=True` in DataLoader | Faster CPU→GPU transfer |
-| **Worker Processes** | vK.10+ | `num_workers=4` in DataLoader | Parallel data loading |
-| **cuDNN Benchmark** | vK.11.0+ | `torch.backends.cudnn.benchmark = True` | Optimized convolution algorithms |
-
-### Training Efficiency Comparison
-
-| Version | Time per Epoch (est.) | Total Training Time | Epochs to Convergence |
-|---------|----------------------|--------------------|-----------------------|
-| vK.3 | ~15 min (no AMP, 1 GPU) | ~12.5 hours | 50 (no ES) |
-| v6.5 | ~8 min (AMP, 2 GPU, 384x384) | ~3.3 hours | 25 (ES) |
-| vK.10.6 | ~5 min (AMP, 2 GPU, 256x256) | ~8.3 hours | 100 (ES at ~75) |
-| vK.11.0+ | ~5 min (AMP, 2 GPU, 256x256) | TBD | TBD |
-
----
-
-## 13. Reproducibility Notes
-
-### Seed Configuration (vK.11.0+)
-
-```python
-SEED = 42
-
-random.seed(SEED)
-np.random.seed(SEED)
-torch.manual_seed(SEED)
-torch.cuda.manual_seed_all(SEED)
-torch.backends.cudnn.deterministic = True
-torch.backends.cudnn.benchmark = False  # disabled for determinism
-```
-
-### Dataset Versioning
-
-| Property | Value |
-|----------|-------|
-| Dataset source | `harshv777/casia2-0-upgraded-dataset` on Kaggle |
-| Split method | `sklearn.model_selection.train_test_split` with `random_state=42` |
-| Split ratio | 70% train / 15% val / 15% test |
-| Stratification | By label (tampered vs authentic) |
-
-### Environment Setup
-
-| Component | Specification |
-|-----------|---------------|
-| Platform | Kaggle Notebooks / Google Colab |
-| GPU | NVIDIA T4 (15 GB VRAM) or P100 (16 GB) |
-| Python | 3.10+ |
-| PyTorch | 2.x (CUDA 11.8+) |
-| SMP | Latest via `pip install segmentation-models-pytorch` |
-| Albumentations | Latest via `pip install albumentations` |
-| W&B | Latest via `pip install wandb` |
-| torchinfo | Latest via `pip install torchinfo` (vK.12.0+) |
-
-### Reproducibility Checklist
-
-- [x] Fixed random seeds (Python, NumPy, PyTorch, CUDA)
-- [x] Deterministic cuDNN mode
-- [x] DataLoader worker seeding via `seed_worker()` function
-- [x] Seeded generator for DataLoader
-- [x] Stratified data splits with fixed `random_state`
-- [x] Checkpoint system (best, last, periodic)
-- [x] CONFIG dictionary captures all hyperparameters
-- [x] W&B logs full configuration
-- [x] Reproducibility Verification section (vK.11.2+) confirms seed/split stability
-
----
-
-## 14. Lessons Learned
+## 11. Lessons Learned
 
 ### Architecture and Training
 
-1. **Pretrained encoders are essential for small datasets.** The custom UNet (from scratch) plateaued at Tam-F1=0.22 after 100 epochs. The same data with a pretrained ResNet34 reached Tam-F1=0.41 in just 25 epochs. Transfer learning is not optional when training data is limited (~8.8K images).
+1. **ELA is the single most impactful variable.** Switching from RGB to ELA input boosted Pixel F1 by +23.74pp — more than any architectural change.
+2. **Multi-quality ELA captures more forensic signal.** Using 3 JPEG quality levels (75/85/95) instead of 1 added another +10pp.
+3. **Pretrained encoders are essential for small datasets.** Custom CNNs plateau at F1~0.22 (100 epochs) vs pretrained ResNet-34 at F1~0.45 (25 epochs).
+4. **ResNet-34 is sufficient.** Neither ResNet-50 nor EfficientNet-B0 improved results with ELA input.
+5. **CBAM attention helps but is secondary.** +3-5pp improvement, but input quality matters more.
+6. **TTA hurts localization.** Averaging predictions smooths away precise mask boundaries.
 
-2. **Early stopping can kill from-scratch training.** The vK.10.3b–10.5 collapse (Tam-F1 near zero) was caused by patience=10 on a from-scratch 31.6M parameter model. The model needed ~50–100 epochs to learn basic features. Extended training (100 epochs, patience=30/50) recovered to Tam-F1=0.22.
+### Methodology
 
-3. **Hyperparameter bugs compound silently.** v8's regression wasn't from architectural changes but from `pos_weight=30.01` (computed incorrectly) and a 16x batch size increase without LR scaling. Always ablate one change at a time.
-
-4. **ELA provides complementary forensic features.** Error Level Analysis detects compression inconsistencies that RGB alone cannot see. Adding ELA as a 4th input channel (vK.11.0) provides the model with direct access to forensic signals.
-
-5. **Edge supervision sharpens mask boundaries.** The Sobel-based edge loss (vK.11.0) penalizes blurry mask boundaries that standard Dice/BCE losses tolerate.
-
-### Evaluation
-
-6. **Mixed-set metrics are misleading.** Authentic images with all-zero masks score perfect Dice/IoU/F1, inflating overall metrics. A mixed-set F1 of 0.75 can correspond to a tampered-only F1 of only 0.50. Always report tampered-only metrics.
-
-7. **Threshold tuning must use validation set only.** The optimal segmentation threshold varies significantly (often 0.3–0.7). Tuning on the test set constitutes data leakage. The 50-point threshold sweep on validation, applied frozen to test, is the correct approach.
-
-8. **Robustness testing reveals model fragility.** Blur (especially kernel=5) is catastrophic for segmentation models that rely on high-frequency features. This finding suggests the model may be learning compression/edge artifacts rather than true tampering semantics.
-
-### Engineering
-
-9. **Generator scripts enable rapid iteration.** The constructive generator pattern (`generate_vk11*.py`) allows reproducible notebook creation from a source, with targeted cell modifications. This avoids manual editing errors and enables systematic version progression.
-
-10. **Comprehensive evaluation is worth the engineering cost.** The 12-feature evaluation suite introduced in vK.10.6 (confusion matrix, ROC/PR, forgery breakdown, mask-size stratification, shortcut checks, Grad-CAM, robustness, failure analysis) provides insights that simple accuracy numbers cannot.
+7. **Single-variable ablation is essential.** Without it, v8's regression would have been attributed to architecture changes instead of a pos_weight bug.
+8. **Mixed-set metrics are misleading.** Always report tampered-only metrics.
+9. **Diminishing returns are real.** After F1~0.78, combining improvements does not compound linearly.
+10. **Alternative forensic features underperform ELA.** DCT (catastrophic), YCbCr, and Noiseprint all fell short.
 
 ---
 
-## 15. Future Improvements
+## 12. Future Improvements
 
 ### High Priority
 
-| Improvement | Expected Impact | Complexity |
-|-------------|----------------|------------|
-| **Run vK.11.0+ on Kaggle** | First test of synthesized architecture; expected Tam-F1 > 0.40 | Low (notebook ready) |
-| **Transformer-based encoder** (e.g., EfficientNet-B4, ConvNeXt) | Stronger feature extraction, potentially +0.05–0.10 Tam-F1 | Medium |
-| **Multi-scale input pipeline** | Process at 256 and 512 resolution, fuse features | Medium |
-| **Cross-dataset evaluation** | Train on CASIA, evaluate on Coverage/CoMoFoD for generalization | Medium |
+| Improvement | Expected Impact |
+|-------------|----------------|
+| Cross-dataset evaluation (Coverage, CoMoFoD) | Test generalization beyond CASIA |
+| Vision Transformer encoders (Swin, ConvNeXt) | Potentially capture global manipulation patterns |
+| Multi-scale input pipeline (256 + 512) | Better handling of varying tampered region sizes |
 
 ### Medium Priority
 
-| Improvement | Expected Impact | Complexity |
-|-------------|----------------|------------|
-| Attention mechanisms (CBAM, SE blocks) | Focus on tampered regions, improve small-mask detection | Low |
-| Test-time augmentation (TTA) | Flip + multi-crop averaging for better test predictions | Low |
-| Larger effective batch size with proper LR scaling | More stable training dynamics | Low |
-| SRM (Steganalysis Rich Model) filters as additional input | Captures noise-level inconsistencies | Medium |
-| Multi-task learning with forgery-type classification | Separate copy-move vs splicing detection | Medium |
-
-### Research Direction
-
-| Direction | Description |
-|-----------|-------------|
-| Vision Transformers for forgery detection | ViT/Swin encoders may capture global manipulation patterns that CNNs miss |
-| Frequency-domain features | DCT/wavelet coefficients as input channels for compression artifact analysis |
-| Self-supervised pretraining on manipulation data | Pre-train on synthetic manipulations before fine-tuning on CASIA |
-| Ensemble methods | Combine RGB-model + ELA-model + frequency-model predictions |
-| Boundary refinement (CRF post-processing) | Conditional Random Field to sharpen predicted mask boundaries |
+| Improvement | Expected Impact |
+|-------------|----------------|
+| SRM (Steganalysis Rich Model) filters | Noise-level inconsistency detection |
+| Ensemble of RGB + ELA + frequency models | Complementary feature fusion |
+| CRF post-processing | Sharper mask boundaries |
+| Larger/better datasets | Break the F1~0.80 ceiling |
 
 ---
 
-## Appendix A: Generator Script Chain
+## 13. Repository Structure
 
 ```
-Source Notebook                → Script                → Output Notebook
-─────────────────────────────────────────────────────────────────────────
-vK.10.6                        → generate_vk11.py       → vK.11.0
-vK.11.0 [Pretrained ResNet34]  → generate_vk111.py      → vK.11.1
-vK.11.1                        → generate_vk112.py      → vK.11.2
-vK.11.2                        → generate_vk113.py      → vK.11.3
-vK.11.3                        → generate_vk114.py      → vK.11.4
-vK.11.4                        → generate_vk115.py      → vK.11.5
-vK.11.5                        → generate_vk120.py      → vK.12.0
+submission/                              # Final deliverables for review
+    final_notebook.ipynb                 # vR.P.19 (best model)
+    submission_report.md
+    model_weights_link.txt
+
+Notebooks/
+    final/                               # Best notebooks curated
+    research_tracks/
+        v0x/documentation_experiments/   # Early exploration (5 approaches)
+        vK/kaggle_baseline_experiments/  # Kaggle track (25 source, 22 runs)
+        vR/research_paper_experiments/   # ETASR track (11 source, 16 runs)
+        vR.P/pretrained_ablation_experiments/  # Primary track (41 source, 22 runs)
+
+experiments/
+    wandb_runs/                          # 37 W&B exported run notebooks
+    wandb_tracking/                      # W&B infrastructure
+
+Docs/
+    submission_report/                   # Clean submission documents
+    research_docs/                       # Full research documentation
+        ablation_study/                  # Ablation plans, audits, leaderboards
+
+scripts/                                 # Python build/utility scripts
+models/                                  # Pretrained weight analysis
+configs/                                 # Training configs, sweep definitions
+data_access/                             # Dataset info and download links
+_archive/                                # Historical artifacts
 ```
-
-## Appendix B: File Inventory
-
-### Notebook Counts
-
-| Location | Count | Description |
-|----------|-------|-------------|
-| `Notebooks/` (main) | 14 | Primary development notebooks (vK.11.x, vK.12.0, v9) |
-| `Notebooks/Runs/` | 16 | Kaggle execution outputs |
-| `Notebooks/reference/` | 16 | Third-party reference notebooks |
-| `Notebooks/archive/` | 4 | Early development drafts |
-| `Notebooks/helper functions/` | 15+ | Generator and patch scripts |
-
-### Audit and Documentation
-
-| Location | Files | Description |
-|----------|-------|-------------|
-| `Audit_all_runs_till_vK.10.5/` | 9 | Audits through vK.10.5 |
-| `Audit_all_runs_till_vK.10.6/` | 13 | Extended audits including vK.10.6 |
-| `Audit of Reference Notebook/` | 10 | Reference notebook audits |
-| `Docs/v11/` | 8 | Architecture specification and roadmap |
-| `Docs/Docs9_Notebook_Roast/` | 10 | v9 critical review |
-| `Docs/Docs_vK4_Kill_Review/` | 10 | vK.4 adversarial review |
-| `Docs/Docs_vK4_Notebook_Audit/` | 10 | vK.4 technical audit |
-| `Docs/Interview Prep/` | 11 | Interview preparation docs |
 
 ---
 
-*This document serves as the complete project history and experiment logbook for the Tampered Image Detection & Localization project. It tracks architectural decisions, performance metrics, debugging efforts, and lessons learned across all development phases.*
+## Appendix A: vR.P Experiment Tree
+
+```
+vR.P.0 (RGB, divg07, no GT)
+  |
+vR.P.1 (dataset fix, GT masks) ----+---- vR.P.5 (ResNet-50)
+  |                                 |---- vR.P.6 (EfficientNet-B0)
+vR.P.1.5 (speed optimizations)
+  |
+vR.P.2 (gradual unfreeze)
+  |
+vR.P.3 (ELA input) ----+---- vR.P.7 (extended 50ep, F1=0.7154)
+  |                     |---- vR.P.8 (progressive unfreeze, F1=0.6985)
+  |                     |---- vR.P.9 (Focal+Dice, F1=0.6923)
+  |                     |---- vR.P.10 (CBAM, F1=0.7277)
+  |                     |---- vR.P.16 (DCT only — CATASTROPHIC)
+  |
+vR.P.4 (4ch RGB+ELA, F1=0.7053)
+  |
+vR.P.12 (augmentation, F1=0.6968)
+vR.P.14/14b (TTA — NEGATIVE)
+vR.P.15 (Multi-Q ELA gray, F1=0.7329)
+  |
+vR.P.17 (ELA+DCT fusion, F1=0.7302)
+
+vR.P.19 (Multi-Q RGB ELA 9ch, F1=0.7965) *** SERIES BEST ***
+  |
+  +---- vR.P.20 (magnitude+chrominance, F1=0.7439)
+  +---- vR.P.23 (chrominance only — NEGATIVE)
+  +---- vR.P.24 (Noiseprint — NEGATIVE)
+  +---- vR.P.27 (JPEG augmentation, F1=0.7523)
+  +---- vR.P.28 (cosine annealing, F1=0.7601)
+  +---- vR.P.30 (Multi-Q + CBAM, F1=0.7714)
+           |
+           +---- vR.P.30.1 (50ep, F1=0.7762) *** 2nd BEST ***
+           +---- vR.P.30.2 (unfreeze, F1=0.7721)
+           +---- vR.P.30.3 (Focal+Dice, F1=0.7698)
+           +---- vR.P.30.4 (augmentation, F1=0.7745)
+
+vR.P.40.1–P.41 (Custom Inception encoders — not yet run)
+```
+
+---
+
+*This document serves as the complete project history and experiment logbook for the Tampered Image Detection & Localization project. It tracks architectural decisions, performance metrics, debugging efforts, and lessons learned across all research tracks and 60+ experiment iterations.*
