@@ -1,0 +1,529 @@
+Time
+#
+Log Message
+7.0s	0	0.00s - Debugger warning: It seems that frozen modules are being used, which may
+7.0s	1	0.00s - make the debugger miss breakpoints. Please pass -Xfrozen_modules=off
+7.0s	2	0.00s - to python to disable frozen modules.
+7.0s	3	0.00s - Note: Debugging will proceed. Set PYDEVD_DISABLE_FILE_VALIDATION=1 to disable this validation.
+7.7s	4	0.00s - Debugger warning: It seems that frozen modules are being used, which may
+7.7s	5	0.00s - make the debugger miss breakpoints. Please pass -Xfrozen_modules=off
+7.7s	6	0.00s - to python to disable frozen modules.
+7.7s	7	0.00s - Note: Debugging will proceed. Set PYDEVD_DISABLE_FILE_VALIDATION=1 to disable this validation.
+5419.1s	8	[34m[1mwandb[0m: [33mWARNING[0m Using a boolean value for 'reinit' is deprecated. Use 'return_previous' or 'finish_previous' instead.
+5419.1s	9	
+5419.1s	10	[34m[1mwandb[0m: [33mWARNING[0m Using a boolean value for 'reinit' is deprecated. Use 'return_previous' or 'finish_previous' instead.
+5419.4s	11	[34m[1mwandb[0m: Tracking run with wandb version 0.24.0
+5419.4s	12	
+5419.4s	13	[34m[1mwandb[0m: Tracking run with wandb version 0.24.0
+5419.4s	14	[34m[1mwandb[0m: W&B syncing is set to [1m`offline`[0m in this directory. Run [1m`wandb online`[0m or set [1mWANDB_MODE=online[0m to enable cloud syncing.
+5419.4s	15	[34m[1mwandb[0m: Run data is saved locally in [35m[1m/kaggle/working/wandb/offline-run-20260313_085213-tjeuox5r[0m
+5419.4s	16	
+5419.4s	17	[34m[1mwandb[0m: W&B syncing is set to [1m`offline`[0m in this directory. Run [1m`wandb online`[0m or set [1mWANDB_MODE=online[0m to enable cloud syncing.
+5419.4s	18	[34m[1mwandb[0m: Run data is saved locally in [35m[1m/kaggle/working/wandb/offline-run-20260313_085213-tjeuox5r[0m
+5423.7s	19	/usr/local/lib/python3.12/dist-packages/albumentations/augmentations/transforms.py:311: FutureWarning: JpegCompression has been deprecated. Please use ImageCompression
+5423.7s	20	  warnings.warn(
+5423.7s	21	
+5423.7s	22	/usr/local/lib/python3.12/dist-packages/albumentations/augmentations/transforms.py:311: FutureWarning: JpegCompression has been deprecated. Please use ImageCompression
+5423.7s	23	  warnings.warn(
+8.8s	24	IN_COLAB: False
+8.8s	25	COLAB_KAGGLE_INPUT: /kaggle/input
+8.8s	26	COLAB_KAGGLE_WORKING: /kaggle/working
+8.8s	27	KAGGLE_DATASET_SLUG: sagnikkayalcse52/casia-spicing-detection-localization
+8.8s	28	Resolved dataset root: /kaggle/input/datasets/sagnikkayalcse52/casia-spicing-detection-localization/New folder
+8.8s	29	IMAGE: /kaggle/input/datasets/sagnikkayalcse52/casia-spicing-detection-localization/New folder/IMAGE
+8.8s	30	MASK : /kaggle/input/datasets/sagnikkayalcse52/casia-spicing-detection-localization/New folder/MASK
+9.8s	31	Available datasets under /kaggle/input:
+9.8s	32	 - datasets
+82.3s	33	
+82.3s	34	Discovered directories:
+82.3s	35	IMAGE_DIR: /kaggle/input/datasets/sagnikkayalcse52/casia-spicing-detection-localization/New folder/IMAGE
+82.3s	36	MASK_DIR: /kaggle/input/datasets/sagnikkayalcse52/casia-spicing-detection-localization/New folder/MASK
+82.3s	37	
+82.3s	38	Scanning images in /kaggle/input/datasets/sagnikkayalcse52/casia-spicing-detection-localization/New folder/IMAGE/Au
+86.6s	39	
+86.6s	40	Scanning images in /kaggle/input/datasets/sagnikkayalcse52/casia-spicing-detection-localization/New folder/IMAGE/Tp
+93.6s	41	
+93.6s	42	Total images found: 12614
+93.6s	43	
+93.6s	44	Preview:
+93.6s	45	                                          image_path  \
+93.6s	46	0  /kaggle/input/datasets/sagnikkayalcse52/casia-...   
+93.6s	47	1  /kaggle/input/datasets/sagnikkayalcse52/casia-...   
+93.6s	48	2  /kaggle/input/datasets/sagnikkayalcse52/casia-...   
+93.6s	49	3  /kaggle/input/datasets/sagnikkayalcse52/casia-...   
+93.6s	50	4  /kaggle/input/datasets/sagnikkayalcse52/casia-...   
+93.6s	51	
+93.6s	52	                                           mask_path  mask_exists  \
+93.6s	53	0  /kaggle/input/datasets/sagnikkayalcse52/casia-...            1   
+93.6s	54	1  /kaggle/input/datasets/sagnikkayalcse52/casia-...            1   
+93.6s	55	2  /kaggle/input/datasets/sagnikkayalcse52/casia-...            1   
+93.6s	56	3  /kaggle/input/datasets/sagnikkayalcse52/casia-...            1   
+93.6s	57	4  /kaggle/input/datasets/sagnikkayalcse52/casia-...            1   
+93.6s	58	
+93.6s	59	  class_folder class_name  label  
+93.6s	60	0           Au  authentic      0  
+93.6s	61	1           Au  authentic      0  
+93.6s	62	2           Au  authentic      0  
+93.6s	63	3           Au  authentic      0  
+93.6s	64	4           Au  authentic      0  
+93.6s	65	
+93.6s	66	Metadata CSV saved to: /kaggle/working/image_mask_metadata.csv
+93.6s	67	
+93.6s	68	Class counts:
+93.6s	69	class_name
+93.6s	70	authentic    7491
+93.6s	71	tampered     5123
+93.6s	72	Name: count, dtype: int64
+93.6s	73	
+93.6s	74	Missing masks examples:
+93.6s	75	Empty DataFrame
+93.6s	76	Columns: [image_path, mask_path, mask_exists, class_folder, class_name, label]
+93.6s	77	Index: []
+95.2s	78	Total samples: 12614
+95.2s	79	class_name
+95.2s	80	authentic    7491
+95.2s	81	tampered     5123
+95.2s	82	Name: count, dtype: int64
+95.2s	83	Train size: 8829
+95.2s	84	Val size:   1892
+95.2s	85	Test size:  1893
+95.2s	86	
+95.2s	87	Train class distribution:
+95.2s	88	class_name
+95.2s	89	authentic    5243
+95.2s	90	tampered     3586
+95.2s	91	Name: count, dtype: int64
+95.2s	92	
+95.2s	93	Val class distribution:
+95.2s	94	class_name
+95.2s	95	authentic    1124
+95.2s	96	tampered      768
+95.2s	97	Name: count, dtype: int64
+95.2s	98	
+95.2s	99	Test class distribution:
+95.2s	100	class_name
+95.2s	101	authentic    1124
+95.2s	102	tampered      769
+95.2s	103	Name: count, dtype: int64
+95.2s	104	
+95.2s	105	Saved:
+95.2s	106	 - /kaggle/working/train_metadata.csv
+95.2s	107	 - /kaggle/working/val_metadata.csv
+95.2s	108	 - /kaggle/working/test_metadata.csv
+97.9s	109	[?25l   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m0.0/125.7 kB[0m [31m?[0m eta [36m-:--:--[0m
+[2K   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m125.7/125.7 kB[0m [31m5.9 MB/s[0m eta [36m0:00:00[0m
+98.5s	110	[?25h[?25l   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m0.0/49.9 MB[0m [31m?[0m eta [36m-:--:--[0m
+[2K   [91m━[0m[90m╺[0m[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m1.6/49.9 MB[0m [31m46.8 MB/s[0m eta [36m0:00:02[0m
+[2K   [91m━━━━━[0m[91m╸[0m[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m7.4/49.9 MB[0m [31m109.1 MB/s[0m eta [36m0:00:01[0m
+[2K   [91m━━━━━━━━━━[0m[91m╸[0m[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m13.5/49.9 MB[0m [31m174.7 MB/s[0m eta [36m0:00:01[0m
+[2K   [91m━━━━━━━━━━━━━━━[0m[91m╸[0m[90m━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m19.6/49.9 MB[0m [31m172.4 MB/s[0m eta [36m0:00:01[0m
+[2K   [91m━━━━━━━━━━━━━━━━━━━━[0m[90m╺[0m[90m━━━━━━━━━━━━━━━━━━━[0m [32m25.5/49.9 MB[0m [31m170.7 MB/s[0m eta [36m0:00:01[0m
+[2K   [91m━━━━━━━━━━━━━━━━━━━━━━━━━[0m[90m╺[0m[90m━━━━━━━━━━━━━━[0m [32m31.7/49.9 MB[0m [31m174.0 MB/s[0m eta [36m0:00:01[0m
+[2K   [91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m[90m╺[0m[90m━━━━━━━━━[0m [32m37.8/49.9 MB[0m [31m171.5 MB/s[0m eta [36m0:00:01[0m
+[2K   [91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m[90m╺[0m[90m━━━━[0m [32m43.7/49.9 MB[0m [31m171.8 MB/s[0m eta [36m0:00:01[0m
+[2K   [91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m[91m╸[0m [32m49.7/49.9 MB[0m [31m172.6 MB/s[0m eta [36m0:00:01[0m
+[2K   [91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m[91m╸[0m [32m49.9/49.9 MB[0m [31m166.3 MB/s[0m eta [36m0:00:01[0m
+[2K   [91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m[91m╸[0m [32m49.9/49.9 MB[0m [31m166.3 MB/s[0m eta [36m0:00:01[0m
+[2K   [91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m[91m╸[0m [32m49.9/49.9 MB[0m [31m166.3 MB/s[0m eta [36m0:00:01[0m
+[2K   [91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m[91m╸[0m [32m49.9/49.9 MB[0m [31m166.3 MB/s[0m eta [36m0:00:01[0m
+[2K   [91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m[91m╸[0m [32m49.9/49.9 MB[0m [31m166.3 MB/s[0m eta [36m0:00:01[0m
+[2K   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m49.9/49.9 MB[0m [31m38.1 MB/s[0m eta [36m0:00:00[0m
+113.6s	111	[?25hTrain: 1893 Val: 1892 Test: 1892
+113.6s	112	class_name
+113.6s	113	authentic    1124
+113.6s	114	tampered      769
+113.6s	115	Name: count, dtype: int64
+113.6s	116	Device: cuda
+236.8s	117	Epoch 1 | Train Loss: 1.2134 | Train Acc: 0.5552
+281.5s	118	Epoch 1 | Val Loss: 1.0731 | Val Acc: 0.6268 | Val Dice: 0.5212
+281.5s	119	==> Saved best model (val acc: 0.6268498942917548 )
+411.7s	120	Epoch 2 | Train Loss: 1.0263 | Train Acc: 0.5499
+457.1s	121	Epoch 2 | Val Loss: 1.0030 | Val Acc: 0.5624 | Val Dice: 0.4714
+587.7s	122	Epoch 3 | Train Loss: 0.9547 | Train Acc: 0.5478
+633.9s	123	Epoch 3 | Val Loss: 0.9004 | Val Acc: 0.6089 | Val Dice: 0.5398
+763.2s	124	Epoch 4 | Train Loss: 0.9120 | Train Acc: 0.5763
+810.2s	125	Epoch 4 | Val Loss: 0.8909 | Val Acc: 0.5856 | Val Dice: 0.5949
+939.8s	126	Epoch 5 | Train Loss: 0.8772 | Train Acc: 0.5541
+985.1s	127	Epoch 5 | Val Loss: 0.9059 | Val Acc: 0.5988 | Val Dice: 0.5949
+1114.6s	128	Epoch 6 | Train Loss: 0.8499 | Train Acc: 0.5795
+1159.6s	129	Epoch 6 | Val Loss: 0.8356 | Val Acc: 0.5951 | Val Dice: 0.5949
+1289.0s	130	Epoch 7 | Train Loss: 0.8389 | Train Acc: 0.5890
+1334.1s	131	Epoch 7 | Val Loss: 0.8264 | Val Acc: 0.6078 | Val Dice: 0.5949
+1463.6s	132	Epoch 8 | Train Loss: 0.8338 | Train Acc: 0.5821
+1508.8s	133	Epoch 8 | Val Loss: 0.8250 | Val Acc: 0.5936 | Val Dice: 0.5949
+1638.5s	134	Epoch 9 | Train Loss: 0.8177 | Train Acc: 0.5980
+1684.4s	135	Epoch 9 | Val Loss: 0.8213 | Val Acc: 0.5539 | Val Dice: 0.5949
+1814.2s	136	Epoch 10 | Train Loss: 0.8118 | Train Acc: 0.6049
+1859.7s	137	Epoch 10 | Val Loss: 0.8047 | Val Acc: 0.6284 | Val Dice: 0.5949
+1859.7s	138	==> Saved best model (val acc: 0.6284355179704016 )
+1989.3s	139	Epoch 11 | Train Loss: 0.8012 | Train Acc: 0.6107
+2034.5s	140	Epoch 11 | Val Loss: 0.8386 | Val Acc: 0.6358 | Val Dice: 0.5949
+2034.5s	141	==> Saved best model (val acc: 0.6358350951374208 )
+2164.2s	142	Epoch 12 | Train Loss: 0.8027 | Train Acc: 0.6181
+2209.5s	143	Epoch 12 | Val Loss: 0.8018 | Val Acc: 0.5983 | Val Dice: 0.5949
+2339.1s	144	Epoch 13 | Train Loss: 0.8084 | Train Acc: 0.6049
+2384.5s	145	Epoch 13 | Val Loss: 0.8099 | Val Acc: 0.5867 | Val Dice: 0.5949
+2514.1s	146	Epoch 14 | Train Loss: 0.7957 | Train Acc: 0.6165
+2559.5s	147	Epoch 14 | Val Loss: 0.8003 | Val Acc: 0.6390 | Val Dice: 0.5949
+2559.5s	148	==> Saved best model (val acc: 0.6390063424947146 )
+2689.3s	149	Epoch 15 | Train Loss: 0.7920 | Train Acc: 0.6128
+2734.4s	150	Epoch 15 | Val Loss: 0.7849 | Val Acc: 0.6305 | Val Dice: 0.5949
+2864.1s	151	Epoch 16 | Train Loss: 0.7914 | Train Acc: 0.6149
+2910.5s	152	Epoch 16 | Val Loss: 0.8037 | Val Acc: 0.6601 | Val Dice: 0.5949
+2910.5s	153	==> Saved best model (val acc: 0.6601479915433404 )
+3040.3s	154	Epoch 17 | Train Loss: 0.7913 | Train Acc: 0.6212
+3085.8s	155	Epoch 17 | Val Loss: 0.7811 | Val Acc: 0.6332 | Val Dice: 0.5949
+3215.3s	156	Epoch 18 | Train Loss: 0.7789 | Train Acc: 0.6466
+3260.7s	157	Epoch 18 | Val Loss: 0.8090 | Val Acc: 0.6342 | Val Dice: 0.5949
+3390.2s	158	Epoch 19 | Train Loss: 0.7772 | Train Acc: 0.6350
+3436.2s	159	Epoch 19 | Val Loss: 0.7810 | Val Acc: 0.6697 | Val Dice: 0.5949
+3436.2s	160	==> Saved best model (val acc: 0.669661733615222 )
+3566.2s	161	Epoch 20 | Train Loss: 0.7752 | Train Acc: 0.6376
+3612.2s	162	Epoch 20 | Val Loss: 0.7848 | Val Acc: 0.6469 | Val Dice: 0.5949
+3741.9s	163	Epoch 21 | Train Loss: 0.7660 | Train Acc: 0.6550
+3788.5s	164	Epoch 21 | Val Loss: 0.7679 | Val Acc: 0.6633 | Val Dice: 0.5949
+3918.1s	165	Epoch 22 | Train Loss: 0.7726 | Train Acc: 0.6498
+3964.0s	166	Epoch 22 | Val Loss: 0.7598 | Val Acc: 0.6691 | Val Dice: 0.5949
+4093.7s	167	Epoch 23 | Train Loss: 0.7710 | Train Acc: 0.6619
+4139.5s	168	Epoch 23 | Val Loss: 0.7616 | Val Acc: 0.6712 | Val Dice: 0.5949
+4139.6s	169	==> Saved best model (val acc: 0.671247357293869 )
+4269.1s	170	Epoch 24 | Train Loss: 0.7575 | Train Acc: 0.6672
+4315.6s	171	Epoch 24 | Val Loss: 0.7581 | Val Acc: 0.6866 | Val Dice: 0.5949
+4315.6s	172	==> Saved best model (val acc: 0.6865750528541226 )
+4445.5s	173	Epoch 25 | Train Loss: 0.7538 | Train Acc: 0.6572
+4491.4s	174	Epoch 25 | Val Loss: 0.7686 | Val Acc: 0.6728 | Val Dice: 0.5949
+4621.1s	175	Epoch 26 | Train Loss: 0.7484 | Train Acc: 0.6704
+4666.5s	176	Epoch 26 | Val Loss: 0.7492 | Val Acc: 0.6675 | Val Dice: 0.5949
+4796.3s	177	Epoch 27 | Train Loss: 0.7441 | Train Acc: 0.6809
+4842.3s	178	Epoch 27 | Val Loss: 0.7626 | Val Acc: 0.6818 | Val Dice: 0.5949
+4973.4s	179	Epoch 28 | Train Loss: 0.7463 | Train Acc: 0.6767
+5019.3s	180	Epoch 28 | Val Loss: 0.7342 | Val Acc: 0.7003 | Val Dice: 0.5949
+5019.3s	181	==> Saved best model (val acc: 0.7003171247357294 )
+5149.3s	182	Epoch 29 | Train Loss: 0.7293 | Train Acc: 0.6962
+5194.9s	183	Epoch 29 | Val Loss: 0.7481 | Val Acc: 0.7077 | Val Dice: 0.5949
+5194.9s	184	==> Saved best model (val acc: 0.7077167019027484 )
+5324.5s	185	Epoch 30 | Train Loss: 0.7269 | Train Acc: 0.6904
+5370.4s	186	Epoch 30 | Val Loss: 0.7372 | Val Acc: 0.7045 | Val Dice: 0.5949
+5370.4s	187	Training finished. Best Val Acc: 0.7077167019027484
+5416.3s	188	Epoch Final | Test Loss: 0.7481 | Test Acc: 0.7077 | Test Dice: 0.5949
+5418.5s	189	W&B online login unavailable, switching to offline mode: No API key configured. Use `wandb login` to log in.
+5420.0s	190	W&B active: True
+5420.0s	191	W&B mode: offline
+5423.5s	192	Train: 8829 Val: 1892 Test: 1893
+5423.5s	193	Train class distribution:
+5423.5s	194	 class_name
+5423.5s	195	authentic    5243
+5423.5s	196	tampered     3586
+5423.5s	197	Name: count, dtype: int64
+5423.5s	198	Device: cuda
+5424.0s	199	Class weights: tensor([0.8420, 1.2310], device='cuda:0')
+6030.7s	200	Epoch 01 | Train Loss: 0.8801 | Train Acc: 0.4741
+6076.0s	201	Epoch 01 | Val Loss: 0.8302 | Val Acc: 0.5201 | Val Dice: 0.5949 | Val IoU: 0.5949 | Val F1: 0.5949
+6076.1s	202	==> Saved new best model (Val Acc: 0.5201)
+6679.8s	203	Epoch 02 | Train Loss: 0.8319 | Train Acc: 0.4763
+6725.5s	204	Epoch 02 | Val Loss: 0.8236 | Val Acc: 0.5359 | Val Dice: 0.5949 | Val IoU: 0.5949 | Val F1: 0.5949
+6725.5s	205	==> Saved new best model (Val Acc: 0.5359)
+7328.2s	206	Epoch 03 | Train Loss: 0.8280 | Train Acc: 0.4845
+7373.3s	207	Epoch 03 | Val Loss: 0.8200 | Val Acc: 0.5026 | Val Dice: 0.5949 | Val IoU: 0.5949 | Val F1: 0.5949
+7976.9s	208	Epoch 04 | Train Loss: 0.8262 | Train Acc: 0.4903
+8022.2s	209	Epoch 04 | Val Loss: 0.8215 | Val Acc: 0.4709 | Val Dice: 0.5949 | Val IoU: 0.5949 | Val F1: 0.5949
+8625.9s	210	Epoch 05 | Train Loss: 0.8242 | Train Acc: 0.5069
+8671.7s	211	Epoch 05 | Val Loss: 0.8202 | Val Acc: 0.5761 | Val Dice: 0.5949 | Val IoU: 0.5949 | Val F1: 0.5949
+8671.7s	212	==> Saved new best model (Val Acc: 0.5761)
+7.0s	213	0.00s - Debugger warning: It seems that frozen modules are being used, which may
+7.0s	214	0.00s - make the debugger miss breakpoints. Please pass -Xfrozen_modules=off
+7.0s	215	0.00s - to python to disable frozen modules.
+7.0s	216	0.00s - Note: Debugging will proceed. Set PYDEVD_DISABLE_FILE_VALIDATION=1 to disable this validation.
+7.7s	217	0.00s - Debugger warning: It seems that frozen modules are being used, which may
+7.7s	218	0.00s - make the debugger miss breakpoints. Please pass -Xfrozen_modules=off
+7.7s	219	0.00s - to python to disable frozen modules.
+7.7s	220	0.00s - Note: Debugging will proceed. Set PYDEVD_DISABLE_FILE_VALIDATION=1 to disable this validation.
+5419.1s	221	[34m[1mwandb[0m: [33mWARNING[0m Using a boolean value for 'reinit' is deprecated. Use 'return_previous' or 'finish_previous' instead.
+5419.1s	222	
+5419.1s	223	[34m[1mwandb[0m: [33mWARNING[0m Using a boolean value for 'reinit' is deprecated. Use 'return_previous' or 'finish_previous' instead.
+5419.4s	224	[34m[1mwandb[0m: Tracking run with wandb version 0.24.0
+5419.4s	225	
+5419.4s	226	[34m[1mwandb[0m: Tracking run with wandb version 0.24.0
+5419.4s	227	[34m[1mwandb[0m: W&B syncing is set to [1m`offline`[0m in this directory. Run [1m`wandb online`[0m or set [1mWANDB_MODE=online[0m to enable cloud syncing.
+5419.4s	228	[34m[1mwandb[0m: Run data is saved locally in [35m[1m/kaggle/working/wandb/offline-run-20260313_085213-tjeuox5r[0m
+5419.4s	229	
+5419.4s	230	[34m[1mwandb[0m: W&B syncing is set to [1m`offline`[0m in this directory. Run [1m`wandb online`[0m or set [1mWANDB_MODE=online[0m to enable cloud syncing.
+5419.4s	231	[34m[1mwandb[0m: Run data is saved locally in [35m[1m/kaggle/working/wandb/offline-run-20260313_085213-tjeuox5r[0m
+5423.7s	232	/usr/local/lib/python3.12/dist-packages/albumentations/augmentations/transforms.py:311: FutureWarning: JpegCompression has been deprecated. Please use ImageCompression
+5423.7s	233	  warnings.warn(
+5423.7s	234	
+5423.7s	235	/usr/local/lib/python3.12/dist-packages/albumentations/augmentations/transforms.py:311: FutureWarning: JpegCompression has been deprecated. Please use ImageCompression
+5423.7s	236	  warnings.warn(
+8.8s	237	IN_COLAB: False
+8.8s	238	COLAB_KAGGLE_INPUT: /kaggle/input
+8.8s	239	COLAB_KAGGLE_WORKING: /kaggle/working
+8.8s	240	KAGGLE_DATASET_SLUG: sagnikkayalcse52/casia-spicing-detection-localization
+8.8s	241	Resolved dataset root: /kaggle/input/datasets/sagnikkayalcse52/casia-spicing-detection-localization/New folder
+8.8s	242	IMAGE: /kaggle/input/datasets/sagnikkayalcse52/casia-spicing-detection-localization/New folder/IMAGE
+8.8s	243	MASK : /kaggle/input/datasets/sagnikkayalcse52/casia-spicing-detection-localization/New folder/MASK
+9.8s	244	Available datasets under /kaggle/input:
+9.8s	245	 - datasets
+82.3s	246	
+82.3s	247	Discovered directories:
+82.3s	248	IMAGE_DIR: /kaggle/input/datasets/sagnikkayalcse52/casia-spicing-detection-localization/New folder/IMAGE
+82.3s	249	MASK_DIR: /kaggle/input/datasets/sagnikkayalcse52/casia-spicing-detection-localization/New folder/MASK
+82.3s	250	
+82.3s	251	Scanning images in /kaggle/input/datasets/sagnikkayalcse52/casia-spicing-detection-localization/New folder/IMAGE/Au
+86.6s	252	
+86.6s	253	Scanning images in /kaggle/input/datasets/sagnikkayalcse52/casia-spicing-detection-localization/New folder/IMAGE/Tp
+93.6s	254	
+93.6s	255	Total images found: 12614
+93.6s	256	
+93.6s	257	Preview:
+93.6s	258	                                          image_path  \
+93.6s	259	0  /kaggle/input/datasets/sagnikkayalcse52/casia-...   
+93.6s	260	1  /kaggle/input/datasets/sagnikkayalcse52/casia-...   
+93.6s	261	2  /kaggle/input/datasets/sagnikkayalcse52/casia-...   
+93.6s	262	3  /kaggle/input/datasets/sagnikkayalcse52/casia-...   
+93.6s	263	4  /kaggle/input/datasets/sagnikkayalcse52/casia-...   
+93.6s	264	
+93.6s	265	                                           mask_path  mask_exists  \
+93.6s	266	0  /kaggle/input/datasets/sagnikkayalcse52/casia-...            1   
+93.6s	267	1  /kaggle/input/datasets/sagnikkayalcse52/casia-...            1   
+93.6s	268	2  /kaggle/input/datasets/sagnikkayalcse52/casia-...            1   
+93.6s	269	3  /kaggle/input/datasets/sagnikkayalcse52/casia-...            1   
+93.6s	270	4  /kaggle/input/datasets/sagnikkayalcse52/casia-...            1   
+93.6s	271	
+93.6s	272	  class_folder class_name  label  
+93.6s	273	0           Au  authentic      0  
+93.6s	274	1           Au  authentic      0  
+93.6s	275	2           Au  authentic      0  
+93.6s	276	3           Au  authentic      0  
+93.6s	277	4           Au  authentic      0  
+93.6s	278	
+93.6s	279	Metadata CSV saved to: /kaggle/working/image_mask_metadata.csv
+93.6s	280	
+93.6s	281	Class counts:
+93.6s	282	class_name
+93.6s	283	authentic    7491
+93.6s	284	tampered     5123
+93.6s	285	Name: count, dtype: int64
+93.6s	286	
+93.6s	287	Missing masks examples:
+93.6s	288	Empty DataFrame
+93.6s	289	Columns: [image_path, mask_path, mask_exists, class_folder, class_name, label]
+93.6s	290	Index: []
+95.2s	291	Total samples: 12614
+95.2s	292	class_name
+95.2s	293	authentic    7491
+95.2s	294	tampered     5123
+95.2s	295	Name: count, dtype: int64
+95.2s	296	Train size: 8829
+95.2s	297	Val size:   1892
+95.2s	298	Test size:  1893
+95.2s	299	
+95.2s	300	Train class distribution:
+95.2s	301	class_name
+95.2s	302	authentic    5243
+95.2s	303	tampered     3586
+95.2s	304	Name: count, dtype: int64
+95.2s	305	
+95.2s	306	Val class distribution:
+95.2s	307	class_name
+95.2s	308	authentic    1124
+95.2s	309	tampered      768
+95.2s	310	Name: count, dtype: int64
+95.2s	311	
+95.2s	312	Test class distribution:
+95.2s	313	class_name
+95.2s	314	authentic    1124
+95.2s	315	tampered      769
+95.2s	316	Name: count, dtype: int64
+95.2s	317	
+95.2s	318	Saved:
+95.2s	319	 - /kaggle/working/train_metadata.csv
+95.2s	320	 - /kaggle/working/val_metadata.csv
+95.2s	321	 - /kaggle/working/test_metadata.csv
+97.9s	322	[?25l   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m0.0/125.7 kB[0m [31m?[0m eta [36m-:--:--[0m
+[2K   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m125.7/125.7 kB[0m [31m5.9 MB/s[0m eta [36m0:00:00[0m
+98.5s	323	[?25h[?25l   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m0.0/49.9 MB[0m [31m?[0m eta [36m-:--:--[0m
+[2K   [91m━[0m[90m╺[0m[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m1.6/49.9 MB[0m [31m46.8 MB/s[0m eta [36m0:00:02[0m
+[2K   [91m━━━━━[0m[91m╸[0m[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m7.4/49.9 MB[0m [31m109.1 MB/s[0m eta [36m0:00:01[0m
+[2K   [91m━━━━━━━━━━[0m[91m╸[0m[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m13.5/49.9 MB[0m [31m174.7 MB/s[0m eta [36m0:00:01[0m
+[2K   [91m━━━━━━━━━━━━━━━[0m[91m╸[0m[90m━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m19.6/49.9 MB[0m [31m172.4 MB/s[0m eta [36m0:00:01[0m
+[2K   [91m━━━━━━━━━━━━━━━━━━━━[0m[90m╺[0m[90m━━━━━━━━━━━━━━━━━━━[0m [32m25.5/49.9 MB[0m [31m170.7 MB/s[0m eta [36m0:00:01[0m
+[2K   [91m━━━━━━━━━━━━━━━━━━━━━━━━━[0m[90m╺[0m[90m━━━━━━━━━━━━━━[0m [32m31.7/49.9 MB[0m [31m174.0 MB/s[0m eta [36m0:00:01[0m
+[2K   [91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m[90m╺[0m[90m━━━━━━━━━[0m [32m37.8/49.9 MB[0m [31m171.5 MB/s[0m eta [36m0:00:01[0m
+[2K   [91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m[90m╺[0m[90m━━━━[0m [32m43.7/49.9 MB[0m [31m171.8 MB/s[0m eta [36m0:00:01[0m
+[2K   [91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m[91m╸[0m [32m49.7/49.9 MB[0m [31m172.6 MB/s[0m eta [36m0:00:01[0m
+[2K   [91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m[91m╸[0m [32m49.9/49.9 MB[0m [31m166.3 MB/s[0m eta [36m0:00:01[0m
+[2K   [91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m[91m╸[0m [32m49.9/49.9 MB[0m [31m166.3 MB/s[0m eta [36m0:00:01[0m
+[2K   [91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m[91m╸[0m [32m49.9/49.9 MB[0m [31m166.3 MB/s[0m eta [36m0:00:01[0m
+[2K   [91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m[91m╸[0m [32m49.9/49.9 MB[0m [31m166.3 MB/s[0m eta [36m0:00:01[0m
+[2K   [91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m[91m╸[0m [32m49.9/49.9 MB[0m [31m166.3 MB/s[0m eta [36m0:00:01[0m
+[2K   [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m49.9/49.9 MB[0m [31m38.1 MB/s[0m eta [36m0:00:00[0m
+113.6s	324	[?25hTrain: 1893 Val: 1892 Test: 1892
+113.6s	325	class_name
+113.6s	326	authentic    1124
+113.6s	327	tampered      769
+113.6s	328	Name: count, dtype: int64
+113.6s	329	Device: cuda
+236.8s	330	Epoch 1 | Train Loss: 1.2134 | Train Acc: 0.5552
+281.5s	331	Epoch 1 | Val Loss: 1.0731 | Val Acc: 0.6268 | Val Dice: 0.5212
+281.5s	332	==> Saved best model (val acc: 0.6268498942917548 )
+411.7s	333	Epoch 2 | Train Loss: 1.0263 | Train Acc: 0.5499
+457.1s	334	Epoch 2 | Val Loss: 1.0030 | Val Acc: 0.5624 | Val Dice: 0.4714
+587.7s	335	Epoch 3 | Train Loss: 0.9547 | Train Acc: 0.5478
+633.9s	336	Epoch 3 | Val Loss: 0.9004 | Val Acc: 0.6089 | Val Dice: 0.5398
+763.2s	337	Epoch 4 | Train Loss: 0.9120 | Train Acc: 0.5763
+810.2s	338	Epoch 4 | Val Loss: 0.8909 | Val Acc: 0.5856 | Val Dice: 0.5949
+939.8s	339	Epoch 5 | Train Loss: 0.8772 | Train Acc: 0.5541
+985.1s	340	Epoch 5 | Val Loss: 0.9059 | Val Acc: 0.5988 | Val Dice: 0.5949
+1114.6s	341	Epoch 6 | Train Loss: 0.8499 | Train Acc: 0.5795
+1159.6s	342	Epoch 6 | Val Loss: 0.8356 | Val Acc: 0.5951 | Val Dice: 0.5949
+1289.0s	343	Epoch 7 | Train Loss: 0.8389 | Train Acc: 0.5890
+1334.1s	344	Epoch 7 | Val Loss: 0.8264 | Val Acc: 0.6078 | Val Dice: 0.5949
+1463.6s	345	Epoch 8 | Train Loss: 0.8338 | Train Acc: 0.5821
+1508.8s	346	Epoch 8 | Val Loss: 0.8250 | Val Acc: 0.5936 | Val Dice: 0.5949
+1638.5s	347	Epoch 9 | Train Loss: 0.8177 | Train Acc: 0.5980
+1684.4s	348	Epoch 9 | Val Loss: 0.8213 | Val Acc: 0.5539 | Val Dice: 0.5949
+1814.2s	349	Epoch 10 | Train Loss: 0.8118 | Train Acc: 0.6049
+1859.7s	350	Epoch 10 | Val Loss: 0.8047 | Val Acc: 0.6284 | Val Dice: 0.5949
+1859.7s	351	==> Saved best model (val acc: 0.6284355179704016 )
+1989.3s	352	Epoch 11 | Train Loss: 0.8012 | Train Acc: 0.6107
+2034.5s	353	Epoch 11 | Val Loss: 0.8386 | Val Acc: 0.6358 | Val Dice: 0.5949
+2034.5s	354	==> Saved best model (val acc: 0.6358350951374208 )
+2164.2s	355	Epoch 12 | Train Loss: 0.8027 | Train Acc: 0.6181
+2209.5s	356	Epoch 12 | Val Loss: 0.8018 | Val Acc: 0.5983 | Val Dice: 0.5949
+2339.1s	357	Epoch 13 | Train Loss: 0.8084 | Train Acc: 0.6049
+2384.5s	358	Epoch 13 | Val Loss: 0.8099 | Val Acc: 0.5867 | Val Dice: 0.5949
+2514.1s	359	Epoch 14 | Train Loss: 0.7957 | Train Acc: 0.6165
+2559.5s	360	Epoch 14 | Val Loss: 0.8003 | Val Acc: 0.6390 | Val Dice: 0.5949
+2559.5s	361	==> Saved best model (val acc: 0.6390063424947146 )
+2689.3s	362	Epoch 15 | Train Loss: 0.7920 | Train Acc: 0.6128
+2734.4s	363	Epoch 15 | Val Loss: 0.7849 | Val Acc: 0.6305 | Val Dice: 0.5949
+2864.1s	364	Epoch 16 | Train Loss: 0.7914 | Train Acc: 0.6149
+2910.5s	365	Epoch 16 | Val Loss: 0.8037 | Val Acc: 0.6601 | Val Dice: 0.5949
+2910.5s	366	==> Saved best model (val acc: 0.6601479915433404 )
+3040.3s	367	Epoch 17 | Train Loss: 0.7913 | Train Acc: 0.6212
+3085.8s	368	Epoch 17 | Val Loss: 0.7811 | Val Acc: 0.6332 | Val Dice: 0.5949
+3215.3s	369	Epoch 18 | Train Loss: 0.7789 | Train Acc: 0.6466
+3260.7s	370	Epoch 18 | Val Loss: 0.8090 | Val Acc: 0.6342 | Val Dice: 0.5949
+3390.2s	371	Epoch 19 | Train Loss: 0.7772 | Train Acc: 0.6350
+3436.2s	372	Epoch 19 | Val Loss: 0.7810 | Val Acc: 0.6697 | Val Dice: 0.5949
+3436.2s	373	==> Saved best model (val acc: 0.669661733615222 )
+3566.2s	374	Epoch 20 | Train Loss: 0.7752 | Train Acc: 0.6376
+3612.2s	375	Epoch 20 | Val Loss: 0.7848 | Val Acc: 0.6469 | Val Dice: 0.5949
+3741.9s	376	Epoch 21 | Train Loss: 0.7660 | Train Acc: 0.6550
+3788.5s	377	Epoch 21 | Val Loss: 0.7679 | Val Acc: 0.6633 | Val Dice: 0.5949
+3918.1s	378	Epoch 22 | Train Loss: 0.7726 | Train Acc: 0.6498
+3964.0s	379	Epoch 22 | Val Loss: 0.7598 | Val Acc: 0.6691 | Val Dice: 0.5949
+4093.7s	380	Epoch 23 | Train Loss: 0.7710 | Train Acc: 0.6619
+4139.5s	381	Epoch 23 | Val Loss: 0.7616 | Val Acc: 0.6712 | Val Dice: 0.5949
+4139.6s	382	==> Saved best model (val acc: 0.671247357293869 )
+4269.1s	383	Epoch 24 | Train Loss: 0.7575 | Train Acc: 0.6672
+4315.6s	384	Epoch 24 | Val Loss: 0.7581 | Val Acc: 0.6866 | Val Dice: 0.5949
+4315.6s	385	==> Saved best model (val acc: 0.6865750528541226 )
+4445.5s	386	Epoch 25 | Train Loss: 0.7538 | Train Acc: 0.6572
+4491.4s	387	Epoch 25 | Val Loss: 0.7686 | Val Acc: 0.6728 | Val Dice: 0.5949
+4621.1s	388	Epoch 26 | Train Loss: 0.7484 | Train Acc: 0.6704
+4666.5s	389	Epoch 26 | Val Loss: 0.7492 | Val Acc: 0.6675 | Val Dice: 0.5949
+4796.3s	390	Epoch 27 | Train Loss: 0.7441 | Train Acc: 0.6809
+4842.3s	391	Epoch 27 | Val Loss: 0.7626 | Val Acc: 0.6818 | Val Dice: 0.5949
+4973.4s	392	Epoch 28 | Train Loss: 0.7463 | Train Acc: 0.6767
+5019.3s	393	Epoch 28 | Val Loss: 0.7342 | Val Acc: 0.7003 | Val Dice: 0.5949
+5019.3s	394	==> Saved best model (val acc: 0.7003171247357294 )
+5149.3s	395	Epoch 29 | Train Loss: 0.7293 | Train Acc: 0.6962
+5194.9s	396	Epoch 29 | Val Loss: 0.7481 | Val Acc: 0.7077 | Val Dice: 0.5949
+5194.9s	397	==> Saved best model (val acc: 0.7077167019027484 )
+5324.5s	398	Epoch 30 | Train Loss: 0.7269 | Train Acc: 0.6904
+5370.4s	399	Epoch 30 | Val Loss: 0.7372 | Val Acc: 0.7045 | Val Dice: 0.5949
+5370.4s	400	Training finished. Best Val Acc: 0.7077167019027484
+5416.3s	401	Epoch Final | Test Loss: 0.7481 | Test Acc: 0.7077 | Test Dice: 0.5949
+5418.5s	402	W&B online login unavailable, switching to offline mode: No API key configured. Use `wandb login` to log in.
+5420.0s	403	W&B active: True
+5420.0s	404	W&B mode: offline
+5423.5s	405	Train: 8829 Val: 1892 Test: 1893
+5423.5s	406	Train class distribution:
+5423.5s	407	 class_name
+5423.5s	408	authentic    5243
+5423.5s	409	tampered     3586
+5423.5s	410	Name: count, dtype: int64
+5423.5s	411	Device: cuda
+5424.0s	412	Class weights: tensor([0.8420, 1.2310], device='cuda:0')
+6030.7s	413	Epoch 01 | Train Loss: 0.8801 | Train Acc: 0.4741
+6076.0s	414	Epoch 01 | Val Loss: 0.8302 | Val Acc: 0.5201 | Val Dice: 0.5949 | Val IoU: 0.5949 | Val F1: 0.5949
+6076.1s	415	==> Saved new best model (Val Acc: 0.5201)
+6679.8s	416	Epoch 02 | Train Loss: 0.8319 | Train Acc: 0.4763
+6725.5s	417	Epoch 02 | Val Loss: 0.8236 | Val Acc: 0.5359 | Val Dice: 0.5949 | Val IoU: 0.5949 | Val F1: 0.5949
+6725.5s	418	==> Saved new best model (Val Acc: 0.5359)
+7328.2s	419	Epoch 03 | Train Loss: 0.8280 | Train Acc: 0.4845
+7373.3s	420	Epoch 03 | Val Loss: 0.8200 | Val Acc: 0.5026 | Val Dice: 0.5949 | Val IoU: 0.5949 | Val F1: 0.5949
+7976.9s	421	Epoch 04 | Train Loss: 0.8262 | Train Acc: 0.4903
+8022.2s	422	Epoch 04 | Val Loss: 0.8215 | Val Acc: 0.4709 | Val Dice: 0.5949 | Val IoU: 0.5949 | Val F1: 0.5949
+8625.9s	423	Epoch 05 | Train Loss: 0.8242 | Train Acc: 0.5069
+8671.7s	424	Epoch 05 | Val Loss: 0.8202 | Val Acc: 0.5761 | Val Dice: 0.5949 | Val IoU: 0.5949 | Val F1: 0.5949
+8671.7s	425	==> Saved new best model (Val Acc: 0.5761)
+9275.2s	426	Epoch 06 | Train Loss: 0.8231 | Train Acc: 0.5173
+9320.3s	427	Epoch 06 | Val Loss: 0.8157 | Val Acc: 0.5745 | Val Dice: 0.5949 | Val IoU: 0.5949 | Val F1: 0.5949
+9923.7s	428	Epoch 07 | Train Loss: 0.8178 | Train Acc: 0.5445
+10008.4s	429	Epoch 07 | Val Loss: 0.8086 | Val Acc: 0.5381 | Val Dice: 0.5949 | Val IoU: 0.5949 | Val F1: 0.5949
+10620.5s	430	Epoch 08 | Train Loss: 0.8148 | Train Acc: 0.5728
+10666.5s	431	Epoch 08 | Val Loss: 0.8017 | Val Acc: 0.6015 | Val Dice: 0.5949 | Val IoU: 0.5949 | Val F1: 0.5949
+10666.6s	432	==> Saved new best model (Val Acc: 0.6015)
+11271.2s	433	Epoch 09 | Train Loss: 0.8110 | Train Acc: 0.5781
+11316.8s	434	Epoch 09 | Val Loss: 0.7951 | Val Acc: 0.6184 | Val Dice: 0.5949 | Val IoU: 0.5949 | Val F1: 0.5949
+11316.8s	435	==> Saved new best model (Val Acc: 0.6184)
+11921.0s	436	Epoch 10 | Train Loss: 0.8077 | Train Acc: 0.5894
+11966.4s	437	Epoch 10 | Val Loss: 0.7946 | Val Acc: 0.6195 | Val Dice: 0.5881 | Val IoU: 0.5881 | Val F1: 0.5881
+11966.4s	438	==> Saved new best model (Val Acc: 0.6195)
+12570.1s	439	Epoch 11 | Train Loss: 0.8083 | Train Acc: 0.5873
+12616.0s	440	Epoch 11 | Val Loss: 0.7939 | Val Acc: 0.6369 | Val Dice: 0.5882 | Val IoU: 0.5881 | Val F1: 0.5882
+12616.0s	441	==> Saved new best model (Val Acc: 0.6369)
+13220.0s	442	Epoch 12 | Train Loss: 0.8068 | Train Acc: 0.5932
+13265.5s	443	Epoch 12 | Val Loss: 0.7942 | Val Acc: 0.6591 | Val Dice: 0.5814 | Val IoU: 0.5813 | Val F1: 0.5814
+13265.5s	444	==> Saved new best model (Val Acc: 0.6591)
+13870.0s	445	Epoch 13 | Train Loss: 0.8067 | Train Acc: 0.6029
+13915.5s	446	Epoch 13 | Val Loss: 0.7937 | Val Acc: 0.6665 | Val Dice: 0.5759 | Val IoU: 0.5757 | Val F1: 0.5759
+13915.6s	447	==> Saved new best model (Val Acc: 0.6665)
+14520.5s	448	Epoch 14 | Train Loss: 0.8072 | Train Acc: 0.6022
+14566.1s	449	Epoch 14 | Val Loss: 0.7918 | Val Acc: 0.6210 | Val Dice: 0.5595 | Val IoU: 0.5593 | Val F1: 0.5595
+15171.1s	450	Epoch 15 | Train Loss: 0.8083 | Train Acc: 0.6020
+15216.5s	451	Epoch 15 | Val Loss: 0.8031 | Val Acc: 0.5486 | Val Dice: 0.4976 | Val IoU: 0.4962 | Val F1: 0.4976
+15820.3s	452	Epoch 16 | Train Loss: 0.8061 | Train Acc: 0.6034
+15865.8s	453	Epoch 16 | Val Loss: 0.7979 | Val Acc: 0.6718 | Val Dice: 0.4798 | Val IoU: 0.4760 | Val F1: 0.4798
+15865.8s	454	==> Saved new best model (Val Acc: 0.6718)
+16469.5s	455	Epoch 17 | Train Loss: 0.8065 | Train Acc: 0.6081
+16515.5s	456	Epoch 17 | Val Loss: 0.7848 | Val Acc: 0.6601 | Val Dice: 0.3411 | Val IoU: 0.3308 | Val F1: 0.3411
+17119.7s	457	Epoch 18 | Train Loss: 0.8020 | Train Acc: 0.6203
+17165.0s	458	Epoch 18 | Val Loss: 0.7779 | Val Acc: 0.6612 | Val Dice: 0.4607 | Val IoU: 0.4535 | Val F1: 0.4607
+17771.3s	459	Epoch 19 | Train Loss: 0.7995 | Train Acc: 0.6327
+17817.4s	460	Epoch 19 | Val Loss: 0.7720 | Val Acc: 0.6670 | Val Dice: 0.3729 | Val IoU: 0.3618 | Val F1: 0.3729
+18424.2s	461	Epoch 20 | Train Loss: 0.7924 | Train Acc: 0.6513
+18470.3s	462	Epoch 20 | Val Loss: 0.7544 | Val Acc: 0.7674 | Val Dice: 0.5296 | Val IoU: 0.5210 | Val F1: 0.5296
+18470.3s	463	==> Saved new best model (Val Acc: 0.7674)
+19077.3s	464	Epoch 21 | Train Loss: 0.7881 | Train Acc: 0.6615
+19124.2s	465	Epoch 21 | Val Loss: 0.7758 | Val Acc: 0.6755 | Val Dice: 0.3949 | Val IoU: 0.3783 | Val F1: 0.3949
+19731.0s	466	Epoch 22 | Train Loss: 0.7786 | Train Acc: 0.6875
+19778.0s	467	Epoch 22 | Val Loss: 0.7295 | Val Acc: 0.8256 | Val Dice: 0.5379 | Val IoU: 0.5294 | Val F1: 0.5379
+19778.0s	468	==> Saved new best model (Val Acc: 0.8256)
+20384.2s	469	Epoch 23 | Train Loss: 0.7736 | Train Acc: 0.7000
+20430.6s	470	Epoch 23 | Val Loss: 0.7068 | Val Acc: 0.8388 | Val Dice: 0.4913 | Val IoU: 0.4782 | Val F1: 0.4913
+20430.6s	471	==> Saved new best model (Val Acc: 0.8388)
+21041.5s	472	Epoch 24 | Train Loss: 0.7612 | Train Acc: 0.7201
+21087.6s	473	Epoch 24 | Val Loss: 0.6823 | Val Acc: 0.8705 | Val Dice: 0.5320 | Val IoU: 0.5212 | Val F1: 0.5320
+21087.6s	474	==> Saved new best model (Val Acc: 0.8705)
+21694.8s	475	Epoch 25 | Train Loss: 0.7564 | Train Acc: 0.7342
+21740.5s	476	Epoch 25 | Val Loss: 0.6776 | Val Acc: 0.8642 | Val Dice: 0.5441 | Val IoU: 0.5308 | Val F1: 0.5441
+22347.0s	477	Epoch 26 | Train Loss: 0.7401 | Train Acc: 0.7650
+22393.1s	478	Epoch 26 | Val Loss: 0.6587 | Val Acc: 0.8805 | Val Dice: 0.5425 | Val IoU: 0.5242 | Val F1: 0.5425
+22393.1s	479	==> Saved new best model (Val Acc: 0.8805)
+23003.0s	480	Epoch 27 | Train Loss: 0.7344 | Train Acc: 0.7702
+23048.7s	481	Epoch 27 | Val Loss: 0.6634 | Val Acc: 0.8673 | Val Dice: 0.5175 | Val IoU: 0.5009 | Val F1: 0.5175
+23658.1s	482	Epoch 28 | Train Loss: 0.7281 | Train Acc: 0.7674
+23704.2s	483	Epoch 28 | Val Loss: 0.6518 | Val Acc: 0.8779 | Val Dice: 0.5254 | Val IoU: 0.5076 | Val F1: 0.5254
+24313.2s	484	Epoch 29 | Train Loss: 0.7163 | Train Acc: 0.7885
+24359.6s	485	Epoch 29 | Val Loss: 0.6477 | Val Acc: 0.8837 | Val Dice: 0.5268 | Val IoU: 0.5075 | Val F1: 0.5268
+24359.7s	486	==> Saved new best model (Val Acc: 0.8837)
+24968.9s	487	Epoch 30 | Train Loss: 0.7163 | Train Acc: 0.7854
+25015.1s	488	Epoch 30 | Val Loss: 0.6427 | Val Acc: 0.8864 | Val Dice: 0.5286 | Val IoU: 0.5077 | Val F1: 0.5286
+25015.2s	489	==> Saved new best model (Val Acc: 0.8864)
+25625.7s	490	Epoch 31 | Train Loss: 0.7152 | Train Acc: 0.7924
+25671.6s	491	Epoch 31 | Val Loss: 0.6559 | Val Acc: 0.8700 | Val Dice: 0.4929 | Val IoU: 0.4714 | Val F1: 0.4929
+26281.2s	492	Epoch 32 | Train Loss: 0.7139 | Train Acc: 0.7919
+26327.0s	493	Epoch 32 | Val Loss: 0.6507 | Val Acc: 0.8805 | Val Dice: 0.5103 | Val IoU: 0.4888 | Val F1: 0.5103

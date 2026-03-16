@@ -1,0 +1,19 @@
+runner_id: 3
+# Heavy (P.12 50ep) + 3 Light
+experiments:
+  - file: "vR.P.12 Image Detection and Localisation.ipynb"
+    version: "vR.P.12"
+    desc: "Data Augmentation + Focal (50ep)"
+    run_id: "run01"
+  - file: "vR.P.4 Image Detection and Localisation.ipynb"
+    version: "vR.P.4"
+    desc: "4-Channel RGB+ELA"
+    run_id: "run01"
+  - file: "vR.P.5 Image Detection and Localisation.ipynb"
+    version: "vR.P.5"
+    desc: "ResNet-50 Encoder"
+    run_id: "run01"
+  - file: "vR.P.6 Image Detection and Localisation.ipynb"
+    version: "vR.P.6"
+    desc: "EfficientNet-B0 Encoder"
+    run_id: "run01"

@@ -1,0 +1,28 @@
+# Model Weights — vR.P.19 (Best Run)
+
+## Best Model: vR.P.19 — Multi-Quality RGB ELA 9-Channel Input
+- Architecture: UNet + ResNet-34 (pretrained, frozen encoder, BN unfrozen)
+- Input: 9-channel Multi-Quality RGB ELA (Q=75/85/95 x RGB)
+- Pixel F1: 0.7965 | IoU: 0.6615 | Pixel AUC: 0.9665
+- Dataset: CASIA 2.0 (12,614 images, 70/15/15 split, seed=42)
+
+## Weights Location
+- Weights are saved as part of the Kaggle notebook output
+- Kaggle notebook: vr-p-19-multi-quality-rgb-ela-9-channels
+- The trained model checkpoint is saved at the end of training in the notebook output
+
+## How to Load
+```python
+import segmentation_models_pytorch as smp
+import torch
+
+model = smp.Unet(
+    encoder_name="resnet34",
+    encoder_weights=None,
+    in_channels=9,
+    classes=1,
+    activation=None
+)
+model.load_state_dict(torch.load("best_model.pth", map_location="cpu"))
+model.eval()
+```
