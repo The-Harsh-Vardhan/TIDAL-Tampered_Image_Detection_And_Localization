@@ -30,6 +30,8 @@ checkpoints/
 
 # Dataset images (too large for git)
 kaggle/input/
+data_access/kaggle_workspace/input/
+*.zip
 
 # Windows device name artifacts
 NUL
