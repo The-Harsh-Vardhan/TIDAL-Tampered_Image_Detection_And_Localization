@@ -618,3 +618,91 @@ vR.P.15 (Multi-Q ELA)          vR.P.10 (CBAM)
           (50ep)   (unfreeze) (Focal)    (augmentation)
 ```
 
+---
+
+## 11. Phase 4: Next-Generation Experiments (vR.P.40.x)
+
+### Rationale
+
+After auditing all 22 W&B runs (documented in `WandB_Run_Audit.md`), Phase 4 was designed to address two key gaps in the experiment series:
+
+1. **Encoder Capacity Gap:** All 22 prior runs used ResNet-34 as encoder. Encoder capacity has never been varied as an independent variable.
+2. **Custom Architecture Gap:** All encoders used ImageNet-pretrained weights. No from-scratch domain-specific architecture has been tested.
+
+### Key Insights from Audit
+
+| # | Finding | Implication |
+|---|---------|-------------|
+| 1 | P.19 is the true best (F1=0.7965) | Multi-Q RGB ELA 9ch was the single biggest improvement |
+| 2 | Input pipeline > attention | P.19 (no attention) beats P.10 (CBAM) by 6.88pp |
+| 3 | Encoder never varied | All 22 runs used ResNet-34, leaving encoder capacity untested |
+| 4 | From-scratch training is highest risk | Only ~12K images for full encoder learning |
+
+### P.40.x Experiment Roadmap
+
+| Version | Encoder | Input | Pretrained | Parent | Key Test |
+|---------|---------|-------|------------|--------|----------|
+| **vR.P.40.1** | EfficientNet-B4 | ELA Q=90 (3ch) | ImageNet | P.3 | Encoder capacity baseline |
+| **vR.P.40.2** | EfficientNet-B4 | Multi-Q RGB ELA (9ch) | ImageNet | P.40.1 | Best encoder + best input |
+| **vR.P.40.3** | InceptionV1 Custom | Multi-Q RGB ELA (9ch) | None | P.19 | From-scratch multi-scale (no BN) |
+| **vR.P.40.4** | InceptionV2 Custom | Multi-Q RGB ELA (9ch) | None | P.40.3 | +BN, +factorized 5x5, +AvgPool |
+| **vR.P.40.5** | InceptionV3 Custom | Multi-Q RGB ELA (9ch) | None | P.40.4 | +Asymmetric 1xn+nx1 factorization |
+
+### Dependency Graph
+
+```
+vR.P.3 (ELA baseline)              vR.P.19 (Multi-Q RGB ELA 9ch)
+    F1=0.6920                           F1=0.7965
+       |                                   |
+    P.40.1 (EffNet-B4, ELA 3ch)      P.40.3 (InceptionV1, 9ch, from scratch)
+       |                                   |
+    P.40.2 (EffNet-B4, 9ch)          P.40.4 (InceptionV2: +BN, +factorized)
+       most likely to beat P.19            |
+                                      P.40.5 (InceptionV3: +asymmetric 1xn+nx1)
+```
+
+### Expected Outcomes Matrix
+
+| Version | Positive F1 | Neutral F1 | Negative F1 | Confidence |
+|---------|-------------|------------|-------------|------------|
+| P.40.1 | > 0.75 | 0.68–0.75 | < 0.68 | 60% positive |
+| P.40.2 | > 0.82 (beat P.19) | 0.75–0.82 | < 0.75 | 45% positive |
+| P.40.3 | > 0.65 | 0.50–0.65 | < 0.50 | 30% positive |
+| P.40.4 | > P.40.3 + 5pp | ±5pp of P.40.3 | < P.40.3 | 45% positive |
+| P.40.5 | > P.40.4 + 3pp | ±3pp of P.40.4 | < P.40.4 | 35% positive |
+
+### Custom Inception Encoder Architecture
+
+All three Inception variants share the same 5-stage structure registered as SMP-compatible encoders via `EncoderMixin`:
+
+```
+out_channels = [in_channels, 32, 128, 240, 336, 432]
+
+Stem:   Conv(in_ch→32, stride=2) → 192×192
+Stage1: Pool + Inception(32→128)  → 96×96
+Stage2: Pool + Inception(128→240) → 48×48
+Stage3: Pool + Inception(240→336) → 24×24
+Stage4: Pool + Inception(336→432) → 12×12
+```
+
+| Feature | V1 (P.40.3) | V2 (P.40.4) | V3 (P.40.5) |
+|---------|-------------|-------------|-------------|
+| BatchNorm | No | Yes | Yes |
+| 5x5 branch | Full 5x5 conv | Two 3x3 (factorized) | 1xn + nx1 (asymmetric) |
+| Pool type | MaxPool | AvgPool | AvgPool |
+| Asymmetric n | N/A | N/A | Adaptive (3→7) |
+
+### Technical Notes
+
+- Custom encoders override `set_in_channels()` to avoid SMP's `patch_first_conv()` which fails on non-standard architectures
+- All custom encoders train entirely from scratch (no pretrained weights)
+- Batch size reduced to 8 for EfficientNet-B4 (larger model, prevent OOM on T4)
+- EfficientNet-B4 uses SMP's native support (`smp.Unet(encoder_name='efficientnet-b4')`)
+
+### Documentation
+
+All 5 experiments have complete per-version documentation in `Docs vR.P.x/docs-vR.P.40.{1-5}/`:
+- `experiment_description.md` — Hypothesis, motivation, pipeline, configuration
+- `implementation_plan.md` — Cell modification map, key code, verification checklist
+- `expected_outcomes.md` — Metric targets, success criteria, failure modes
+
