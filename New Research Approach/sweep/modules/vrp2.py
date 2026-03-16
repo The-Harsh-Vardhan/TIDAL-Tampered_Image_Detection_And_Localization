@@ -1128,7 +1128,7 @@ try:
     axes[1, 0].grid(True, alpha=0.3)
     
     # Learning Rate
-    axes[1, 1].plot(epochs_range, history['lr'], 'k-', linewidth=2)
+    axes[1, 1].plot(epochs_range, history.get('lr', history.get('lr_encoder', [])), 'k-', linewidth=2)
     axes[1, 1].set_xlabel('Epoch')
     axes[1, 1].set_ylabel('Learning Rate')
     axes[1, 1].set_title('Learning Rate Schedule')

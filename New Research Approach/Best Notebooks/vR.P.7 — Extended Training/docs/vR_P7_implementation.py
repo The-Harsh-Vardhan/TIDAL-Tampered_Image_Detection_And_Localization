@@ -613,7 +613,7 @@ for epoch in range(start_epoch, EPOCHS + 1):
     history['val_loss'].append(val_loss)
     history['val_pixel_f1'].append(val_f1)
     history['val_pixel_iou'].append(val_iou)
-    history['lr'].append(current_lr)
+    history.get('lr', history.get('lr_encoder', [])).append(current_lr)
 
     # Check for improvement
     improved = ''
@@ -706,7 +706,7 @@ axes[1, 0].set_title('Validation Pixel IoU')
 axes[1, 0].grid(True, alpha=0.3)
 
 # Learning Rate
-axes[1, 1].plot(epochs_range, history['lr'], 'k-', linewidth=2)
+axes[1, 1].plot(epochs_range, history.get('lr', history.get('lr_encoder', [])), 'k-', linewidth=2)
 axes[1, 1].set_xlabel('Epoch')
 axes[1, 1].set_ylabel('Learning Rate')
 axes[1, 1].set_title('Learning Rate Schedule')
