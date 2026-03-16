@@ -29,3 +29,38 @@ Among the availabel datasets this was the biggest one and runnable on compute re
 
 
 I also found "FakeShield" and tried to implement a pruned version but it was too complicated but it was stil very comlex and time taking so I discontinued that version too
+
+---
+
+## Phase 4: Next-Generation Experiments (vR.P.40.x)
+
+After auditing all 22 W&B runs (documented in `Docs for Ablation Study/WandB_Run_Audit.md`), Phase 4 was designed to address two key gaps:
+
+### Gap 1: Encoder Capacity
+All prior experiments used ResNet-34. Phase 4 tests EfficientNet-B4 which has compound scaling (depth + width + resolution) and built-in Squeeze-and-Excitation attention.
+
+### Gap 2: Custom Architecture
+The Inception module family (V1/V2/V3) was converted from a TensorFlow/Keras deepfake detection reference notebook to PyTorch and registered as SMP-compatible custom encoders. These train entirely from scratch on CASIA2 to test whether domain-specific architectures can compete with pretrained ImageNet encoders.
+
+### vR.P.40.x Experiment Series
+
+| Version | Encoder | Input | Pretrained | Key Test |
+|---------|---------|-------|------------|----------|
+| **vR.P.40.1** | EfficientNet-B4 | ELA Q=90 (3ch) | ImageNet | Encoder capacity (baseline) |
+| **vR.P.40.2** | EfficientNet-B4 | Multi-Q RGB ELA (9ch) | ImageNet | Best encoder + best input |
+| **vR.P.40.3** | InceptionV1 Custom | Multi-Q RGB ELA (9ch) | None | From-scratch multi-scale (no BN) |
+| **vR.P.40.4** | InceptionV2 Custom | Multi-Q RGB ELA (9ch) | None | +BN, +factorized 5x5, +AvgPool |
+| **vR.P.40.5** | InceptionV3 Custom | Multi-Q RGB ELA (9ch) | None | +Asymmetric 1xn+nx1 factorization |
+
+### Key Insights from Audit
+
+1. **P.19 is the true best** (F1=0.7965) — Multi-Q RGB ELA 9ch was the single biggest improvement
+2. **Input pipeline matters more than attention** — P.19 (no attention) beats P.10 (CBAM) by 6.88pp
+3. **Encoder has never been varied** — all 22 runs used ResNet-34, leaving encoder capacity untested
+4. **From-scratch training is the biggest risk** — only ~12K images for full encoder learning
+
+### Expected Outcomes Matrix
+
+- P.40.2 is the most likely candidate to beat P.19 (combining best encoder + best input)
+- P.40.3-40.5 will likely underperform pretrained encoders but establish from-scratch baselines
+- The V1 < V2 < V3 progression tests whether BN and factorization matter for forensic features

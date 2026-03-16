@@ -23,15 +23,31 @@ The assignment requires **both image-level detection AND pixel-level localizatio
 
 These notebooks produce pixel-level tampered region masks and satisfy all assignment requirements.
 
-### 1. vR.P.10 -- CBAM Attention (Best Localization Overall)
+### 1. vR.P.19 -- Multi-Q RGB ELA 9ch (New Best Localization)
 
 | Metric | Value |
 |--------|-------|
-| Pixel F1 | **0.7277** (series best) |
-| Pixel IoU | **0.5719** (series best) |
-| Pixel AUC | **0.9573** (series best) |
+| Pixel F1 | **0.7965** (series best) |
+| Pixel IoU | **0.6622** (series best) |
+| Pixel AUC | **0.9707** (series best) |
+| Image Accuracy | 90.85% |
+| Image ROC-AUC | **0.9740** (series best) |
+| Quality Score | 82/100 |
+| Verdict | **POSITIVE** (+10.45pp from P.3 baseline) |
+
+**Why #1:** Highest localization metrics across all experiments by a wide margin. Multi-quality RGB ELA (Q=75/85/95) captures forensic artifacts across the compression spectrum in 9 channels. +6.88pp F1 over previous best P.10 without any attention mechanism -- proves input pipeline is the dominant factor.
+
+---
+
+### 2. vR.P.10 -- CBAM Attention (Best Attention-Based Localization)
+
+| Metric | Value |
+|--------|-------|
+| Pixel F1 | 0.7277 |
+| Pixel IoU | 0.5719 |
+| Pixel AUC | 0.9573 |
 | Image Accuracy | 87.32% |
-| Image ROC-AUC | **0.9633** (series best) |
+| Image ROC-AUC | 0.9633 |
 | Quality Score | 87/100 |
 | Verdict | **POSITIVE** (+3.57pp from P.3 baseline) |
 
@@ -41,7 +57,7 @@ These notebooks produce pixel-level tampered region masks and satisfy all assign
 
 ---
 
-### 2. vR.P.7 -- Extended Training (Runner-up Localization)
+### 3. vR.P.7 -- Extended Training (Runner-up Localization)
 
 | Metric | Value |
 |--------|-------|
