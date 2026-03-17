@@ -314,6 +314,19 @@ Mixed-set metrics are inflated because authentic images have all-zero GT masks, 
 
 Every experiment changes exactly **one variable** from its parent version. This isolates the effect of each modification and enables clear causal attribution.
 
+### Ablation Discipline Exceptions
+
+Four experiments deviate from the single-variable protocol by changing multiple variables simultaneously:
+
+| Experiment | Changes Made | Note |
+|-----------|-------------|------|
+| vR.P.8 | Progressive encoder unfreeze + 50 epochs (was 25) | 2 simultaneous changes |
+| vR.P.12 | Data augmentation + CBAM (inherited) | 2 simultaneous changes |
+| vR.P.13 | Focal+Dice loss + inherits P.12's combined changes | 3 compounded changes from P.3 |
+| vR.P.28 | Cosine annealing LR + different training schedule | 2 simultaneous changes |
+
+These results remain valid but should be interpreted as combined-effect measurements, not isolated ablations. See [`AUDIT_REPORT.md`](Notebooks/research_tracks/vR.P/pretrained_ablation_experiments/final%20runs/AUDIT_REPORT.md) for the full notebook audit.
+
 ---
 
 ## 10. Error Analysis
