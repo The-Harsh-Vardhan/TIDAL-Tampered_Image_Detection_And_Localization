@@ -59,7 +59,7 @@ The key contributions of this work are:
     \item A rigorous ablation study establishing that \textbf{input representation dominates all other factors} --- the single biggest improvement came from how we preprocess the image, not from architecture or training tricks.
     \item Transparent documentation of both successes and failures, including three failed research tracks that provided lessons directly shaping the final approach.
     \item Full reproducibility via Weights~\&~Biases experiment tracking and fixed random seeds.
-    \item Open-source code and experiment logs available publicly.\footnote{GitHub: \url{https://github.com/The-Harsh-Vardhan/TIDAL-Tampered_Image_Detection_And_Localization}}\textsuperscript{,}\footnote{W\&B Report: \url{https://api.wandb.ai/links/tampered-image-detection-and-localization/w5fy6lb0}}
+    \item Open-source code and experiment logs available publicly.\footnote{GitHub: \url{https://github.com/The-Harsh-Vardhan/TIDAL-Tampered_Image_Detection_And_Localization}}\textsuperscript{,}\footnote{W\&B Report: \url{https://api.wandb.ai/links/tampered-image-detection-and-localization/w5fy6lb0}}\textsuperscript{,}\footnote{Submission Report (PDF): \url{https://drive.google.com/file/d/1_zZZyN2QQpVBu6v43YElF7WVk1HL50MY/view?usp=sharing}}
 \end{itemize}
 
 
@@ -146,6 +146,7 @@ Several challenges make this dataset difficult:
 
 % ==================== METHODOLOGY ====================
 \section{Methodology}
+\label{sec:methodology}
 
 The final system consists of three main components: ELA preprocessing, a UNet segmentation model with a pretrained encoder, and a training pipeline with carefully chosen loss functions and hyperparameters.
 
@@ -716,6 +717,16 @@ A centralized leaderboard notebook automatically queries the W\&B API to generat
 \subsection{Reproducibility Verification}
 
 Two experiments (vR.P.3 and vR.P.10) were run twice independently on Kaggle T4 GPUs. Both runs produced identical metrics, confirming the reproducibility of results with seed~42.
+
+\subsection{Model Weights}
+
+The trained model weights for the best model (vR.P.19, Multi-Quality RGB ELA 9-channel, Pixel F1 = 0.7965) are publicly available for download and inference:
+
+\begin{center}
+\url{https://drive.google.com/drive/folders/1X8YecLh0OAanRU8IG7XHaLrG9w3cdiFK}
+\end{center}
+
+The checkpoint includes the full UNet state dict (ResNet-34 encoder + decoder) and can be loaded directly with the \texttt{segmentation\_models\_pytorch} library using the same configuration described in Section~\ref{sec:methodology}.
 
 
 % ==================== KEY LEARNINGS ====================
