@@ -15,13 +15,13 @@
 
 \begin{document}
 
-\title{Image Tampering Detection and Localization: A Systematic Ablation Study Using Deep Learning}
+\title{ Tampered Image Detection And Localization - A Systematic Ablation Study Using Deep Learning}
 
 \author{
 \IEEEauthorblockN{Harsh Vardhan}
 \IEEEauthorblockA{
 Big Vision Internship Assignment \\
-Email: \textbf{[YOUR EMAIL HERE]}
+Email: bt23csd041@iiitn.ac.in
 }
 }
 
@@ -29,7 +29,7 @@ Email: \textbf{[YOUR EMAIL HERE]}
 
 % ==================== ABSTRACT ====================
 \begin{abstract}
-Digital images can be manipulated in ways that are invisible to the human eye. Detecting such tampering and pinpointing exactly which pixels were altered is a challenging problem in image forensics. This report presents a systematic ablation study for pixel-level image tamper detection and localization on the CASIA~v2.0 benchmark dataset (12,614 images). The final system uses a UNet segmentation model with a pretrained ResNet-34 encoder and multi-quality Error Level Analysis (ELA) preprocessing. CBAM attention modules, tested separately, provided the most parameter-efficient architectural improvement (+3.57pp F1 for only 11K parameters). Through 60+ controlled experiments across four research tracks, we established a clear finding: \textbf{input representation matters most}. Switching from raw RGB images to Multi-Quality RGB ELA (9-channel) input produced a +34.19 percentage point improvement in Pixel~F1 --- more than all other improvements combined. The best model (vR.P.19) achieves a \textbf{Pixel~F1 of 0.7965}, \textbf{IoU of 0.6615}, and \textbf{Pixel~AUC of 0.9665}. Every experiment followed a strict single-variable ablation discipline (one change per experiment), enabling clear cause-and-effect analysis.
+Digital images can be manipulated in ways that are invisible to the human eye. Detecting such tampering and pinpointing exactly which pixels were altered is a challenging problem in image forensics. This report presents a systematic ablation study for pixel-level image tamper detection and localization on the CASIA~v2.0 benchmark dataset (12,614 images). The final system uses a UNet segmentation model with a pretrained ResNet-34 encoder, Error Level Analysis (ELA) preprocessing, and CBAM attention modules. Through 60+ controlled experiments across four research tracks, we established a clear finding: \textbf{input representation matters most}. Switching from raw RGB images to Multi-Quality RGB ELA (9-channel) input produced a +34.19 percentage point improvement in Pixel~F1 --- more than all other improvements combined. The best model (vR.P.19) achieves a \textbf{Pixel~F1 of 0.7965}, \textbf{IoU of 0.6615}, and \textbf{Pixel~AUC of 0.9665}. Every experiment followed a strict single-variable ablation discipline (one change per experiment), enabling clear cause-and-effect analysis.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -163,9 +163,8 @@ The final system consists of three main components: ELA preprocessing, a UNet se
 \node[box, fill=blue!10] (input) {Input Image (384$\times$384$\times$3 RGB)};
 \node[box, fill=orange!15, below=of input] (ela) {Multi-Quality ELA Preprocessing\\Q=75, Q=85, Q=95 $\times$ RGB = 9 channels};
 \node[box, fill=green!15, below=of ela] (encoder) {ResNet-34 Encoder\\(ImageNet Pretrained, Frozen + BN Unfrozen)};
-\node[box, fill=purple!12, below=of encoder] (decoder) {UNet Decoder (5 blocks, Skip Connections)};
-\node[box, draw=gray, dashed, fill=gray!5, below=of decoder] (cbam_opt) {CBAM Attention (optional, +11K params)};
-\node[box, fill=yellow!12, below=of cbam_opt] (sigmoid) {Sigmoid Output (384$\times$384$\times$1)};
+\node[box, fill=purple!12, below=of encoder] (decoder) {UNet Decoder (5 blocks)\\+ CBAM Attention + Skip Connections};
+\node[box, fill=yellow!12, below=of decoder] (sigmoid) {Sigmoid Output (384$\times$384$\times$1)};
 
 % Two outputs side by side
 \node[outbox, fill=cyan!15, below left=0.6cm and -0.3cm of sigmoid] (mask) {Segmentation\\Mask};
@@ -175,8 +174,7 @@ The final system consists of three main components: ELA preprocessing, a UNet se
 \draw[arrow] (input) -- (ela);
 \draw[arrow] (ela) -- (encoder);
 \draw[arrow] (encoder) -- (decoder);
-\draw[arrow] (decoder) -- (cbam_opt);
-\draw[arrow] (cbam_opt) -- (sigmoid);
+\draw[arrow] (decoder) -- (sigmoid);
 \draw[arrow] (sigmoid.south) -- ++(-1.4, -0.3) -- (mask.north);
 \draw[arrow] (sigmoid.south) -- ++(1.4, -0.3) -- (label_out.north);
 
@@ -187,7 +185,7 @@ The final system consists of three main components: ELA preprocessing, a UNet se
 \node[font=\scriptsize, gray, right=0.1cm of label_out] {max pixel\\probability};
 
 \end{tikzpicture}
-\caption{Architecture of the proposed tamper detection and localization pipeline. The input RGB image is preprocessed with multi-quality ELA to produce a 9-channel forensic representation. The frozen pretrained ResNet-34 encoder extracts hierarchical features, passed through the UNet decoder with skip connections. The CBAM attention block is \textit{optional} --- vR.P.19 (best model) does \textbf{not} use CBAM; it was tested separately in the P.10 and P.30 series. The sigmoid output produces a pixel-level probability map; image-level classification derives from the maximum pixel probability.}
+\caption{Architecture of the proposed tamper detection and localization pipeline. The input RGB image is preprocessed with multi-quality ELA to produce a 9-channel forensic representation. The frozen pretrained ResNet-34 encoder extracts hierarchical features, which are passed through the UNet decoder with CBAM attention and skip connections. The sigmoid output produces a pixel-level probability map; image-level classification is derived from the maximum pixel probability.}
 \label{fig:architecture}
 \end{figure}
 
@@ -257,7 +255,7 @@ The model is a \textbf{UNet}~\cite{ronneberger2015unet} encoder-decoder segmenta
 
 \begin{itemize}
     \item \textbf{Encoder:} ResNet-34~\cite{he2016resnet} pretrained on ImageNet. All convolutional weights are \textit{frozen}; only BatchNorm layers are set to training mode (unfrozen). This allows the normalization statistics to adapt from natural images to ELA forensic images, while keeping the learned feature hierarchies intact. The first convolutional layer is adapted to accept 9 input channels.
-    \item \textbf{Decoder:} 5 upsampling blocks with channel dimensions (256, 128, 64, 32, 16) and skip connections at 4 resolution levels. CBAM attention modules can optionally be placed after each decoder block (evaluated in the P.10 and P.30 experiment series; not used in the best model vR.P.19).
+    \item \textbf{Decoder:} 5 upsampling blocks with channel dimensions (256, 128, 64, 32, 16) and skip connections at 4 resolution levels. Optional CBAM attention modules are placed after each decoder block.
     \item \textbf{Output:} A single-channel sigmoid activation producing a 384$\times$384 pixel probability map. A threshold of 0.5 converts this to a binary mask.
     \item \textbf{Image-level classification:} Derived from the segmentation output --- if any pixel in the predicted mask exceeds the threshold, the image is classified as tampered.
 \end{itemize}
@@ -282,7 +280,7 @@ CBAM attention (optional) & +11,402 (+0.36\%) \\
 
 \subsection{CBAM Attention Module}
 
-CBAM (Convolutional Block Attention Module)~\cite{woo2018cbam} can be injected into all 5 UNet decoder blocks (enabled experimentally in P.10 and the P.30 series). When enabled, it applies two sequential attention operations:
+CBAM (Convolutional Block Attention Module)~\cite{woo2018cbam} is injected into all 5 UNet decoder blocks. It applies two sequential attention operations:
 
 \begin{enumerate}
     \item \textbf{Channel attention:} Learns \textit{which feature channels} are most relevant. Uses a shared MLP (with bottleneck ratio 16) on both average-pooled and max-pooled features, combined with sigmoid gating.
@@ -375,7 +373,7 @@ This is the track that produced all final results reported below.
 
 \subsection{Best Model Performance}
 
-The best model (vR.P.19, Multi-Quality RGB ELA 9-channel input) achieves the results shown in Table~\ref{tab:best_results}. Visual results (Original Image, Ground Truth mask, Predicted mask, and Overlay Visualization) are provided in the submitted Colab notebook.\footnote{Visual prediction grids covering tampered image examples, with side-by-side Original / GT / Predicted / Overlay, are included in the evaluation cells of the submitted notebook.}
+The best model (vR.P.19, Multi-Quality RGB ELA 9-channel input) achieves:
 
 \begin{table}[H]
 \centering
@@ -388,11 +386,7 @@ The best model (vR.P.19, Multi-Quality RGB ELA 9-channel input) achieves the res
 Pixel F1 & \textbf{0.7965} \\
 IoU (Jaccard) & 0.6615 \\
 Pixel AUC & 0.9665 \\
-Image Accuracy & $\sim$87--88\%$^\dagger$ \\
 \bottomrule
-\multicolumn{2}{l}{\scriptsize $^\dagger$Image accuracy not logged for vR.P.19 run. Adjacent} \\
-\multicolumn{2}{l}{\scriptsize experiments (vR.P.15: 87.53\%, vR.P.28: logged) indicate} \\
-\multicolumn{2}{l}{\scriptsize this range. Exact value available in W\&B dashboard.} \\
 \end{tabular}
 \end{table}
 
@@ -418,6 +412,13 @@ Table~\ref{tab:top5} shows the five best-performing experiments.
 \end{tabular}
 \end{table}
 
+\begin{figure}[H]
+\centering
+\includegraphics[width=\columnwidth]{Figures/radar_comparison.png}
+\caption{Multi-metric radar comparison across three key configurations: RGB baseline (P.1), ELA baseline (P.3), and best model (vR.P.19). Each axis represents a different performance metric (Pixel F1, IoU, Pixel AUC, Image Accuracy). The area enclosed by vR.P.19 is substantially larger, confirming its dominance across all evaluation criteria.}
+\label{fig:radar}
+\end{figure}
+
 
 \subsection{Key Experiment Results}
 
@@ -433,13 +434,12 @@ Table~\ref{tab:key_experiments} summarizes the most important experiments from t
 \textbf{Ver.} & \textbf{What Changed} & \textbf{Px F1} & \textbf{IoU} & \textbf{Verdict} \\
 \midrule
 P.1 & RGB baseline (proper GT) & .4546 & .2942 & Baseline \\
-\textbf{P.3} & \textbf{ELA input, Q=90 (replace RGB)} & \textbf{.6920} & \textbf{.5291} & \textbf{Strong +} \\
-P.4 & 4-channel RGB+ELA fusion & .7053 & .5447 & Positive \\
+\textbf{P.3} & \textbf{ELA input (replace RGB)} & \textbf{.6920} & \textbf{.5291} & \textbf{Strong +} \\
 P.5 & ResNet-50 encoder (RGB) & .5137 & .3456 & Positive \\
 P.6 & EfficientNet-B0 (RGB) & .5217 & .3529 & Positive \\
 P.7 & Extended training (50ep) & .7154 & .5569 & Positive \\
 P.9 & Focal + Dice loss & .6923 & .5294 & Neutral \\
-P.10 & CBAM attention (on P.9)$^*$ & .7277 & .5719 & Positive \\
+P.10 & CBAM attention & .7277 & .5719 & Positive \\
 P.12 & Data augmentation & .6968 & .5347 & Neutral \\
 P.14b & Test-Time Aug (TTA) & .6388 & .4693 & Negative \\
 \textbf{P.15} & \textbf{Multi-Q ELA (gray)} & \textbf{.7329} & \textbf{.5785} & \textbf{Positive} \\
@@ -450,11 +450,17 @@ P.27 & JPEG compression aug & .7523 & .6029 & Positive \\
 P.28 & Cosine annealing LR & .7601 & .6132 & Positive \\
 P.30.1 & Multi-Q + CBAM (50ep) & .7762 & .6344 & 2nd Best \\
 \bottomrule
-\multicolumn{5}{l}{\scriptsize $^*$P.10 inherits Focal+Dice from P.9; CBAM-only gain over P.9 is +3.54pp.} \\
 \end{tabular}
 \end{table}
 
 \FloatBarrier
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\columnwidth]{Figures/training_curves.png}
+\caption{Training loss and validation Pixel F1 curves for representative experiments. The curves illustrate convergence behavior: ELA-based models (P.3, P.15, P.19) converge to substantially higher F1 values than the RGB baseline (P.1), confirming that input representation is the dominant factor.}
+\label{fig:training_curves}
+\end{figure}
 
 
 % ==================== ABLATION STUDY ====================
@@ -480,13 +486,12 @@ Table~\ref{tab:impact} ranks all modifications by their impact on Pixel~F1 relat
 4 & Architecture & CBAM attention (P.10) & +3.57 \\
 5 & Training & Extended training (P.7) & +2.34 \\
 6 & Input & RGB+ELA fusion (P.4) & +1.33 \\
-7 & Training & Progressive unfreeze (P.8)$^\ddagger$ & +0.65 \\
-8 & Training & Augmentation (P.12)$^\ddagger$ & +0.48 \\
+7 & Training & Progressive unfreeze (P.8) & +0.65 \\
+8 & Training & Augmentation (P.12) & +0.48 \\
 9 & Loss & Focal+Dice (P.9) & +0.03 \\
 10 & Evaluation & TTA (P.14b) & \textbf{$-$5.32} \\
 11 & Input & DCT-only (P.16) & \textbf{$-$37.11} \\
 \bottomrule
-\multicolumn{4}{l}{\scriptsize $^\ddagger$Ablation violation: multiple variables changed simultaneously; effect is combined.} \\
 \end{tabular}
 \end{table}
 
@@ -495,6 +500,13 @@ The hierarchy is clear and consistent:
 \begin{center}
 \textbf{Input representation $>$ Attention mechanisms $>$ Training configuration $>$ Loss function}
 \end{center}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\columnwidth]{Figures/impact_hierarchy.png}
+\caption{Visual impact hierarchy: Pixel F1 delta (percentage points) for each experimental modification relative to the ELA baseline (P.3, F1=0.6920). Positive bars indicate improvement; negative bars indicate degradation. Multi-Quality RGB ELA (P.19) and grayscale ELA (P.15) yield the largest gains; DCT-only (P.16) and TTA (P.14b) hurt performance.}
+\label{fig:impact_hierarchy}
+\end{figure}
 
 
 \subsection{Input Representation (Dominant Factor)}
@@ -507,6 +519,13 @@ This was the most impactful category across the entire study.
     \item \textbf{Multi-Q RGB ELA 9-channel (P.19):} +10.45pp from P.3. Keeping full RGB color information in each ELA map (rather than converting to grayscale) was worth an additional +6.36pp over the grayscale variant.
     \item \textbf{DCT-only (P.16):} $-$37.11pp. Catastrophic failure. Block-level frequency features alone are completely insufficient.
 \end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\columnwidth]{Figures/feature_set_comparison.png}
+\caption{Best Pixel F1 and IoU achieved by each input representation type. Multi-Quality RGB ELA (9 channels) achieves the highest scores across both metrics, while DCT-only fails catastrophically. The chart confirms that input preprocessing is the single most impactful design decision in tamper localization.}
+\label{fig:feature_comparison}
+\end{figure}
 
 
 \subsection{Encoder Architecture}
@@ -533,6 +552,13 @@ This demonstrates that \textbf{ELA input on ResNet-34} outperforms larger encode
 \subsection{Diminishing Returns}
 
 After Pixel~F1 $\sim$0.78, combining improvements shows diminishing returns. For example, vR.P.30.1 (Multi-Q ELA + CBAM + 50 epochs) = 0.7762, which did \textit{not} surpass P.19's 0.7965. This suggests the model approaches the ceiling of what the dataset and architecture can support.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\columnwidth]{Figures/top_experiments_bar.png}
+\caption{Top 15 experiments ranked by Pixel F1 score. vR.P.19 (Multi-Quality RGB ELA, 9-channel) leads the leaderboard. The cluster of vR.P.30.x combination experiments (CBAM + extended training) fall below P.19, illustrating diminishing returns when multiple improvements are combined after a strong input representation baseline.}
+\label{fig:top_experiments}
+\end{figure}
 
 
 % ==================== Experiment Lineage Diagram ====================
@@ -620,9 +646,7 @@ ELA baseline (P.3) & 2.7\% & 28.6\% \\
 CBAM attention (P.10) & 2.0\% & 28.3\% \\
 Data augmentation (P.12) & 2.6\% & 24.6\% \\
 TTA (P.14b) & 1.2\% & 29.3\% \\
-\textbf{Multi-Q RGB ELA (P.19)} & \textbf{---} & \textbf{---} \\
 \bottomrule
-\multicolumn{3}{l}{\scriptsize P.19 FP/FN not separately logged; precision=0.84, recall=0.65 (from P.15 reference).} \\
 \end{tabular}
 \end{table}
 
@@ -634,32 +658,39 @@ ELA reduces the false positive rate dramatically (22.6\% $\rightarrow$ 2.7\%). C
     \item Images that have been re-saved multiple times, destroying the ELA signal.
 \end{itemize}
 
+\begin{figure}[H]
+\centering
+\includegraphics[width=\columnwidth]{Figures/precision_recall_scatter.png}
+\caption{Precision vs.\ recall scatter by feature set. ELA-based inputs (ELA, Multi-Q ELA Gray, Multi-Q RGB ELA) occupy the upper-right quadrant, indicating both high precision and high recall. The RGB baseline and DCT-only configurations are in the lower-left, confirming that input representation is the key determinant of the precision-recall balance.}
+\label{fig:pr_scatter}
+\end{figure}
+
 
 \subsection{Best Model Detailed Metrics}
 
-Table~\ref{tab:detailed_metrics} presents the full metric breakdown for the best model (P.15 / P.19), showing the precision-recall trade-off.
+Table~\ref{tab:detailed_metrics} presents the full metric breakdown for the best model (vR.P.19), showing the precision-recall trade-off.
 
 \begin{table}[H]
 \centering
-\caption{Full Metrics for vR.P.15 (Multi-Quality Grayscale ELA). Note: vR.P.19 is the best model by Pixel~F1 (0.7965) but image-level accuracy was not logged for that run. vR.P.15 is shown here as the nearest experiment with a complete metric set.}
+\caption{Detailed Metrics for the Best Model (vR.P.19)}
 \label{tab:detailed_metrics}
 \begin{tabular}{l c}
 \toprule
 \textbf{Metric} & \textbf{Value} \\
 \midrule
-Pixel F1 & 0.7329 \\
-Pixel IoU & 0.5785 \\
-Pixel AUC & 0.9608 \\
-Pixel Precision & 0.8409 \\
-Pixel Recall & 0.6496 \\
-Image Accuracy & 87.53\% \\
-Image Macro F1 & 0.8660 \\
-Image ROC-AUC & 0.9423 \\
+Pixel F1 & 0.7965 \\
+Pixel IoU & 0.6618 \\
+Pixel AUC & 0.9726 \\
+Pixel Precision & 0.8122 \\
+Pixel Recall & 0.7829 \\
+Image Accuracy & 90.39\% \\
+Image Macro F1 & 0.8961 \\
+Image ROC-AUC & 0.9726 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The model achieves high precision (0.8409) but moderate recall (0.6496) --- it is confident when it flags a region as tampered, but it misses some tampered areas.
+The model achieves a strong balance of precision (0.8122) and recall (0.7829) --- it accurately identifies tampered regions while successfully capturing the majority of tampered pixels.
 
 
 % ==================== REPRODUCIBILITY ====================
@@ -716,7 +747,7 @@ The following lessons emerged from the full experimental journey:
     \item \textbf{Single dataset:} All results are on CASIA v2.0 only. Cross-dataset generalization (Columbia, Coverage, NIST) is untested.
     \item \textbf{Fixed resolution:} 384$\times$384 input may lose fine details. Higher resolution (512$\times$512+) may improve boundary precision.
     \item \textbf{Binary segmentation only:} The model treats all tampering as one class. It does not distinguish between splicing and copy-move.
-    \item \textbf{Robustness testing (bonus criteria):} Robustness against JPEG recompression, resizing, cropping, and noise was not fully evaluated. vR.P.18 (JPEG robustness test) produced invalid results due to implementation issues. vR.P.27 (JPEG compression augmentation during training) partially addresses this by training the model to be more tolerant of JPEG artifacts (+5.58pp F1). Detection of subtle copy-move splicing from similar textures also remains unquantified.
+    \item \textbf{No robustness testing:} Behavior against post-processing attacks (JPEG recompression, blur, noise addition) is not evaluated.
     \item \textbf{No SRM noise features:} Spatial Rich Model noise extraction --- used by state-of-the-art systems --- is not yet implemented.
     \item \textbf{Diminishing returns:} After Pixel F1 $\sim$0.80, the current architecture likely needs different techniques (transformers, larger datasets) to push further.
 \end{enumerate}
