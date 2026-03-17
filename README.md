@@ -1,5 +1,9 @@
 # Tampered Image Detection & Localization
 
+<p align="center">
+  <img src="figures/TIDAL Logo.png" alt="TIDAL Logo" width="420"/>
+</p>
+
 A systematic ablation study using deep learning to detect and localize tampered regions in images, achieving **Pixel F1 = 0.7965** on the CASIA 2.0 dataset.
 
 **[W&B Dashboard](https://wandb.ai/tampered-image-detection-and-localization/Tampered%20Image%20Detection%20&%20Localization/reports/Tampered-Image-Detection-Localization--VmlldzoxNjIyMjMxNg?accessToken=35b8v807ums5jnxtg6z8wieul1ylpetxrv2x4n7k9tr39mwf79ngtqs8w6d6tuaa)** | **[Submission Report](submission/submission_report.md)** | **[Final Notebook](submission/final_notebook.ipynb)**
