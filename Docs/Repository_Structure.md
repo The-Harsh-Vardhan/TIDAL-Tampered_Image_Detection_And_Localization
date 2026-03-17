@@ -14,8 +14,7 @@ For reviewers, everything needed is in one folder:
 submission/
 ├── final_notebook.ipynb          # vR.P.19 — best performing model (Pixel F1 = 0.7965)
 ├── submission_report.md          # Full submission report
-├── model_weights_link.txt        # How to load trained weights
-└── Internship Assignment...pdf   # Original assignment brief
+└── model_weights_link.txt        # How to load trained weights
 ```
 
 ---
@@ -39,23 +38,30 @@ Notebooks/
 │       ├── 4. vR.P.3 — ELA Breakthrough (Most Impactful Innovation)/
 │       └── 5. vR.1.6 — Deeper CNN (Best Classification)/
 │
-└── research_tracks/
-    ├── v0x/documentation_experiments/    # Early approach exploration (Approaches 1-4)
-    ├── vK/kaggle_baseline_experiments/   # Kaggle baseline track (vK.1–vK.12)
-    │   ├── source/                       # Source notebooks (25 files)
-    │   ├── runs/                         # Kaggle run outputs (22 files)
-    │   ├── reference/                    # Reference notebooks from Kaggle (16 files)
-    │   ├── scripts/                      # vK build scripts
-    │   └── helper_functions/             # vK helper functions
-    ├── vR/research_paper_experiments/    # Research paper CNN track (vR.0–vR.1.7)
-    │   ├── source/                       # Source notebooks (11 files)
-    │   ├── runs/                         # Kaggle run outputs (15+ files)
-    │   └── reference/                    # Reference ELA/CNN notebooks
-    └── vR.P/pretrained_ablation_experiments/  # Pretrained ablation track (vR.P.0–vR.P.41)
-        ├── source/                       # Source notebooks (41 files)
-        ├── runs/                         # Kaggle run outputs (22 files)
-        ├── per_version_docs/             # Per-experiment documentation (36 dirs)
-        └── best_notebooks/               # Curated best from vR.P track
+├── tracks/
+│   ├── v0x/                             # Early approach exploration (Approaches 1-5)
+│   ├── vK/                              # Kaggle baseline track (vK.1–vK.12)
+│   │   ├── source/                      # Source notebooks (25 files)
+│   │   ├── runs/                        # Kaggle run outputs (22 files)
+│   │   └── reference/                   # Reference notebooks from Kaggle (16 files)
+│   ├── vR/                              # Research paper CNN track (vR.0–vR.1.7)
+│   │   ├── source/                      # Source notebooks (11 files)
+│   │   ├── runs/                        # Kaggle run outputs (15+ files)
+│   │   └── reference/                   # Reference ELA/CNN notebooks
+│   └── vR.P/                            # Pretrained ablation track (vR.P.0–vR.P.41)
+│       ├── source/                      # Source notebooks (41 files)
+│       ├── runs/                        # Kaggle run outputs (22 files)
+│       ├── colab/                       # Colab-specific notebooks
+│       ├── colab_t4/                    # Colab T4 optimised notebooks
+│       ├── final_runs/                  # Final run outputs
+│       ├── final_notebooks/             # Final notebook versions
+│       ├── final_upgraded/              # Final upgraded notebook versions
+│       └── version_docs/               # Per-experiment documentation (36 dirs)
+│
+└── scripts/
+    ├── builders/                        # build_*/create_*/gen_*/generate_*/expand_*/upgrade_* scripts
+    ├── fixers/                          # fix_*/run_* scripts
+    └── reference/                       # External reference implementations (DocAuth-master, etc.)
 ```
 
 ### `experiments/`
@@ -63,18 +69,24 @@ Experiment tracking and W&B integration.
 
 ```
 experiments/
-├── wandb_runs/                     # 37 W&B exported run notebooks
+├── runs/                              # 37 W&B exported run notebooks
 │   ├── vr-p-0-pretrained-resnet-34-unet.ipynb
 │   ├── vr-p-19-multi-quality-rgb-ela-9-channels.ipynb
 │   ├── vr-p-30-1-multi-quality-ela-cbam-attention.ipynb
 │   └── ... (37 total)
-└── wandb_tracking/                 # W&B tracking infrastructure
-    ├── configs/                    # W&B config files
-    ├── datasets/                   # Kaggle dataset runners + source notebooks
-    ├── experiment_lists/           # Experiment lists
-    ├── leaderboard/                # Leaderboard notebooks
-    ├── runners/                    # W&B runner notebooks
-    └── utilities/                  # Tracking utilities
+├── results/                           # ALL result CSVs and summaries (single source of truth)
+│   ├── all_experiment_results.csv
+│   ├── experiment_results.csv
+│   ├── leaderboard_results.csv
+│   ├── leaderboard_table.md
+│   └── best_model_summary.txt
+└── wandb_tracking/                    # W&B tracking infrastructure
+    ├── configs/                       # W&B config files
+    ├── datasets/                      # Kaggle dataset runners + source notebooks
+    ├── experiment_lists/              # Experiment lists
+    ├── leaderboard/                   # Leaderboard notebooks
+    ├── runners/                       # W&B runner notebooks
+    └── utilities/                     # Tracking utilities
 ```
 
 ### `Docs/`
@@ -82,80 +94,39 @@ All documentation, split into submission and research tiers.
 
 ```
 Docs/
-├── submission_report/              # Clean submission documents
-│   ├── Submission_Report.md        # Final submission report
-│   ├── Submission_Report.latex     # LaTeX version
-│   ├── Report_reference.latex      # Reference LaTeX
+├── Repository_Structure.md            # This file
+├── submission/                        # Clean submission documents
+│   ├── Submission_Report.md           # Final submission report
+│   ├── Submission_Report.latex        # LaTeX version
 │   ├── Detailed_Technical_Report.md
-│   ├── Internship Assignment...pdf # Original assignment brief
-│   └── figures/                    # Report figures
+│   └── figures/                       # Report figures
 │
-└── research_docs/                  # Full research documentation
-    ├── Research_Report.md          # Academic-style research paper
-    ├── Research_Journey_and_Experimentation.md  # Full experiment narrative
-    ├── Assignment.md               # Assignment analysis
-    ├── Project_Experiment_Evolution_Report.md
-    │
-    ├── ablation_study/             # Ablation study documents
-    │   ├── WandB_Run_Audit.md      # Comprehensive run audit with /100 scores
-    │   ├── ablation_master_plan.md # Full experiment roadmap
+└── research/                          # Full research documentation
+    ├── ablation_study/                # Ablation study documents
+    │   ├── WandB_Run_Audit.md         # Comprehensive run audit with /100 scores
+    │   ├── ablation_master_plan.md    # Full experiment roadmap
     │   ├── experiment_leaderboard.md
     │   ├── experiment_tracking_table.md
     │   └── ... (14 files)
     │
-    ├── audits/                     # Audit reports across all tracks
-    │   ├── Audits_vK/              # vK track audits
-    │   ├── Audit_new_runs_vK11/    # vK.11 run audits
-    │   └── vR ETASR audit files    # vR track audit files
+    ├── audits/                        # Audit reports across all tracks
+    │   ├── Audits_vK/                 # vK track audits
+    │   ├── Audit_new_runs_vK11/       # vK.11 run audits
+    │   └── vR/vR.P audit files        # vR track audit files
     │
-    ├── papers/                     # Research paper analyses
-    │   ├── Paper_Analyses/
-    │   ├── Papers/
+    ├── reports/                       # Research narrative documents
+    │   ├── Research_Report.md
+    │   ├── Research_Journey_and_Experimentation.md
+    │   ├── Project_Experiment_Evolution_Report.md
     │   └── Research_Paper_Analysis_Report.md
     │
-    ├── vR_docs/                    # vR track documentation
-    │   ├── DocsR1_ETASR/           # Master ETASR docs (6 files)
+    ├── version_docs/                  # Per-version experiment documentation
+    │   ├── DocsR1_ETASR/              # Master ETASR docs (6 files)
     │   ├── docs-vR.1.1/ to docs-vR.1.7/
     │   └── docs-vR.P.0/ to docs-vR.P.3/
     │
-    ├── vK_docs/                    # vK track documentation
-    │   ├── Docs9_Notebook_Roast/
-    │   ├── Docs_vK4_Kill_Review/
-    │   ├── Docs_vK4_Notebook_Audit/
-    │   ├── Interview Prep/
-    │   └── v11/
-    │
-    └── reference/                  # External reference documents
-```
-
-### `scripts/`
-All Python scripts used for notebook generation and utilities.
-
-```
-scripts/
-├── build_research_notebook.py      # Notebook builder
-├── create_p41.py                   # P.41 generator
-├── fix_ela_quality.py              # ELA quality fix script
-├── gen_docs.py                     # Documentation generator
-├── gen_runners.py                  # W&B runner generator
-├── upgrade_etasr_notebooks.py      # ETASR notebook upgrader
-├── reference_code/                 # External reference implementations
-│   └── DocAuth-master/             # Document authentication reference
-└── peerj_review_codes/             # PeerJ review code reference
-```
-
-### `models/`
-Model weights and analysis.
-
-```
-models/
-├── pretrained_weights/             # Pretrained model analysis docs
-│   ├── 01_Feasibility_Analysis.md
-│   ├── 02_Architecture_Comparison.md
-│   ├── 03_Implementation_Plan.md
-│   └── 04_ELA_Compatibility_Analysis.md
-└── checkpoints/
-    └── results/                    # Training results/outputs
+    └── papers/                        # Research paper analyses
+        └── peerj_review_codes/        # PeerJ review code reference
 ```
 
 ### `configs/`
@@ -163,26 +134,37 @@ Training configurations and hyperparameter sweep definitions.
 
 ```
 configs/
-└── training_configs/
-    ├── sweep.yaml                  # W&B sweep configuration
-    ├── sweep_runner.py             # Sweep runner script
-    ├── convert_notebooks.py        # Notebook conversion utility
-    ├── path_config.py              # Path configuration
-    └── modules/                    # Sweep modules
+├── sweep.yaml                         # W&B sweep configuration
+├── sweep_runner.py                    # Sweep runner script
+├── convert_notebooks.py               # Notebook conversion utility
+├── path_config.py                     # Path configuration
+├── GUIDE.md                           # Configuration guide
+└── modules/                           # Sweep modules (vrp0–vrp28)
 ```
 
-### `data_access/`
+### `data/`
 Dataset information and access utilities.
 
 ```
-data_access/
-├── Datasets-Comparison.md          # Dataset comparison analysis
-├── Image Forgery Datasets.md       # Dataset catalog
-├── Links-to-Datasets.md            # Dataset download links
-├── dataset_download_scripts/       # Download automation
-└── kaggle_workspace/               # Kaggle workspace template
+data/
+├── docs/                              # Dataset documentation
+│   ├── Datasets-Comparison.md
+│   ├── Image Forgery Datasets.md
+│   └── Links-to-Datasets.md
+├── download_scripts/                  # Download automation
+└── kaggle_workspace/                  # Kaggle workspace template
     ├── input/
     └── working/
+```
+
+### `models/`
+Model weights and analysis.
+
+```
+models/
+├── best_model.pt
+├── pretrained_weights/                # Pretrained model analysis docs
+└── checkpoints/                       # Training checkpoints
 ```
 
 ### `figures/`
@@ -190,14 +172,18 @@ Visual assets for reports and documentation.
 
 ```
 figures/
-└── visual_results/                 # Model prediction visualizations
+├── logos/                             # TIDAL logo assets
+│   ├── TIDAL Logo.png
+│   └── TIDAL Logo 2.png
+└── plots/                             # Generated visualization PNGs
+    ├── ablation_progression.png
+    ├── training_curves.png
+    ├── radar_comparison.png
+    └── ... (10 total)
 ```
 
 ### `_archive/`
-Historical artifacts preserved for lineage. Contains older documentation versions (v1-v9), archived notebooks, old audit reports, and early project files.
-
-### `Approach 5 FakeShield Simplification/`
-Separate git repository for FakeShield approach exploration. Cannot be moved due to independent .git history.
+Historical artifacts preserved for lineage. Contains older documentation versions (v1-v9), archived notebooks, old audit reports, and early project files. See `_archive/INDEX.md` for a full catalog.
 
 ---
 
@@ -255,7 +241,7 @@ vR.P track: P.0 → P.1 → P.2 → P.3(ELA breakthrough) → P.4–P.18 (ablati
 | Final notebook | `submission/final_notebook.ipynb` | Best model (vR.P.19) |
 | Submission report | `submission/submission_report.md` | Summary for reviewers |
 | Model weights | `submission/model_weights_link.txt` | How to load weights |
-| Run audit | `Docs/research_docs/ablation_study/WandB_Run_Audit.md` | All runs scored /100 |
-| Ablation plan | `Docs/research_docs/ablation_study/ablation_master_plan.md` | Full experiment roadmap |
-| Research paper | `Docs/research_docs/Research_Report.md` | Academic-style report |
-| Experiment journey | `Docs/research_docs/Research_Journey_and_Experimentation.md` | Full narrative |
+| Run audit | `Docs/research/ablation_study/WandB_Run_Audit.md` | All runs scored /100 |
+| Ablation plan | `Docs/research/ablation_study/ablation_master_plan.md` | Full experiment roadmap |
+| Research report | `Docs/research/reports/Research_Report.md` | Academic-style report |
+| Experiment journey | `Docs/research/reports/Research_Journey_and_Experimentation.md` | Full narrative |

@@ -1,7 +1,7 @@
 # Tampered Image Detection & Localization
 
 <p align="center">
-  <img src="figures/TIDAL Logo.png" alt="TIDAL Logo" width="420"/>
+  <img src="figures/logos/TIDAL Logo.png" alt="TIDAL Logo" width="420"/>
 </p>
 
 <p align="center">
@@ -66,8 +66,7 @@ Everything a reviewer needs is in one folder:
 submission/
 ├── final_notebook.ipynb                                          # Best model (vR.P.19)
 ├── submission_report.md                                          # Full report
-├── model_weights_link.txt                                        # How to load trained weights
-└── Internship Assignment_ Tampered Image Detection & Localization.pdf
+└── model_weights_link.txt                                        # How to load trained weights
 ```
 
 ---
@@ -121,13 +120,13 @@ Input Image (384x384 RGB)
 ### Baseline vs Best — Multi-Metric Comparison
 
 <p align="center">
-  <img src="figures/visual_results/radar_comparison.png" alt="Radar chart comparing P.1 baseline, P.15 grayscale ELA, and P.19 RGB ELA across 5 metrics" width="520"/>
+  <img src="figures/plots/radar_comparison.png" alt="Radar chart comparing P.1 baseline, P.15 grayscale ELA, and P.19 RGB ELA across 5 metrics" width="520"/>
 </p>
 
 ### Training Curves — Top Experiments
 
 <p align="center">
-  <img src="figures/visual_results/training_curves.png" alt="Training loss, validation loss, and validation Pixel F1 curves for top experiments"/>
+  <img src="figures/plots/training_curves.png" alt="Training loss, validation loss, and validation Pixel F1 curves for top experiments"/>
 </p>
 
 ---
@@ -137,19 +136,19 @@ Input Image (384x384 RGB)
 ### Ablation Progression — Pixel F1 & IoU Across All Experiments
 
 <p align="center">
-  <img src="figures/visual_results/ablation_progression.png" alt="Pixel F1 and IoU progression across all vR.P experiments with vR.P.19 starred as best"/>
+  <img src="figures/plots/ablation_progression.png" alt="Pixel F1 and IoU progression across all vR.P experiments with vR.P.19 starred as best"/>
 </p>
 
 ### Best Performance by Input Representation
 
 <p align="center">
-  <img src="figures/visual_results/feature_set_comparison.png" alt="Bar chart comparing Pixel F1 and IoU across input types: multi-quality ELA, ELA, RGB, DCT, noiseprint, etc."/>
+  <img src="figures/plots/feature_set_comparison.png" alt="Bar chart comparing Pixel F1 and IoU across input types: multi-quality ELA, ELA, RGB, DCT, noiseprint, etc."/>
 </p>
 
 ### Precision-Recall Trade-off by Feature Set
 
 <p align="center">
-  <img src="figures/visual_results/precision_recall_scatter.png" alt="Bubble scatter plot of precision vs recall colored by feature set with F1 iso-curves" width="620"/>
+  <img src="figures/plots/precision_recall_scatter.png" alt="Bubble scatter plot of precision vs recall colored by feature set with F1 iso-curves" width="620"/>
 </p>
 
 ---
@@ -200,13 +199,13 @@ P.0 (RGB baseline) -> P.1 (dataset fix) -> P.3 (ELA: +23pp)
 ### Impact Hierarchy — Change Contribution vs ELA Baseline
 
 <p align="center">
-  <img src="figures/visual_results/impact_hierarchy.png" alt="Lollipop chart showing each change's contribution vs ELA baseline in percentage points"/>
+  <img src="figures/plots/impact_hierarchy.png" alt="Lollipop chart showing each change's contribution vs ELA baseline in percentage points"/>
 </p>
 
 ### Top 15 Experiments by Pixel F1
 
 <p align="center">
-  <img src="figures/visual_results/top_experiments_bar.png" alt="Horizontal bar chart ranking top 15 experiments by Pixel F1 score"/>
+  <img src="figures/plots/top_experiments_bar.png" alt="Horizontal bar chart ranking top 15 experiments by Pixel F1 score"/>
 </p>
 
 ---
@@ -217,24 +216,31 @@ P.0 (RGB baseline) -> P.1 (dataset fix) -> P.3 (ELA: +23pp)
 submission/                    # Final deliverables (notebook, report, weights)
 Notebooks/
     final/                     # Best notebooks curated with docs
-    research_tracks/
+    tracks/
         v0x/                   # Early exploration approaches
         vK/                    # Kaggle baseline track (25 notebooks)
         vR/                    # ETASR paper track (11 notebooks)
         vR.P/                  # Pretrained ablation track (41 notebooks)
+    scripts/                   # Notebook generation scripts
 experiments/
-    wandb_runs/                # 37 W&B exported run notebooks
+    runs/                      # 37 W&B exported run notebooks
+    results/                   # All result CSVs (single source of truth)
     wandb_tracking/            # W&B infrastructure and runners
 Docs/
-    submission_report/         # Assignment report and LaTeX source
-    research_docs/             # Full research documentation
+    submission/                # Assignment report and LaTeX source
+    research/                  # Full research documentation
         ablation_study/        # Audit, leaderboard, master plan
-figures/                       # Logo and visual results
-scripts/                       # Build scripts and utilities
-models/                        # Pretrained weight analysis
-configs/                       # Training configs and sweeps
-data_access/                   # Dataset information and links
-_archive/                      # Historical artifacts
+        audits/                # All audit reports
+        reports/               # Research narrative documents
+        version_docs/          # Per-version experiment docs
+        papers/                # Paper reviews
+figures/
+    logos/                     # TIDAL logo assets
+    plots/                     # Generated visualization PNGs
+configs/                       # Training configs, sweeps, modules
+data/                          # Dataset docs, download scripts, workspace
+models/                        # Model weights and checkpoints
+_archive/                      # Historical artifacts (see INDEX.md)
 ```
 
 See [Docs/Repository_Structure.md](Docs/Repository_Structure.md) for a detailed breakdown.
@@ -290,5 +296,5 @@ This project was developed as part of the Big Vision internship assignment.
 - [Final Notebook](submission/final_notebook.ipynb)
 - [Repository Structure](Docs/Repository_Structure.md)
 - [Project Lifecycle Tracker](Project_Lifecycle_Tracker.md)
-- [Ablation Master Plan](Docs/research_docs/ablation_study/ablation_master_plan.md)
-- [W&B Run Audit](Docs/research_docs/ablation_study/WandB_Run_Audit.md)
+- [Ablation Master Plan](Docs/research/ablation_study/ablation_master_plan.md)
+- [W&B Run Audit](Docs/research/ablation_study/WandB_Run_Audit.md)
