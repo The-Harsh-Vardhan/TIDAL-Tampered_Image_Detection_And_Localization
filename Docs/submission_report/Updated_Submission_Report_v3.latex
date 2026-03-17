@@ -455,12 +455,12 @@ P.30.1 & Multi-Q + CBAM (50ep) & .7762 & .6344 & 2nd Best \\
 
 \FloatBarrier
 
-\begin{figure}[H]
+\begin{figure*}[t]
 \centering
-\includegraphics[width=\columnwidth]{Figures/training_curves.png}
+\includegraphics[width=\textwidth]{Figures/training_curves.png}
 \caption{Training loss and validation Pixel F1 curves for representative experiments. The curves illustrate convergence behavior: ELA-based models (P.3, P.15, P.19) converge to substantially higher F1 values than the RGB baseline (P.1), confirming that input representation is the dominant factor.}
 \label{fig:training_curves}
-\end{figure}
+\end{figure*}
 
 
 % ==================== ABLATION STUDY ====================
