@@ -4,7 +4,20 @@
   <img src="figures/TIDAL Logo.png" alt="TIDAL Logo" width="420"/>
 </p>
 
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.10-blue?logo=python&logoColor=white"/>
+  <img src="https://img.shields.io/badge/PyTorch-2.x-orange?logo=pytorch&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Pixel_F1-0.7965-brightgreen"/>
+  <img src="https://img.shields.io/badge/Experiments-60+-blueviolet"/>
+  <img src="https://img.shields.io/badge/W%26B-Tracked-yellow?logo=weightsandbiases&logoColor=black"/>
+  <img src="https://img.shields.io/badge/Colab-Ready-F9AB00?logo=google-colab&logoColor=black"/>
+</p>
+
 A systematic ablation study using deep learning to detect and localize tampered regions in images, achieving **Pixel F1 = 0.7965** on the CASIA 2.0 dataset.
+
+Through 60+ controlled ablation experiments, one finding dominated: **input representation matters most**. Switching from raw RGB to Multi-Quality RGB ELA produced a **+34.19 percentage point improvement in Pixel F1** — more than all architectural changes, attention mechanisms, and training strategies combined.
+
+**Keywords:** image forensics · ELA · UNet · ResNet-34 · CASIA 2.0 · ablation study · segmentation
 
 **[W&B Dashboard](https://wandb.ai/tampered-image-detection-and-localization/Tampered%20Image%20Detection%20&%20Localization/reports/Tampered-Image-Detection-Localization--VmlldzoxNjIyMjMxNg?accessToken=35b8v807ums5jnxtg6z8wieul1ylpetxrv2x4n7k9tr39mwf79ngtqs8w6d6tuaa)** | **[Submission Report](submission/submission_report.md)** | **[Final Notebook](submission/final_notebook.ipynb)**
 
@@ -27,25 +40,35 @@ A systematic ablation study using deep learning to detect and localize tampered 
 
 ## Quick Start
 
+### Run in One Click
+
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/The-Harsh-Vardhan/TIDAL-Tampered_Image_Detection_And_Localization/blob/main/submission/final_notebook.ipynb)
+
+Open `submission/final_notebook.ipynb` in Google Colab or Kaggle with a T4 GPU.
+
+### Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+Or install the core packages directly:
+
+```bash
+pip install torch segmentation-models-pytorch albumentations opencv-python wandb
+```
+
 ### Submission Artifacts
 
 Everything a reviewer needs is in one folder:
 
 ```
 submission/
-├── final_notebook.ipynb      # Best model (vR.P.19)
-├── submission_report.md      # Full report
-├── model_weights_link.txt    # How to load trained weights
-└── assignment brief.pdf      # Original assignment
+├── final_notebook.ipynb                                          # Best model (vR.P.19)
+├── submission_report.md                                          # Full report
+├── model_weights_link.txt                                        # How to load trained weights
+└── Internship Assignment_ Tampered Image Detection & Localization.pdf
 ```
-
-### Run the Best Model
-
-```bash
-pip install torch segmentation-models-pytorch albumentations opencv-python wandb
-```
-
-Open `submission/final_notebook.ipynb` in Kaggle or Google Colab with a T4 GPU.
 
 ---
 
@@ -67,7 +90,7 @@ Input Image (384x384 RGB)
    + Image Classification (Authentic/Tampered)
 ```
 
-**Error Level Analysis (ELA)** re-saves an image as JPEG at a given quality level and measures the difference from the original. Tampered regions show inconsistent compression artifacts, appearing as bright spots in the ELA map. Using three quality levels (75, 85, 95) captures different compression frequency bands.
+**Error Level Analysis (ELA)** re-saves an image as JPEG at a given quality level and measures the difference from the original. Tampered regions show inconsistent compression artifacts, appearing as bright spots in the ELA map. Using three quality levels (75, 85, 95) captures different compression frequency bands. Using full RGB (not grayscale) preserves chrominance artifacts that the human eye cannot see but the model can learn from.
 
 ---
 
@@ -94,6 +117,14 @@ Input Image (384x384 RGB)
 ### Key Finding
 
 **Input preprocessing is the single most impactful variable.** Switching from raw RGB to Multi-Quality RGB ELA improved Pixel F1 by **+34.19 percentage points** — more than any architectural change, attention mechanism, or training strategy.
+
+---
+
+## Visual Results
+
+*ELA Q=85 | Ground Truth Mask | Predicted Mask | Overlay (green=GT, red=predicted)*
+
+Visual outputs from the best model (vR.P.19) on the CASIA 2.0 test set are saved to `figures/visual_results/` after running the final notebook.
 
 ---
 
@@ -126,7 +157,7 @@ P.0 (RGB baseline) -> P.1 (dataset fix) -> P.3 (ELA: +23pp)
 | ELA preprocessing | **+23.74pp** | P.1 (0.4546) -> P.3 (0.6920) |
 | Multi-quality ELA (3 Q levels) | **+4.09pp** | P.3 (0.6920) -> P.15 (0.7329) |
 | RGB channels in ELA | **+6.36pp** | P.15 (0.7329) -> P.19 (0.7965) |
-| CBAM attention in decoder | +3-5pp | P.3 -> P.10 |
+| CBAM attention in decoder | **+3.57pp for only 11K params** | P.3 -> P.10 |
 | Extended training (50 epochs) | +2-3pp | P.3 -> P.7 |
 | Cosine annealing scheduler | +2pp | P.19 -> P.28 |
 
@@ -160,6 +191,7 @@ Docs/
     submission_report/         # Assignment report and LaTeX source
     research_docs/             # Full research documentation
         ablation_study/        # Audit, leaderboard, master plan
+figures/                       # Logo and visual results
 scripts/                       # Build scripts and utilities
 models/                        # Pretrained weight analysis
 configs/                       # Training configs and sweeps
@@ -203,7 +235,7 @@ All experiments use:
 - **Albumentations** — image and mask augmentation
 - **Weights & Biases** — experiment tracking
 - **OpenCV** — ELA computation
-- **Kaggle T4 GPU** — training hardware
+- **Kaggle / Google Colab (T4 GPU)** — training hardware
 
 ---
 
