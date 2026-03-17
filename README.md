@@ -118,13 +118,39 @@ Input Image (384x384 RGB)
 
 **Input preprocessing is the single most impactful variable.** Switching from raw RGB to Multi-Quality RGB ELA improved Pixel F1 by **+34.19 percentage points** — more than any architectural change, attention mechanism, or training strategy.
 
+### Baseline vs Best — Multi-Metric Comparison
+
+<p align="center">
+  <img src="figures/visual_results/radar_comparison.png" alt="Radar chart comparing P.1 baseline, P.15 grayscale ELA, and P.19 RGB ELA across 5 metrics" width="520"/>
+</p>
+
+### Training Curves — Top Experiments
+
+<p align="center">
+  <img src="figures/visual_results/training_curves.png" alt="Training loss, validation loss, and validation Pixel F1 curves for top experiments"/>
+</p>
+
 ---
 
 ## Visual Results
 
-*ELA Q=85 | Ground Truth Mask | Predicted Mask | Overlay (green=GT, red=predicted)*
+### Ablation Progression — Pixel F1 & IoU Across All Experiments
 
-Visual outputs from the best model (vR.P.19) on the CASIA 2.0 test set are saved to `figures/visual_results/` after running the final notebook.
+<p align="center">
+  <img src="figures/visual_results/ablation_progression.png" alt="Pixel F1 and IoU progression across all vR.P experiments with vR.P.19 starred as best"/>
+</p>
+
+### Best Performance by Input Representation
+
+<p align="center">
+  <img src="figures/visual_results/feature_set_comparison.png" alt="Bar chart comparing Pixel F1 and IoU across input types: multi-quality ELA, ELA, RGB, DCT, noiseprint, etc."/>
+</p>
+
+### Precision-Recall Trade-off by Feature Set
+
+<p align="center">
+  <img src="figures/visual_results/precision_recall_scatter.png" alt="Bubble scatter plot of precision vs recall colored by feature set with F1 iso-curves" width="620"/>
+</p>
 
 ---
 
@@ -170,6 +196,18 @@ P.0 (RGB baseline) -> P.1 (dataset fix) -> P.3 (ELA: +23pp)
 | ResNet-50 (vs ResNet-34) | Neutral | P.5: no improvement with ELA |
 | Noiseprint features | -6.35pp vs ELA | P.24: underperforms ELA |
 | Focal+Dice (vs BCE+Dice) | Neutral | P.9: no consistent improvement |
+
+### Impact Hierarchy — Change Contribution vs ELA Baseline
+
+<p align="center">
+  <img src="figures/visual_results/impact_hierarchy.png" alt="Lollipop chart showing each change's contribution vs ELA baseline in percentage points"/>
+</p>
+
+### Top 15 Experiments by Pixel F1
+
+<p align="center">
+  <img src="figures/visual_results/top_experiments_bar.png" alt="Horizontal bar chart ranking top 15 experiments by Pixel F1 score"/>
+</p>
 
 ---
 

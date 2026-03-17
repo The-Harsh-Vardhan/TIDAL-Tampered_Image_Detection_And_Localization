@@ -1,0 +1,7 @@
+Best Model: vR.P.19
+Change:     Multi-Quality RGB ELA (9ch, Q=75/85/95 full-color)
+Feature:    multi_quality_ela
+Pixel F1:   0.7965
+IoU:        0.6618
+Pixel AUC:  0.9726
+Img Acc:    0.9039
