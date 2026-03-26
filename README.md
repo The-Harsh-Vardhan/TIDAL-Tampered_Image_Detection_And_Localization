@@ -19,7 +19,7 @@ Through 60+ controlled ablation experiments, one finding dominated: **input repr
 
 **Keywords:** image forensics · ELA · UNet · ResNet-34 · CASIA 2.0 · ablation study · segmentation
 
-**[W&B Dashboard](https://wandb.ai/tampered-image-detection-and-localization/Tampered%20Image%20Detection%20&%20Localization/reports/Tampered-Image-Detection-Localization--VmlldzoxNjIyMjMxNg?accessToken=35b8v807ums5jnxtg6z8wieul1ylpetxrv2x4n7k9tr39mwf79ngtqs8w6d6tuaa)** | **[Submission Report](submission/submission_report.md)** | **[Final Notebook](submission/final_notebook.ipynb)**
+**[W&B Dashboard](https://wandb.ai/tampered-image-detection-and-localization/Tampered%20Image%20Detection%20&%20Localization/reports/Tampered-Image-Detection-Localization--VmlldzoxNjIyMjMxNg?accessToken=35b8v807ums5jnxtg6z8wieul1ylpetxrv2x4n7k9tr39mwf79ngtqs8w6d6tuaa)** | **[Submission Report](submission/submission_report.md)** | **[Final Notebook](submission/final_notebook.ipynb)** | **[Project Report PDF](https://drive.google.com/file/d/1_zZZyN2QQpVBu6v43YElF7WVk1HL50MY/view?usp=sharing)**
 
 ---
 
@@ -294,6 +294,7 @@ This project was developed as part of the Big Vision internship assignment.
 - [W&B Dashboard](https://wandb.ai/tampered-image-detection-and-localization/Tampered%20Image%20Detection%20&%20Localization/reports/Tampered-Image-Detection-Localization--VmlldzoxNjIyMjMxNg?accessToken=35b8v807ums5jnxtg6z8wieul1ylpetxrv2x4n7k9tr39mwf79ngtqs8w6d6tuaa)
 - [Submission Report](submission/submission_report.md)
 - [Final Notebook](submission/final_notebook.ipynb)
+- [Project Report PDF](https://drive.google.com/file/d/1_zZZyN2QQpVBu6v43YElF7WVk1HL50MY/view?usp=sharing)
 - [Repository Structure](Docs/Repository_Structure.md)
 - [Project Lifecycle Tracker](Project_Lifecycle_Tracker.md)
 - [Ablation Master Plan](Docs/research/ablation_study/ablation_master_plan.md)
