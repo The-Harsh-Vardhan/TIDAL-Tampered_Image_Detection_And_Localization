@@ -3,6 +3,7 @@ __pycache__/
 *.pyc
 *.pyo
 .env
+.env.*
 
 # OS files
 Thumbs.db
@@ -11,6 +12,8 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+*.swp
+*.swo
 
 # Python
 *.egg-info/
@@ -32,6 +35,23 @@ checkpoints/
 kaggle/input/
 data_access/kaggle_workspace/input/
 *.zip
+
+# DVC
+/dvc_pipeline/.dvc/
+/dvc_pipeline/metrics/
+/dvc_pipeline/evaluation_results/
+/dvc_pipeline/visualize_results/
+
+# Docker
+docker/logs/
+prometheus-data/
+grafana-data/
+
+# Observability
+observability/*.log
+
+# Sweep outputs
+sweep_outputs/
 
 # Windows device name artifacts
 NUL

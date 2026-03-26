@@ -1,0 +1,44 @@
+# TIDAL Alerting Rules
+
+groups:
+  - name: tidal_alerts
+    rules:
+      # High error rate
+      - alert: HighErrorRate
+        expr: rate(tidal_requests_total{status="error"}[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High inference error rate"
+          description: "Error rate exceeds 10% for 2 minutes"
+
+      # P99 latency too high
+      - alert: HighP99Latency
+        expr: histogram_quantile(0.99, rate(tidal_request_duration_seconds_bucket[5m])) > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "P99 inference latency > 10s"
+          description: "P99 latency has been above 10 seconds for 5 minutes"
+
+      # GPU OOM events
+      - alert: GPUOutOfMemory
+        expr: increase(tidal_requests_total{status="oom"}[10m]) > 0
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "GPU OOM event detected"
+          description: "At least one GPU out-of-memory error in the last 10 minutes"
+
+      # API down
+      - alert: APIDown
+        expr: up{job="tidal-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "TIDAL API is down"
+          description: "The API has been unreachable for 1 minute"

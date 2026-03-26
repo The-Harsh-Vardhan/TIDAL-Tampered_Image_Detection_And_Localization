@@ -1,0 +1,60 @@
+# =============================================================================
+# TIDAL DVC Pipeline — Hyperparameters
+# Matched to best run vR.P.19 (Multi-Quality RGB ELA, Pixel F1 = 0.7965)
+# =============================================================================
+
+seed: 42
+
+# -- Data -------------------------------------------------------------------
+data:
+  dataset_root: "data/CASIA2"          # Parent of Au/ and Tp/ directories
+  gt_mask_dir: "data/CASIA2_GT"        # Ground truth masks (optional)
+  supported_extensions: [".jpg", ".jpeg", ".png", ".tif", ".bmp"]
+  train_split: 0.70
+  val_split: 0.15
+  test_split: 0.15
+
+# -- Preprocessing ----------------------------------------------------------
+preprocessing:
+  ela_qualities: [75, 85, 95]
+  image_size: 384
+  in_channels: 9
+  normalization_samples: 500            # Samples to compute ELA stats
+
+# -- Model ------------------------------------------------------------------
+model:
+  encoder: "resnet34"
+  encoder_weights: "imagenet"
+  in_channels: 9
+  num_classes: 1
+  freeze_strategy: "body_frozen_bn_unfrozen"  # body frozen + BN unfrozen + conv1 unfrozen
+
+# -- Training ---------------------------------------------------------------
+training:
+  batch_size: 16
+  epochs: 25
+  learning_rate: 1.0e-3
+  weight_decay: 1.0e-5
+  patience: 7                           # Early stopping patience
+  num_workers: 0
+  use_amp: true                         # Automatic mixed precision
+  scheduler: "reduce_on_plateau"
+  scheduler_factor: 0.5
+  scheduler_patience: 3
+  loss: "bce_dice"                      # BCE + Dice combined loss
+
+# -- Evaluation -------------------------------------------------------------
+evaluation:
+  thresholds:
+    min_pixel_f1: 0.70
+    min_iou: 0.55
+    min_auc: 0.90
+  pixel_threshold: 0.5
+  classification_area_threshold: 0.005
+
+# -- Visualization ----------------------------------------------------------
+visualization:
+  num_samples: 8
+  output_dir: "visualize_results"
+  grid_cols: 4
+  save_individual: true

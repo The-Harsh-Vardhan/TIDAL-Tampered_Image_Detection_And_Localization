@@ -1,0 +1,43 @@
+name: Code Quality
+
+on:
+  push:
+    branches: [main, production]
+  pull_request:
+    branches: [main, production]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Ruff lint
+        run: ruff check . --output-format=github
+
+      - name: Ruff format check
+        run: ruff format --check .
+
+      - name: Run tests
+        run: pytest tests/ -v --tb=short
+
+      - name: Security audit
+        run: pip-audit --strict
+        continue-on-error: true
+
+      - name: Validate DVC config
+        run: python -c "import yaml; yaml.safe_load(open('dvc_pipeline/dvc.yaml')); print('DVC YAML valid')"
