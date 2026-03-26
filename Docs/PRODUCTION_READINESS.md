@@ -1,0 +1,11 @@
+# Production Readiness Checklist
+- [x] FastAPI server (5 endpoints)
+- [x] Model loader with SHA-256 validation
+- [x] Rate limiting + input validation
+- [x] DVC 4-stage pipeline
+- [x] Dark glassmorphism frontend
+- [x] Docker multi-stage + compose
+- [x] Prometheus + Grafana observability
+- [x] pytest suite
+- [x] CI/CD workflows
+- [x] SECURITY.md

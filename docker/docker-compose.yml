@@ -1,0 +1,27 @@
+version: "3.8"
+services:
+  tidal-api:
+    build: {context: .., dockerfile: docker/Dockerfile}
+    container_name: tidal-api
+    ports: ["8000:8000"]
+    environment: [DEVICE=auto, MODEL_DIR=/app/models, MAX_CONCURRENT=4, CORS_ORIGINS=http://localhost:3000]
+    volumes: ["../models:/app/models:ro"]
+    restart: unless-stopped
+  tidal-frontend:
+    image: nginx:1.25-alpine
+    container_name: tidal-frontend
+    ports: ["3000:80"]
+    volumes: ["../frontend:/usr/share/nginx/html:ro"]
+    depends_on: [tidal-api]
+    restart: unless-stopped
+  prometheus:
+    image: prom/prometheus:v2.48.0
+    container_name: tidal-prometheus
+    ports: ["9090:9090"]
+    volumes: ["../observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro"]
+    restart: unless-stopped
+  grafana:
+    image: grafana/grafana:10.2.0
+    ports: ["3001:3000"]
+    environment: [GF_SECURITY_ADMIN_PASSWORD=tidal-admin, GF_USERS_ALLOW_SIGN_UP=false]
+    restart: unless-stopped

@@ -1,0 +1,11 @@
+groups:
+  - name: tidal_alerts
+    rules:
+      - alert: HighErrorRate
+        expr: rate(tidal_requests_total{status="error"}[5m]) > 0.1
+        for: 2m
+        labels: {severity: critical}
+      - alert: APIDown
+        expr: up{job="tidal-api"} == 0
+        for: 1m
+        labels: {severity: critical}
