@@ -14,7 +14,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     CORS_ORIGINS=*
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends libgl1-mesa-glx libglib2.0-0 curl && \
+    apt-get install -y --no-install-recommends libgl1 libglib2.0-0 curl && \
     rm -rf /var/lib/apt/lists/*
 
 # Non-root user (HF Spaces requirement)
