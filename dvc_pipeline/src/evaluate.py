@@ -1,117 +1,38 @@
-"""
-dvc_pipeline/src/evaluate.py
-==============================
-Evaluate the trained TIDAL model on the test set.
-
-Outputs metrics/eval_metrics.json and evaluation_results/ directory.
-"""
-
-from __future__ import annotations
-
-import json
-import logging
+"""Evaluate trained model on test set."""
+import json, logging
 from pathlib import Path
-
-import numpy as np
-import torch
+import numpy as np, torch
 from torch.utils.data import DataLoader
-
 from dataset import CASIASegmentationDataset, collect_image_paths
 from models import build_model
 from utils import compute_pixel_f1, get_device, load_params, save_metrics, seed_everything
-
-logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
-def evaluate(params: dict) -> None:
-    """Evaluate on test set and check against quality thresholds."""
-    seed_everything(params["seed"])
-    device = get_device()
-
-    model_cfg = params["model"]
-    eval_cfg = params["evaluation"]
-    prep_cfg = params["preprocessing"]
-    data_cfg = params["data"]
-
-    # Load model
-    model = build_model(
-        encoder=model_cfg["encoder"],
-        encoder_weights=None,
-        in_channels=model_cfg["in_channels"],
-        num_classes=model_cfg["num_classes"],
-    ).to(device)
-
-    checkpoint = torch.load("../models/best_model.pt", map_location=device, weights_only=False)
-    state_dict = checkpoint.get("model_state_dict", checkpoint)
-    model.load_state_dict(state_dict, strict=False)
-    model.eval()
-
-    # Load ELA stats
-    with open("artifacts/ela_statistics.json") as f:
-        stats = json.load(f)
-    ela_mean = torch.tensor(stats["mean"], dtype=torch.float32)
-    ela_std = torch.tensor(stats["std"], dtype=torch.float32)
-
-    # Build test set
+def evaluate(params):
+    seed_everything(params["seed"]); device=get_device()
+    mc,ec,pc,dc = params["model"],params["evaluation"],params["preprocessing"],params["data"]
+    model = build_model(mc["encoder"],None,mc["in_channels"],mc["num_classes"]).to(device)
+    ckpt = torch.load("../models/best_model.pt",map_location=device,weights_only=False)
+    model.load_state_dict(ckpt.get("model_state_dict",ckpt),strict=False); model.eval()
+    with open("artifacts/ela_statistics.json") as f: s=json.load(f)
+    em,es = torch.tensor(s["mean"],dtype=torch.float32), torch.tensor(s["std"],dtype=torch.float32)
     from sklearn.model_selection import train_test_split
-
-    dataset_root = data_cfg["dataset_root"]
-    extensions = set(data_cfg.get("supported_extensions", [".jpg", ".jpeg", ".png"]))
-    au_paths = collect_image_paths(f"{dataset_root}/Au", extensions)
-    tp_paths = collect_image_paths(f"{dataset_root}/Tp", extensions)
-    all_paths = au_paths + tp_paths
-    all_labels = [0] * len(au_paths) + [1] * len(tp_paths)
-
-    seed = params["seed"]
-    _, temp_idx = train_test_split(range(len(all_paths)), test_size=0.30, stratify=all_labels, random_state=seed)
-    temp_labels = [all_labels[i] for i in temp_idx]
-    _, test_idx = train_test_split(temp_idx, test_size=0.50, stratify=temp_labels, random_state=seed)
-
-    test_ds = CASIASegmentationDataset(
-        image_paths=[all_paths[i] for i in test_idx],
-        mask_paths=[None] * len(test_idx),
-        labels=[all_labels[i] for i in test_idx],
-        ela_mean=ela_mean,
-        ela_std=ela_std,
-        img_size=prep_cfg["image_size"],
-        qualities=prep_cfg["ela_qualities"],
-    )
-    test_loader = DataLoader(test_ds, batch_size=16, shuffle=False, num_workers=0)
-
-    # Inference
-    all_preds, all_masks = [], []
+    au=collect_image_paths(f"{dc['dataset_root']}/Au"); tp=collect_image_paths(f"{dc['dataset_root']}/Tp")
+    all_p,all_l = au+tp, [0]*len(au)+[1]*len(tp)
+    _,tmp = train_test_split(range(len(all_p)),test_size=0.30,stratify=all_l,random_state=params["seed"])
+    _,test_i = train_test_split(tmp,test_size=0.50,stratify=[all_l[i] for i in tmp],random_state=params["seed"])
+    ds=CASIASegmentationDataset([all_p[i] for i in test_i],[None]*len(test_i),[all_l[i] for i in test_i],em,es,pc["image_size"],pc["ela_qualities"])
+    dl=DataLoader(ds,batch_size=16,shuffle=False)
+    ap,am=[],[]
     with torch.no_grad():
-        for images, masks, _ in test_loader:
-            images = images.to(device)
-            preds = model(images)
-            probs = torch.sigmoid(preds.float())
-            all_preds.append(probs.cpu().numpy())
-            all_masks.append(masks.numpy())
-
-    preds_np = np.concatenate(all_preds)
-    masks_np = np.concatenate(all_masks)
-    metrics = compute_pixel_f1(preds_np, masks_np)
-
-    # Quality gate
-    thresholds = eval_cfg["thresholds"]
-    passed = (
-        metrics["pixel_f1"] >= thresholds["min_pixel_f1"]
-        and metrics["pixel_iou"] >= thresholds["min_iou"]
-    )
-    metrics["quality_gate_passed"] = passed
-    metrics["test_samples"] = len(test_idx)
-
-    # Save
+        for imgs,masks,_ in dl:
+            ap.append(torch.sigmoid(model(imgs.to(device)).float()).cpu().numpy()); am.append(masks.numpy())
+    mets = compute_pixel_f1(np.concatenate(ap),np.concatenate(am))
+    th = ec["thresholds"]; mets["quality_gate_passed"] = mets["pixel_f1"]>=th["min_pixel_f1"] and mets["pixel_iou"]>=th["min_iou"]
+    mets["test_samples"]=len(test_i)
     Path("evaluation_results").mkdir(exist_ok=True)
-    save_metrics(metrics, "metrics/eval_metrics.json")
+    save_metrics(mets,"metrics/eval_metrics.json")
+    logger.info("Results: %s Gate: %s", mets, "PASS" if mets["quality_gate_passed"] else "FAIL")
 
-    logger.info("Evaluation results:")
-    for k, v in metrics.items():
-        logger.info("  %s: %s", k, v)
-    logger.info("Quality gate: %s", "PASSED ✓" if passed else "FAILED ✗")
-
-
-if __name__ == "__main__":
-    params = load_params("params.yaml")
-    evaluate(params)
+if __name__=="__main__": evaluate(load_params())

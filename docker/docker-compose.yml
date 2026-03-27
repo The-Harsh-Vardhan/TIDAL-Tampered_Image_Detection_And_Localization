@@ -1,98 +1,27 @@
-# ═══════════════════════════════════════════════════════════════════════════
-# TIDAL Docker Compose — Full Stack
-# ═══════════════════════════════════════════════════════════════════════════
-# Services:
-#   1. tidal-api       — FastAPI + TIDAL model inference (GPU)
-#   2. tidal-frontend  — Static frontend via Nginx
-#   3. prometheus      — Metrics collection
-#   4. grafana         — Metrics dashboard
-# ═══════════════════════════════════════════════════════════════════════════
-
 version: "3.8"
-
 services:
-
-  # ── TIDAL API Server ─────────────────────────────────────────────────
   tidal-api:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile
+    build: {context: .., dockerfile: docker/Dockerfile}
     container_name: tidal-api
-    ports:
-      - "8000:8000"
-    environment:
-      - DEVICE=auto
-      - MODEL_DIR=/app/models
-      - MAX_CONCURRENT=4
-      - RATE_LIMIT_PER_MINUTE=30
-      - MODEL_VERSION=vR.P.19
-      - CORS_ORIGINS=http://localhost:3000,http://localhost:8000
-    volumes:
-      - ../models:/app/models:ro
-      - ./logs:/app/logs
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [ gpu ]
+    ports: ["8000:8000"]
+    environment: [DEVICE=auto, MODEL_DIR=/app/models, MAX_CONCURRENT=4, CORS_ORIGINS=http://localhost:3000]
+    volumes: ["../models:/app/models:ro"]
     restart: unless-stopped
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8000/health" ]
-      interval: 30s
-      timeout: 5s
-      start_period: 120s
-      retries: 3
-
-  # ── Frontend ──────────────────────────────────────────────────────────
   tidal-frontend:
     image: nginx:1.25-alpine
     container_name: tidal-frontend
-    ports:
-      - "3000:80"
-    volumes:
-      - ../frontend:/usr/share/nginx/html:ro
-    depends_on:
-      - tidal-api
+    ports: ["3000:80"]
+    volumes: ["../frontend:/usr/share/nginx/html:ro"]
+    depends_on: [tidal-api]
     restart: unless-stopped
-
-  # ── Prometheus ───────────────────────────────────────────────────────
   prometheus:
     image: prom/prometheus:v2.48.0
     container_name: tidal-prometheus
-    ports:
-      - "9090:9090"
-    volumes:
-      - ../observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - ../observability/alerting_rules.yml:/etc/prometheus/alerting_rules.yml:ro
-      - prometheus-data:/prometheus
-    command:
-      - "--config.file=/etc/prometheus/prometheus.yml"
-      - "--storage.tsdb.retention.time=15d"
-    depends_on:
-      tidal-api:
-        condition: service_healthy
+    ports: ["9090:9090"]
+    volumes: ["../observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro"]
     restart: unless-stopped
-
-  # ── Grafana ──────────────────────────────────────────────────────────
   grafana:
     image: grafana/grafana:10.2.0
-    container_name: tidal-grafana
-    ports:
-      - "3001:3000"
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=tidal-admin
-      - GF_USERS_ALLOW_SIGN_UP=false
-    volumes:
-      - grafana-data:/var/lib/grafana
-      - ../observability/grafana_dashboard.json:/var/lib/grafana/dashboards/tidal.json:ro
-    depends_on:
-      - prometheus
+    ports: ["3001:3000"]
+    environment: [GF_SECURITY_ADMIN_PASSWORD=tidal-admin, GF_USERS_ALLOW_SIGN_UP=false]
     restart: unless-stopped
-
-volumes:
-  prometheus-data:
-    driver: local
-  grafana-data:
-    driver: local

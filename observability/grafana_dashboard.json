@@ -1,79 +1,23 @@
 {
   "dashboard": {
-    "title": "TIDAL — Inference Dashboard",
+    "title": "TIDAL Dashboard",
     "uid": "tidal-main",
     "panels": [
       {
         "title": "Request Rate",
         "type": "graph",
-        "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
         "targets": [
           {
-            "expr": "rate(tidal_requests_total[5m])",
-            "legendFormat": "{{status}}"
+            "expr": "rate(tidal_requests_total[5m])"
           }
         ]
       },
       {
-        "title": "Inference Latency (P50/P95/P99)",
+        "title": "Latency P99",
         "type": "graph",
-        "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8},
         "targets": [
           {
-            "expr": "histogram_quantile(0.50, rate(tidal_request_duration_seconds_bucket[5m]))",
-            "legendFormat": "P50"
-          },
-          {
-            "expr": "histogram_quantile(0.95, rate(tidal_request_duration_seconds_bucket[5m]))",
-            "legendFormat": "P95"
-          },
-          {
-            "expr": "histogram_quantile(0.99, rate(tidal_request_duration_seconds_bucket[5m]))",
-            "legendFormat": "P99"
-          }
-        ]
-      },
-      {
-        "title": "Error Rate",
-        "type": "singlestat",
-        "gridPos": {"x": 0, "y": 8, "w": 6, "h": 4},
-        "targets": [
-          {
-            "expr": "rate(tidal_requests_total{status='error'}[5m]) / rate(tidal_requests_total[5m])",
-            "legendFormat": "Error %"
-          }
-        ]
-      },
-      {
-        "title": "Success Rate",
-        "type": "singlestat",
-        "gridPos": {"x": 6, "y": 8, "w": 6, "h": 4},
-        "targets": [
-          {
-            "expr": "rate(tidal_requests_total{status='success'}[5m]) / rate(tidal_requests_total[5m])",
-            "legendFormat": "Success %"
-          }
-        ]
-      },
-      {
-        "title": "Total Requests",
-        "type": "singlestat",
-        "gridPos": {"x": 12, "y": 8, "w": 6, "h": 4},
-        "targets": [
-          {
-            "expr": "sum(tidal_requests_total)",
-            "legendFormat": "Total"
-          }
-        ]
-      },
-      {
-        "title": "GPU OOM Events",
-        "type": "singlestat",
-        "gridPos": {"x": 18, "y": 8, "w": 6, "h": 4},
-        "targets": [
-          {
-            "expr": "sum(tidal_requests_total{status='oom'})",
-            "legendFormat": "OOM"
+            "expr": "histogram_quantile(0.99,rate(tidal_request_duration_seconds_bucket[5m]))"
           }
         ]
       }

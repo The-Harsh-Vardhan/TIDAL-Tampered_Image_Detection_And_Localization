@@ -1,85 +1,43 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["backend*", "dvc_pipeline*"]
+
 [project]
 name = "tidal"
 version = "1.0.0"
-description = "TIDAL — Tampered Image Detection And Localization"
+description = "TIDAL - Tampered Image Detection And Localization"
 readme = "README.md"
 requires-python = ">=3.10"
-license = { text = "MIT" }
-authors = [{ name = "Harsh Vardhan" }]
-
+license = {text = "MIT"}
+authors = [{name = "Harsh Vardhan"}]
 dependencies = [
-    "torch>=2.0.0",
-    "torchvision>=0.15.0",
-    "segmentation-models-pytorch>=0.3.3",
-    "albumentations>=1.3.0",
-    "opencv-python>=4.8.0",
-    "numpy>=1.24.0",
-    "pandas>=2.0.0",
-    "matplotlib>=3.7.0",
-    "scikit-learn>=1.3.0",
-    "Pillow>=10.0.0",
-    "tqdm>=4.65.0",
-    "fastapi>=0.110.0",
-    "uvicorn[standard]>=0.27.0",
-    "python-multipart>=0.0.9",
-    "prometheus-client>=0.20.0",
-    "pydantic>=2.0.0",
-    "pydantic-settings>=2.0.0",
+    "torch>=2.0.0", "torchvision>=0.15.0", "segmentation-models-pytorch>=0.3.3",
+    "albumentations>=1.3.0", "opencv-python>=4.8.0", "numpy>=1.24.0",
+    "pandas>=2.0.0", "matplotlib>=3.7.0", "scikit-learn>=1.3.0",
+    "Pillow>=10.0.0", "tqdm>=4.65.0", "fastapi>=0.110.0",
+    "uvicorn[standard]>=0.27.0", "python-multipart>=0.0.9",
+    "prometheus-client>=0.20.0", "pydantic>=2.0.0", "pydantic-settings>=2.0.0",
 ]
-
 [project.optional-dependencies]
-dev = [
-    "ruff>=0.4.0",
-    "pytest>=8.0.0",
-    "pytest-asyncio>=0.23.0",
-    "httpx>=0.27.0",
-    "pip-audit>=2.7.0",
-]
-tracking = [
-    "wandb>=0.16.0",
-    "huggingface-hub>=0.20.0",
-]
-dvc = [
-    "dvc>=3.0.0",
-    "pyyaml>=6.0.0",
-]
+dev = ["ruff>=0.4.0", "pytest>=8.0.0", "pytest-asyncio>=0.23.0", "httpx>=0.27.0", "pip-audit>=2.7.0"]
 
 [tool.ruff]
 target-version = "py310"
 line-length = 100
 fix = true
-
 [tool.ruff.lint]
-select = [
-    "E",   # pycodestyle errors
-    "W",   # pycodestyle warnings
-    "F",   # pyflakes
-    "I",   # isort
-    "N",   # pep8-naming
-    "UP",  # pyupgrade
-    "B",   # flake8-bugbear
-    "S",   # flake8-bandit (security)
-    "T20", # flake8-print
-    "SIM", # flake8-simplify
-    "TCH", # flake8-type-checking
-    "RUF", # ruff-specific rules
-]
-ignore = [
-    "S101",  # assert allowed in tests
-    "T201",  # print() allowed (CLI scripts)
-    "E501",  # line too long (handled by formatter)
-]
-
+select = ["E","W","F","I","N","UP","B","S","T20","SIM","RUF"]
+ignore = ["S101","T201","E501"]
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["S101", "S105", "S106"]
-"configs/**" = ["ALL"]  # auto-generated notebook modules
-
+"tests/**" = ["S101","S105","S106"]
+"configs/**" = ["ALL"]
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
-
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = "test_*.py"
-python_functions = "test_*"
 asyncio_mode = "auto"

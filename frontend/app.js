@@ -1,198 +1,44 @@
-/**
- * frontend/app.js
- * ================
- * TIDAL Frontend — API client, health polling, drag-and-drop upload.
- */
+(()=>{"use strict";
+const API=location.hostname==="localhost"||location.hostname==="127.0.0.1"?"http://localhost:8000":"";
+const $=id=>document.getElementById(id);
+const ua=$("uploadArea"),uc=$("uploadContent"),up=$("uploadPreview"),fi=$("fileInput"),
+  bb=$("browseBtn"),cb=$("clearBtn"),pi=$("previewImage"),ra=$("resultsArea"),
+  si=$("statusIndicator"),st=$("statusText"),rv=$("resultVerdict"),vi=$("verdictIcon"),
+  vt=$("verdictText"),vd=$("verdictDetail"),mc=$("metricConfidence"),mr=$("metricRatio"),
+  mt=$("metricTime"),mi=$("maskImage");
 
-(() => {
-    "use strict";
+async function checkHealth(){
+  try{const r=await fetch(`${API}/health`,{signal:AbortSignal.timeout(5000)});
+    if(r.ok){si.className="status-indicator online";st.textContent="API connected";return true}}
+  catch{}si.className="status-indicator offline";st.textContent="API offline";return false}
+checkHealth();setInterval(checkHealth,15000);
 
-    // ── Configuration ─────────────────────────────────────────────────────
-    const API_BASE = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
-        ? "http://localhost:8000"
-        : "";
-    const HEALTH_POLL_INTERVAL = 15000; // 15 seconds
+ua.addEventListener("dragover",e=>{e.preventDefault();ua.classList.add("drag-active")});
+ua.addEventListener("dragleave",()=>ua.classList.remove("drag-active"));
+ua.addEventListener("drop",e=>{e.preventDefault();ua.classList.remove("drag-active");if(e.dataTransfer.files.length)handleFile(e.dataTransfer.files[0])});
+bb.addEventListener("click",e=>{e.stopPropagation();fi.click()});
+fi.addEventListener("change",()=>{if(fi.files.length)handleFile(fi.files[0])});
+cb.addEventListener("click",e=>{e.stopPropagation();clear()});
 
-    // ── DOM Elements ──────────────────────────────────────────────────────
-    const uploadArea = document.getElementById("uploadArea");
-    const uploadContent = document.getElementById("uploadContent");
-    const uploadPreview = document.getElementById("uploadPreview");
-    const fileInput = document.getElementById("fileInput");
-    const browseBtn = document.getElementById("browseBtn");
-    const clearBtn = document.getElementById("clearBtn");
-    const previewImage = document.getElementById("previewImage");
-    const resultsArea = document.getElementById("resultsArea");
-    const statusIndicator = document.getElementById("statusIndicator");
-    const statusText = document.getElementById("statusText");
+function handleFile(f){
+  if(!["image/jpeg","image/png","image/webp"].includes(f.type))return alert("Upload JPEG/PNG/WebP");
+  if(f.size>20*1024*1024)return alert("Max 20MB");
+  const r=new FileReader();r.onload=e=>{pi.src=e.target.result;uc.hidden=true;up.hidden=false};r.readAsDataURL(f);
+  submit(f)}
+function clear(){fi.value="";uc.hidden=false;up.hidden=true;ra.hidden=true}
 
-    // Result elements
-    const resultVerdict = document.getElementById("resultVerdict");
-    const verdictIcon = document.getElementById("verdictIcon");
-    const verdictText = document.getElementById("verdictText");
-    const verdictDetail = document.getElementById("verdictDetail");
-    const metricConfidence = document.getElementById("metricConfidence");
-    const metricRatio = document.getElementById("metricRatio");
-    const metricTime = document.getElementById("metricTime");
-    const maskImage = document.getElementById("maskImage");
+async function submit(f){
+  ra.hidden=false;vt.textContent="Analyzing...";vi.textContent="⏳";mc.textContent=mr.textContent=mt.textContent="—";mi.src="";
+  const fd=new FormData();fd.append("file",f);
+  try{const r=await fetch(`${API}/infer`,{method:"POST",body:fd});
+    if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.detail||`HTTP ${r.status}`)}
+    show(await r.json())}catch(e){vi.textContent="⚠";vt.textContent="Error";vd.textContent=e.message}}
 
-    let currentFile = null;
-
-    // ── Health Check ──────────────────────────────────────────────────────
-    async function checkHealth() {
-        try {
-            const res = await fetch(`${API_BASE}/health`, { signal: AbortSignal.timeout(5000) });
-            if (res.ok) {
-                statusIndicator.className = "status-indicator online";
-                statusText.textContent = "API connected";
-                return true;
-            }
-        } catch {
-            // ignore
-        }
-        statusIndicator.className = "status-indicator offline";
-        statusText.textContent = "API offline — start the backend server";
-        return false;
-    }
-
-    // Poll health
-    checkHealth();
-    setInterval(checkHealth, HEALTH_POLL_INTERVAL);
-
-    // ── Drag & Drop ──────────────────────────────────────────────────────
-    uploadArea.addEventListener("dragover", (e) => {
-        e.preventDefault();
-        uploadArea.classList.add("drag-active");
-    });
-
-    uploadArea.addEventListener("dragleave", () => {
-        uploadArea.classList.remove("drag-active");
-    });
-
-    uploadArea.addEventListener("drop", (e) => {
-        e.preventDefault();
-        uploadArea.classList.remove("drag-active");
-        const files = e.dataTransfer.files;
-        if (files.length > 0) handleFile(files[0]);
-    });
-
-    // ── File Selection ────────────────────────────────────────────────────
-    browseBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        fileInput.click();
-    });
-
-    fileInput.addEventListener("change", () => {
-        if (fileInput.files.length > 0) handleFile(fileInput.files[0]);
-    });
-
-    clearBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        clearUpload();
-    });
-
-    // ── Handle File ──────────────────────────────────────────────────────
-    function handleFile(file) {
-        // Validate type
-        const validTypes = ["image/jpeg", "image/png", "image/webp"];
-        if (!validTypes.includes(file.type)) {
-            showError("Please upload a JPEG, PNG, or WebP image.");
-            return;
-        }
-
-        // Validate size (20 MB)
-        if (file.size > 20 * 1024 * 1024) {
-            showError("File too large. Maximum size is 20 MB.");
-            return;
-        }
-
-        currentFile = file;
-
-        // Show preview
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            previewImage.src = e.target.result;
-            uploadContent.hidden = true;
-            uploadPreview.hidden = false;
-        };
-        reader.readAsDataURL(file);
-
-        // Auto-submit
-        submitInference(file);
-    }
-
-    function clearUpload() {
-        currentFile = null;
-        fileInput.value = "";
-        uploadContent.hidden = false;
-        uploadPreview.hidden = true;
-        resultsArea.hidden = true;
-    }
-
-    // ── Submit Inference ──────────────────────────────────────────────────
-    async function submitInference(file) {
-        resultsArea.hidden = true;
-
-        // Show loading state
-        verdictText.textContent = "Analyzing...";
-        verdictDetail.textContent = "Running ELA + UNet pipeline";
-        verdictIcon.textContent = "⏳";
-        resultVerdict.className = "result-verdict";
-        metricConfidence.textContent = "—";
-        metricRatio.textContent = "—";
-        metricTime.textContent = "—";
-        resultsArea.hidden = false;
-        maskImage.src = "";
-
-        const formData = new FormData();
-        formData.append("file", file);
-
-        try {
-            const res = await fetch(`${API_BASE}/infer`, {
-                method: "POST",
-                body: formData,
-            });
-
-            if (!res.ok) {
-                const err = await res.json().catch(() => ({}));
-                throw new Error(err.detail || `HTTP ${res.status}`);
-            }
-
-            const data = await res.json();
-            displayResult(data);
-        } catch (err) {
-            showResultError(err.message);
-        }
-    }
-
-    // ── Display Result ───────────────────────────────────────────────────
-    function displayResult(data) {
-        const tampered = data.is_tampered;
-
-        resultVerdict.className = `result-verdict ${tampered ? "verdict-tampered" : "verdict-authentic"}`;
-        verdictIcon.textContent = tampered ? "✗" : "✓";
-        verdictText.textContent = tampered ? "Tampered" : "Authentic";
-        verdictDetail.textContent = tampered
-            ? `Tampering detected in ${(data.tampered_ratio * 100).toFixed(1)}% of the image`
-            : "No tampering evidence found";
-
-        metricConfidence.textContent = `${(data.confidence * 100).toFixed(1)}%`;
-        metricRatio.textContent = `${(data.tampered_ratio * 100).toFixed(2)}%`;
-        metricTime.textContent = `${data.inference_time_ms.toFixed(0)}ms`;
-
-        // Show mask
-        if (data.mask_base64) {
-            maskImage.src = `data:image/png;base64,${data.mask_base64}`;
-        }
-    }
-
-    function showResultError(message) {
-        verdictIcon.textContent = "⚠";
-        verdictText.textContent = "Error";
-        verdictDetail.textContent = message;
-        resultVerdict.className = "result-verdict";
-    }
-
-    function showError(message) {
-        alert(message);
-    }
+function show(d){
+  const t=d.is_tampered;rv.className=`result-verdict ${t?"verdict-tampered":"verdict-authentic"}`;
+  vi.textContent=t?"✗":"✓";vt.textContent=t?"Tampered":"Authentic";
+  vd.textContent=t?`${(d.tampered_ratio*100).toFixed(1)}% tampered`:"No tampering found";
+  mc.textContent=`${(d.confidence*100).toFixed(1)}%`;mr.textContent=`${(d.tampered_ratio*100).toFixed(2)}%`;
+  mt.textContent=`${d.inference_time_ms.toFixed(0)}ms`;
+  if(d.mask_base64)mi.src=`data:image/png;base64,${d.mask_base64}`}
 })();

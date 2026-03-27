@@ -4,210 +4,66 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TIDAL — Tampered Image Detection & Localization</title>
-    <meta name="description" content="Detect and localize tampered regions in images using deep learning with Multi-Quality RGB Error Level Analysis and UNet segmentation.">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <meta name="description" content="Detect tampered regions in images using deep learning with Multi-Quality RGB ELA and UNet segmentation.">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="nav" id="nav">
-        <div class="nav-brand">
-            <span class="nav-icon">🔍</span>
-            <span class="nav-title">TIDAL</span>
+<nav class="nav"><div class="nav-brand"><span>🔍</span><span class="nav-title">TIDAL</span></div>
+<div class="nav-links"><a href="#pipeline">Pipeline</a><a href="#demo">Try It</a><a href="#results">Results</a></div></nav>
+
+<section class="hero" id="hero"><div class="hero-bg-grid"></div>
+<div class="hero-content">
+    <div class="hero-badge">Pixel F1 = 0.7965 on CASIA 2.0</div>
+    <h1>Tampered Image<br>Detection & Localization</h1>
+    <p class="hero-subtitle">Deep learning forensic analysis using Multi-Quality RGB ELA and UNet segmentation.</p>
+    <div class="hero-actions"><a href="#demo" class="btn btn-primary">Try Demo</a><a href="#pipeline" class="btn btn-secondary">How It Works</a></div>
+    <div class="hero-stats"><div class="stat"><span class="stat-value">60+</span><span class="stat-label">Experiments</span></div>
+    <div class="stat"><span class="stat-value">9ch</span><span class="stat-label">Multi-Q ELA</span></div>
+    <div class="stat"><span class="stat-value">12.6K</span><span class="stat-label">Images</span></div></div>
+</div></section>
+
+<section class="section" id="pipeline"><div class="container">
+<h2 class="section-title">How the Pipeline Works</h2>
+<div class="pipeline-grid">
+    <div class="pipeline-card glass-card"><div class="pipeline-step">01</div><h3>Error Level Analysis</h3><p>Re-saves at Q=75,85,95 producing a 9-channel forensic signature.</p></div>
+    <div class="pipeline-arrow">→</div>
+    <div class="pipeline-card glass-card"><div class="pipeline-step">02</div><h3>UNet + ResNet-34</h3><p>Segmentation network with frozen encoder processes 9ch ELA input.</p></div>
+    <div class="pipeline-arrow">→</div>
+    <div class="pipeline-card glass-card"><div class="pipeline-step">03</div><h3>Tamper Localization</h3><p>Binary mask output highlights tampered regions with confidence scoring.</p></div>
+</div></div></section>
+
+<section class="section section-dark" id="demo"><div class="container">
+<h2 class="section-title">Try It Live</h2>
+<div class="demo-layout">
+    <div class="upload-area glass-card" id="uploadArea">
+        <div class="upload-content" id="uploadContent"><div class="upload-icon">📤</div><h3>Drop image here</h3><p>JPEG, PNG, WebP • Max 20 MB</p>
+        <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" hidden>
+        <button class="btn btn-primary" id="browseBtn">Select Image</button></div>
+        <div class="upload-preview" id="uploadPreview" hidden><img id="previewImage" alt="Preview"><button class="btn btn-sm btn-secondary" id="clearBtn">Clear</button></div>
+    </div>
+    <div class="results-area" id="resultsArea" hidden>
+        <div class="result-header glass-card"><div class="result-verdict" id="resultVerdict">
+            <span class="verdict-icon" id="verdictIcon">✓</span><div><h3 id="verdictText">Authentic</h3><p id="verdictDetail">No tampering detected</p></div></div>
+            <div class="result-metrics"><div class="metric"><span class="metric-label">Confidence</span><span class="metric-value" id="metricConfidence">—</span></div>
+            <div class="metric"><span class="metric-label">Tampered</span><span class="metric-value" id="metricRatio">—</span></div>
+            <div class="metric"><span class="metric-label">Time</span><span class="metric-value" id="metricTime">—</span></div></div>
         </div>
-        <div class="nav-links">
-            <a href="#pipeline">Pipeline</a>
-            <a href="#demo">Try It</a>
-            <a href="#results">Results</a>
-            <a href="https://github.com/The-Harsh-Vardhan/TIDAL-Tampered_Image_Detection_And_Localization" target="_blank" rel="noopener">GitHub</a>
-        </div>
-    </nav>
+        <div class="result-images"><div class="result-image-card glass-card"><h4>Tamper Heatmap</h4><img id="maskImage" alt="Mask"></div></div>
+    </div>
+</div>
+<div class="status-bar" id="statusBar"><div class="status-indicator" id="statusIndicator"></div><span id="statusText">Checking API...</span></div>
+</div></section>
 
-    <!-- Hero -->
-    <section class="hero" id="hero">
-        <div class="hero-bg-grid"></div>
-        <div class="hero-content">
-            <div class="hero-badge">Pixel F1 = 0.7965 on CASIA 2.0</div>
-            <h1>Tampered Image<br>Detection & Localization</h1>
-            <p class="hero-subtitle">
-                Deep learning-powered forensic analysis that detects and pinpoints tampered regions
-                in images using Multi-Quality RGB Error Level Analysis and UNet segmentation.
-            </p>
-            <div class="hero-actions">
-                <a href="#demo" class="btn btn-primary">Try Demo</a>
-                <a href="#pipeline" class="btn btn-secondary">How It Works</a>
-            </div>
-            <div class="hero-stats">
-                <div class="stat">
-                    <span class="stat-value">60+</span>
-                    <span class="stat-label">Experiments</span>
-                </div>
-                <div class="stat">
-                    <span class="stat-value">9ch</span>
-                    <span class="stat-label">Multi-Q ELA</span>
-                </div>
-                <div class="stat">
-                    <span class="stat-value">12.6K</span>
-                    <span class="stat-label">Images</span>
-                </div>
-            </div>
-        </div>
-    </section>
+<section class="section" id="results"><div class="container">
+<h2 class="section-title">Key Results</h2>
+<div class="results-grid">
+    <div class="result-card glass-card"><div class="result-number">0.7965</div><div class="result-metric">Pixel F1</div><p>Best on CASIA 2.0 with Multi-Q RGB ELA</p></div>
+    <div class="result-card glass-card"><div class="result-number">+34.19pp</div><div class="result-metric">ELA Impact</div><p>More than all architectural changes combined</p></div>
+    <div class="result-card glass-card"><div class="result-number">0.9665</div><div class="result-metric">Pixel AUC</div><p>Area Under ROC Curve</p></div>
+</div></div></section>
 
-    <!-- Pipeline -->
-    <section class="section" id="pipeline">
-        <div class="container">
-            <h2 class="section-title">How the Pipeline Works</h2>
-            <p class="section-desc">TIDAL uses a three-stage forensic analysis pipeline. Each stage extracts different evidence of image tampering.</p>
-
-            <div class="pipeline-grid">
-                <div class="pipeline-card glass-card">
-                    <div class="pipeline-step">01</div>
-                    <h3>Error Level Analysis</h3>
-                    <p>Re-saves the image at three JPEG quality levels (Q=75, 85, 95) and measures pixel-level differences. Tampered regions show inconsistent compression artifacts across all three quality levels, producing a 9-channel forensic signature.</p>
-                </div>
-                <div class="pipeline-arrow">→</div>
-                <div class="pipeline-card glass-card">
-                    <div class="pipeline-step">02</div>
-                    <h3>UNet + ResNet-34</h3>
-                    <p>A segmentation network with a frozen ImageNet-pretrained encoder processes the 9-channel ELA input. The conv1 layer is initialized by tiling 3ch pretrained weights 3×, enabling transfer learning from natural images to forensic features.</p>
-                </div>
-                <div class="pipeline-arrow">→</div>
-                <div class="pipeline-card glass-card">
-                    <div class="pipeline-step">03</div>
-                    <h3>Tamper Localization</h3>
-                    <p>The model outputs a pixel-level probability map highlighting tampered regions. A threshold converts this to a binary mask, and the tampered area ratio determines the image-level classification (authentic vs. tampered).</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Demo -->
-    <section class="section section-dark" id="demo">
-        <div class="container">
-            <h2 class="section-title">Try It Live</h2>
-            <p class="section-desc">Upload an image and watch the TIDAL pipeline analyze it for tampering evidence.</p>
-
-            <div class="demo-layout">
-                <!-- Upload Area -->
-                <div class="upload-area glass-card" id="uploadArea">
-                    <div class="upload-content" id="uploadContent">
-                        <div class="upload-icon">📤</div>
-                        <h3>Drop image here or browse</h3>
-                        <p>JPEG, PNG, WebP • Max 20 MB</p>
-                        <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" hidden>
-                        <button class="btn btn-primary" id="browseBtn">Select Image</button>
-                    </div>
-                    <div class="upload-preview" id="uploadPreview" hidden>
-                        <img id="previewImage" alt="Preview">
-                        <button class="btn btn-sm btn-secondary" id="clearBtn">Clear</button>
-                    </div>
-                </div>
-
-                <!-- Results Area -->
-                <div class="results-area" id="resultsArea" hidden>
-                    <div class="result-header glass-card">
-                        <div class="result-verdict" id="resultVerdict">
-                            <span class="verdict-icon" id="verdictIcon">✓</span>
-                            <div>
-                                <h3 id="verdictText">Authentic</h3>
-                                <p id="verdictDetail">No tampering detected</p>
-                            </div>
-                        </div>
-                        <div class="result-metrics">
-                            <div class="metric">
-                                <span class="metric-label">Confidence</span>
-                                <span class="metric-value" id="metricConfidence">—</span>
-                            </div>
-                            <div class="metric">
-                                <span class="metric-label">Tampered Area</span>
-                                <span class="metric-value" id="metricRatio">—</span>
-                            </div>
-                            <div class="metric">
-                                <span class="metric-label">Time</span>
-                                <span class="metric-value" id="metricTime">—</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="result-images">
-                        <div class="result-image-card glass-card">
-                            <h4>Tamper Heatmap</h4>
-                            <img id="maskImage" alt="Tamper mask">
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Status -->
-            <div class="status-bar" id="statusBar">
-                <div class="status-indicator" id="statusIndicator"></div>
-                <span id="statusText">Checking API status...</span>
-            </div>
-        </div>
-    </section>
-
-    <!-- Results Section -->
-    <section class="section" id="results">
-        <div class="container">
-            <h2 class="section-title">Key Results</h2>
-            <div class="results-grid">
-                <div class="result-card glass-card">
-                    <div class="result-number">0.7965</div>
-                    <div class="result-metric">Pixel F1 Score</div>
-                    <p>Best performance on CASIA 2.0 dataset using Multi-Q RGB ELA input representation</p>
-                </div>
-                <div class="result-card glass-card">
-                    <div class="result-number">+34.19pp</div>
-                    <div class="result-metric">ELA Impact</div>
-                    <p>Improvement from switching to Multi-Quality RGB ELA — more than all architectural changes combined</p>
-                </div>
-                <div class="result-card glass-card">
-                    <div class="result-number">0.9665</div>
-                    <div class="result-metric">Pixel AUC</div>
-                    <p>Area Under ROC Curve for pixel-level tamper detection</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Limitations -->
-    <section class="section section-dark" id="limitations">
-        <div class="container">
-            <h2 class="section-title">Limitations & Precautions</h2>
-            <div class="limits-grid">
-                <div class="limit-card glass-card">
-                    <h4>🖼️ JPEG-Focused</h4>
-                    <p>ELA works best on JPEG images. RAW or lossless formats may produce weaker forensic signals.</p>
-                </div>
-                <div class="limit-card glass-card">
-                    <h4>📐 Fixed Resolution</h4>
-                    <p>Images are resized to 384×384 for analysis. Very small tampered regions may be missed.</p>
-                </div>
-                <div class="limit-card glass-card">
-                    <h4>🎯 Dataset-Specific</h4>
-                    <p>Trained on CASIA 2.0 (copy-move + splicing). May not generalize to all tampering methods.</p>
-                </div>
-                <div class="limit-card glass-card">
-                    <h4>🔬 Research Prototype</h4>
-                    <p>This is an academic investigation, not commercial forensic software.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="footer">
-        <p>TIDAL v1.0.0 — UNet + ResNet-34 + Multi-Q RGB ELA</p>
-        <div class="footer-links">
-            <a href="/docs" target="_blank">API Docs</a>
-            <a href="/metrics" target="_blank">Metrics</a>
-            <a href="https://github.com/The-Harsh-Vardhan/TIDAL-Tampered_Image_Detection_And_Localization" target="_blank" rel="noopener">GitHub</a>
-        </div>
-        <p class="footer-credit">© 2025 Harsh Vardhan — IIIT Nagpur</p>
-    </footer>
-
-    <script src="app.js"></script>
-</body>
-</html>
+<footer class="footer"><p>TIDAL v1.0.0 — UNet + ResNet-34 + Multi-Q RGB ELA</p>
+<p class="footer-credit">© 2025 Harsh Vardhan — IIIT Nagpur</p></footer>
+<script src="app.js"></script>
+</body></html>

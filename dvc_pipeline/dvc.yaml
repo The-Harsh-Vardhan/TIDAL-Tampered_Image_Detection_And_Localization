@@ -1,91 +1,24 @@
-# DVC Pipeline — TIDAL Training
-# ==============================
-# 4-stage DAG:  preprocess → train → evaluate → visualize
-#
-# Run:   dvc repro          (full pipeline)
-#        dvc repro <stage>  (single stage + upstream deps)
-#
-# Metrics: dvc metrics show
-# Params:  dvc params diff
-# DAG:     dvc dag
-
 stages:
-
-  # -- Stage 1: Preprocess (compute ELA statistics) -------------------------
   preprocess:
     cmd: python src/preprocess.py
-    deps:
-      - src/preprocess.py
-      - src/dataset.py
-      - src/utils.py
-    params:
-      - seed
-      - data
-      - preprocessing
-    outs:
-      - artifacts/ela_statistics.json
-    metrics:
-      - metrics/preprocess_metrics.json:
-          cache: false
-
-  # -- Stage 2: Train UNet + ResNet-34 --------------------------------------
+    deps: [src/preprocess.py, src/dataset.py, src/utils.py]
+    params: [seed, data, preprocessing]
+    outs: [artifacts/ela_statistics.json]
+    metrics: [{metrics/preprocess_metrics.json: {cache: false}}]
   train:
     cmd: python src/train.py
-    deps:
-      - src/train.py
-      - src/dataset.py
-      - src/models.py
-      - src/utils.py
-      - artifacts/ela_statistics.json
-    params:
-      - seed
-      - data
-      - model
-      - training
-      - preprocessing
-    outs:
-      - ../models/best_model.pt
-    metrics:
-      - metrics/train_metrics.json:
-          cache: false
-
-  # -- Stage 3: Evaluate on test set ----------------------------------------
+    deps: [src/train.py, src/dataset.py, src/models.py, src/utils.py, artifacts/ela_statistics.json]
+    params: [seed, data, model, training, preprocessing]
+    outs: [../models/best_model.pt]
+    metrics: [{metrics/train_metrics.json: {cache: false}}]
   evaluate:
     cmd: python src/evaluate.py
-    deps:
-      - src/evaluate.py
-      - src/dataset.py
-      - src/models.py
-      - src/utils.py
-      - ../models/best_model.pt
-      - artifacts/ela_statistics.json
-    params:
-      - seed
-      - data
-      - model
-      - evaluation
-      - preprocessing
-    outs:
-      - evaluation_results
-    metrics:
-      - metrics/eval_metrics.json:
-          cache: false
-
-  # -- Stage 4: Visualize predictions ---------------------------------------
+    deps: [src/evaluate.py, src/dataset.py, src/models.py, src/utils.py, ../models/best_model.pt, artifacts/ela_statistics.json]
+    params: [seed, data, model, evaluation, preprocessing]
+    outs: [evaluation_results]
+    metrics: [{metrics/eval_metrics.json: {cache: false}}]
   visualize:
     cmd: python src/visualize.py
-    deps:
-      - src/visualize.py
-      - src/dataset.py
-      - src/models.py
-      - src/utils.py
-      - ../models/best_model.pt
-      - artifacts/ela_statistics.json
-    params:
-      - seed
-      - data
-      - model
-      - visualization
-      - preprocessing
-    outs:
-      - visualize_results
+    deps: [src/visualize.py, src/dataset.py, src/models.py, src/utils.py, ../models/best_model.pt, artifacts/ela_statistics.json]
+    params: [seed, data, model, visualization, preprocessing]
+    outs: [visualize_results]
