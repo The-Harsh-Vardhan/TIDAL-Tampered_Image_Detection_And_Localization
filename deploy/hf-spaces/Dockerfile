@@ -11,6 +11,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     DEVICE=cpu \
     MODEL_DIR=/app/models \
+    MODEL_VERSION=vR.P.19_U \
     CORS_ORIGINS=*
 
 RUN apt-get update && \

@@ -57,3 +57,5 @@ sweep_outputs/
 
 # Windows device name artifacts
 NUL
+.vercel
+.env*.local

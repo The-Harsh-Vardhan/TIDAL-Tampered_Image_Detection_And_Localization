@@ -54,7 +54,7 @@ DEVICE=cpu python -m uvicorn backend.app:app --host 0.0.0.0 --port 8000 --reload
 | `DEVICE` | `auto` | `cpu`, `cuda`, or `auto` |
 | `MODEL_DIR` | `models` | Path to model checkpoints |
 | `MODEL_FILENAME` | `best_model.pt` | Checkpoint filename |
-| `MODEL_VERSION` | `vR.P.19` | Model version label |
+| `MODEL_VERSION` | `vR.P.19_U` | Model version label |
 | `MAX_CONCURRENT` | `4` | Max concurrent inferences |
 | `RATE_LIMIT_PER_MINUTE` | `30` | Rate limit per IP |
 | `CORS_ORIGINS` | `*` | Allowed origins (comma-separated) |

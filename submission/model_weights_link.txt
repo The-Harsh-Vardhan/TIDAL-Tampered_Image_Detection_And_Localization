@@ -1,15 +1,15 @@
-# Model Weights — vR.P.19 (Best Run)
+# Model Weights — vR.P.19_U (Best Run)
 
-## Best Model: vR.P.19 — Multi-Quality RGB ELA 9-Channel Input
+## Best Model: vR.P.19_U — Multi-Quality RGB ELA 9-Channel Input
 - Architecture: UNet + ResNet-34 (pretrained, frozen encoder, BN unfrozen)
 - Input: 9-channel Multi-Quality RGB ELA (Q=75/85/95 x RGB)
 - Pixel F1: 0.7965 | IoU: 0.6615 | Pixel AUC: 0.9665
 - Dataset: CASIA 2.0 (12,614 images, 70/15/15 split, seed=42)
 
 ## Weights Location
-- Weights are saved as part of the Kaggle notebook output
-- Kaggle notebook: vr-p-19-multi-quality-rgb-ela-9-channels
-- The trained model checkpoint is saved at the end of training in the notebook output
+- Canonical backend checkpoint: `models/best_model.pt`
+- Versioned checkpoint copy: `models/vR.P.19_U_unet_resnet34_mqela_rgb.pth`
+- New best notebook in submission bundle: `submission/vr-p-19-u-image-tampering-detection-and-localization.ipynb`
 
 ## How to Load
 ```python
@@ -23,6 +23,6 @@ model = smp.Unet(
     classes=1,
     activation=None
 )
-model.load_state_dict(torch.load("best_model.pth", map_location="cpu"))
+model.load_state_dict(torch.load("models/best_model.pt", map_location="cpu"))
 model.eval()
 ```

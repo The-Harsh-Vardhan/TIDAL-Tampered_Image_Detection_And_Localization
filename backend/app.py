@@ -29,7 +29,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger("tidal.api")
 API_VERSION = "1.0.0"
-MODEL_VERSION = os.environ.get("MODEL_VERSION", "vR.P.19")
+MODEL_VERSION = os.environ.get("MODEL_VERSION", "vR.P.19_U")
 MAX_CONCURRENT = int(os.environ.get("MAX_CONCURRENT", "4"))
 REQUEST_COUNT = Counter("tidal_requests_total", "Total requests", ["status"])
 REQUEST_LATENCY = Histogram(
