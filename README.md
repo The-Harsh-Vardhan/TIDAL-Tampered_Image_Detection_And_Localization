@@ -289,6 +289,56 @@ This project was developed as part of the Big Vision internship assignment.
 
 ---
 
+## 🚀 Production API (`production` branch)
+
+The `production` branch contains a fully productionized system built around the best experiment (vR.P.19).
+
+### Quick Start
+
+```bash
+git checkout production
+
+# Backend (CPU mode)
+set DEVICE=cpu
+python -m uvicorn backend.app:app --host 0.0.0.0 --port 8000 --reload
+
+# Frontend (new terminal)
+cd frontend && python -m http.server 3000
+# → Open http://localhost:3000
+```
+
+### API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/health` | Liveness check |
+| `GET` | `/ready` | Readiness (model loaded?) |
+| `POST` | `/infer` | Upload image → tamper mask + verdict |
+| `GET` | `/metrics` | Prometheus metrics |
+| `GET` | `/version` | API + model version info |
+
+### Docker (Full Stack)
+
+```bash
+cd docker && docker compose up -d
+# API :8000 · Frontend :3000 · Prometheus :9090 · Grafana :3001
+```
+
+### DVC Training Pipeline
+
+```bash
+cd dvc_pipeline
+dvc repro   # runs preprocess → train → evaluate → visualize
+```
+
+### CI/CD
+
+GitHub Actions runs automatically on push to `main` / `production`:
+- `code_quality.yml` — Ruff lint + pytest + pip-audit
+- `docker_build.yml` — Docker build with BuildKit cache
+
+---
+
 ## Links
 
 - [W&B Dashboard](https://wandb.ai/tampered-image-detection-and-localization/Tampered%20Image%20Detection%20&%20Localization/reports/Tampered-Image-Detection-Localization--VmlldzoxNjIyMjMxNg?accessToken=35b8v807ums5jnxtg6z8wieul1ylpetxrv2x4n7k9tr39mwf79ngtqs8w6d6tuaa)
