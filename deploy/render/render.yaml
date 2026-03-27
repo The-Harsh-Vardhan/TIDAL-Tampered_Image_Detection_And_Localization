@@ -1,0 +1,24 @@
+# Render Blueprint — TIDAL Backend
+# Deploy: Connect this repo to Render, point to this file
+# Docs: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: tidal-api
+    runtime: python
+    region: oregon
+    plan: free
+    branch: production
+    buildCommand: pip install -r requirements-prod.txt
+    startCommand: uvicorn backend.app:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DEVICE
+        value: cpu
+      - key: MODEL_DIR
+        value: /opt/render/project/src/models
+      - key: CORS_ORIGINS
+        value: "*"
+      - key: PYTHON_VERSION
+        value: "3.11.0"
+    healthCheckPath: /health
+    autoDeploy: true

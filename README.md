@@ -5,100 +5,106 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Python-3.10-blue?logo=python&logoColor=white"/>
-  <img src="https://img.shields.io/badge/PyTorch-2.x-orange?logo=pytorch&logoColor=white"/>
-  <img src="https://img.shields.io/badge/Pixel_F1-0.7965-brightgreen"/>
-  <img src="https://img.shields.io/badge/Experiments-60+-blueviolet"/>
-  <img src="https://img.shields.io/badge/W%26B-Tracked-yellow?logo=weightsandbiases&logoColor=black"/>
-  <img src="https://img.shields.io/badge/Colab-Ready-F9AB00?logo=google-colab&logoColor=black"/>
+  <img src="https://img.shields.io/badge/Python-3.10+-blue?logo=python&logoColor=white" alt="Python"/>
+  <img src="https://img.shields.io/badge/PyTorch-2.x-orange?logo=pytorch&logoColor=white" alt="PyTorch"/>
+  <img src="https://img.shields.io/badge/FastAPI-0.110+-009688?logo=fastapi&logoColor=white" alt="FastAPI"/>
+  <img src="https://img.shields.io/badge/Pixel_F1-0.7965-brightgreen" alt="Pixel F1"/>
+  <img src="https://img.shields.io/badge/Experiments-60+-blueviolet" alt="Experiments"/>
+  <img src="https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white" alt="Docker"/>
+  <img src="https://img.shields.io/badge/W%26B-Tracked-yellow?logo=weightsandbiases&logoColor=black" alt="W&B"/>
+  <img src="https://img.shields.io/badge/License-MIT-green" alt="License"/>
 </p>
 
-A systematic ablation study using deep learning to detect and localize tampered regions in images, achieving **Pixel F1 = 0.7965** on the CASIA 2.0 dataset.
-
-Through 60+ controlled ablation experiments, one finding dominated: **input representation matters most**. Switching from raw RGB to Multi-Quality RGB ELA produced a **+34.19 percentage point improvement in Pixel F1** — more than all architectural changes, attention mechanisms, and training strategies combined.
-
-**Keywords:** image forensics · ELA · UNet · ResNet-34 · CASIA 2.0 · ablation study · segmentation
-
-**[W&B Dashboard](https://wandb.ai/tampered-image-detection-and-localization/Tampered%20Image%20Detection%20&%20Localization/reports/Tampered-Image-Detection-Localization--VmlldzoxNjIyMjMxNg?accessToken=35b8v807ums5jnxtg6z8wieul1ylpetxrv2x4n7k9tr39mwf79ngtqs8w6d6tuaa)** | **[Submission Report](submission/submission_report.md)** | **[Final Notebook](submission/final_notebook.ipynb)**
+<p align="center">
+  <b>
+    <a href="https://wandb.ai/tampered-image-detection-and-localization/Tampered%20Image%20Detection%20%26%20Localization/reports/Tampered-Image-Detection-Localization--VmlldzoxNjIyMjMxNg?accessToken=35b8v807ums5jnxtg6z8wieul1ylpetxrv2x4n7k9tr39mwf79ngtqs8w6d6tuaa">W&B Dashboard</a>
+    · <a href="submission/submission_report.md">Submission Report</a>
+    · <a href="submission/final_notebook.ipynb">Final Notebook</a>
+    · <a href="docs/ARCHITECTURE.md">Architecture</a>
+  </b>
+</p>
 
 ---
 
-## Overview
+A production-ready deep learning system for detecting and localizing tampered regions in images, achieving **Pixel F1 = 0.7965** on the CASIA 2.0 dataset.
+
+Through 60+ controlled ablation experiments, one finding dominated: **input representation matters most**. Switching from raw RGB to Multi-Quality RGB ELA produced a **+34.19pp improvement in Pixel F1** — more than all architectural changes, attention mechanisms, and training strategies combined.
+
+> **Keywords:** image forensics · ELA · UNet · ResNet-34 · CASIA 2.0 · ablation study · segmentation · FastAPI · DVC
+
+---
+
+## ✨ Try It
+
+### 🔬 Run the Research Notebook
+
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/The-Harsh-Vardhan/TIDAL-Tampered_Image_Detection_And_Localization/blob/main/submission/final_notebook.ipynb)
+
+### 🚀 Run the Production API
+
+```bash
+git clone https://github.com/The-Harsh-Vardhan/TIDAL-Tampered_Image_Detection_And_Localization.git
+cd TIDAL-Tampered_Image_Detection_And_Localization
+git checkout production
+pip install -e ".[dev]"
+
+# Start the backend (CPU mode)
+DEVICE=cpu uvicorn backend.app:app --host 0.0.0.0 --port 8000 --reload
+
+# Start the frontend (new terminal)
+cd frontend && python -m http.server 3000
+```
+
+Open **http://localhost:3000** → drag & drop any image to scan for tampering.
+
+---
+
+## 📊 Overview
 
 | | |
-|---|---|
+| --- | --- |
 | **Task** | Pixel-level tamper localization + image-level detection |
-| **Dataset** | CASIA 2.0 (12,614 images, 7,491 authentic + 5,123 tampered) |
+| **Dataset** | CASIA 2.0 (12,614 images — 7,491 authentic + 5,123 tampered) |
 | **Architecture** | UNet + ResNet-34 (ImageNet pretrained) via SMP |
-| **Best Input** | Multi-Quality RGB ELA 9-channel (Q=75/85/95 x RGB) |
-| **Best Result** | Pixel F1 = 0.7965, IoU = 0.6615, Pixel AUC = 0.9665 |
+| **Best Input** | Multi-Quality RGB ELA 9-channel (Q=75/85/95 × RGB) |
+| **Best Result** | Pixel F1 = 0.7965, IoU = 0.6615, AUC = 0.9665 |
 | **Experiments** | 60+ controlled ablation experiments across 4 research tracks |
 | **Framework** | PyTorch + Segmentation Models PyTorch (SMP) |
 | **Tracking** | Weights & Biases |
 
 ---
 
-## Quick Start
+## 🔬 Pipeline
 
-### Run in One Click
-
-[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/The-Harsh-Vardhan/TIDAL-Tampered_Image_Detection_And_Localization/blob/main/submission/final_notebook.ipynb)
-
-Open `submission/final_notebook.ipynb` in Google Colab or Kaggle with a T4 GPU.
-
-### Install Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-Or install the core packages directly:
-
-```bash
-pip install torch segmentation-models-pytorch albumentations opencv-python wandb
-```
-
-### Submission Artifacts
-
-Everything a reviewer needs is in one folder:
-
-```
-submission/
-├── final_notebook.ipynb                                          # Best model (vR.P.19)
-├── submission_report.md                                          # Full report
-└── model_weights_link.txt                                        # How to load trained weights
-```
-
----
-
-## Pipeline
-
-```
-Input Image (384x384 RGB)
-        |
-        v
+```text
+Input Image (any size)
+        │
+        ▼
+   Resize to 384×384 RGB
+        │
+        ▼
    ELA Preprocessing
-   (Q=75, Q=85, Q=95 x RGB = 9 channels)
-        |
-        v
+   Q=75, Q=85, Q=95 × RGB = 9 channels
+        │
+        ▼
    UNet + ResNet-34 Encoder
-   (ImageNet pretrained, frozen, BN unfrozen)
-        |
-        v
-   Predicted Binary Mask (384x384)
-   + Image Classification (Authentic/Tampered)
+   (body frozen, BN unfrozen, conv1 unfrozen for 9ch)
+        │
+        ▼
+   Sigmoid → Binary Mask (384×384)
+   + Image Classification (Authentic / Tampered)
 ```
 
-**Error Level Analysis (ELA)** re-saves an image as JPEG at a given quality level and measures the difference from the original. Tampered regions show inconsistent compression artifacts, appearing as bright spots in the ELA map. Using three quality levels (75, 85, 95) captures different compression frequency bands. Using full RGB (not grayscale) preserves chrominance artifacts that the human eye cannot see but the model can learn from.
+**Error Level Analysis (ELA)** re-saves an image as JPEG at a given quality level and measures the difference from the original. Tampered regions show inconsistent compression artifacts. Using three quality levels (75, 85, 95) captures different compression frequency bands. Full RGB (not grayscale) preserves chrominance artifacts the model can learn from.
 
 ---
 
-## Key Results
+## 📈 Key Results
 
 ### Best Run: vR.P.19
 
 | Metric | Value |
-|--------|-------|
+| --- | --- |
 | Pixel F1 | **0.7965** |
 | IoU (Jaccard) | 0.6615 |
 | Pixel AUC | 0.9665 |
@@ -106,7 +112,7 @@ Input Image (384x384 RGB)
 ### Top 5 Runs
 
 | Rank | Version | Pixel F1 | Key Configuration |
-|------|---------|----------|-------------------|
+| --- | --- | --- | --- |
 | 1 | **vR.P.19** | **0.7965** | Multi-Q RGB ELA 9ch, 25 epochs |
 | 2 | vR.P.30.1 | 0.7762 | Multi-Q ELA + CBAM, 50 epochs |
 | 3 | vR.P.30.4 | 0.7745 | Multi-Q ELA + CBAM + augmentation |
@@ -115,158 +121,192 @@ Input Image (384x384 RGB)
 
 ### Key Finding
 
-**Input preprocessing is the single most impactful variable.** Switching from raw RGB to Multi-Quality RGB ELA improved Pixel F1 by **+34.19 percentage points** — more than any architectural change, attention mechanism, or training strategy.
+> **Input preprocessing is the single most impactful variable.** Switching from raw RGB to Multi-Quality RGB ELA improved Pixel F1 by **+34.19 percentage points** — more than any architectural change.
 
-### Baseline vs Best — Multi-Metric Comparison
+---
+
+## 📸 Visual Results
+
+### Multi-Metric Comparison
 
 <p align="center">
-  <img src="figures/plots/radar_comparison.png" alt="Radar chart comparing P.1 baseline, P.15 grayscale ELA, and P.19 RGB ELA across 5 metrics" width="520"/>
+  <img src="figures/plots/radar_comparison.png" alt="Radar chart comparing baseline vs Multi-Q RGB ELA across 5 metrics" width="520"/>
 </p>
 
-### Training Curves — Top Experiments
+### Ablation Progression
 
 <p align="center">
-  <img src="figures/plots/training_curves.png" alt="Training loss, validation loss, and validation Pixel F1 curves for top experiments"/>
+  <img src="figures/plots/ablation_progression.png" alt="Pixel F1 and IoU across all experiments"/>
+</p>
+
+### Feature Set Comparison
+
+<p align="center">
+  <img src="figures/plots/feature_set_comparison.png" alt="Pixel F1 and IoU by input representation"/>
 </p>
 
 ---
 
-## Visual Results
+## 🏗️ Architecture
 
-### Ablation Progression — Pixel F1 & IoU Across All Experiments
-
-<p align="center">
-  <img src="figures/plots/ablation_progression.png" alt="Pixel F1 and IoU progression across all vR.P experiments with vR.P.19 starred as best"/>
-</p>
-
-### Best Performance by Input Representation
-
-<p align="center">
-  <img src="figures/plots/feature_set_comparison.png" alt="Bar chart comparing Pixel F1 and IoU across input types: multi-quality ELA, ELA, RGB, DCT, noiseprint, etc."/>
-</p>
-
-### Precision-Recall Trade-off by Feature Set
-
-<p align="center">
-  <img src="figures/plots/precision_recall_scatter.png" alt="Bubble scatter plot of precision vs recall colored by feature set with F1 iso-curves" width="620"/>
-</p>
-
----
-
-## Research Tracks
-
-| Track | Versions | Focus | Best Result |
-|-------|----------|-------|-------------|
-| **vR.P** (Primary) | vR.P.0 – vR.P.41 | Pretrained UNet ablation study | Pixel F1 = 0.7965 |
-| **vR** | vR.0 – vR.1.7 | ETASR paper reproduction + ablation | Test Acc = 90.23% |
-| **vK** | vK.1 – vK.12.0 | Kaggle baseline evolution | Tam-F1 = 0.4101 |
-| **v0x** | Approaches 1–5 | Early exploration | N/A |
-
-### Experiment Lineage (vR.P Track)
-
-```
-P.0 (RGB baseline) -> P.1 (dataset fix) -> P.3 (ELA: +23pp)
-    -> P.15 (Multi-Q ELA gray: F1=0.7329)
-    -> P.19 (Multi-Q RGB ELA 9ch: F1=0.7965)  <-- BEST
-        -> P.30 (+ CBAM) -> P.30.1 (+ 50ep: F1=0.7762)  <-- 2nd BEST
-```
-
----
-
-## Ablation Study Summary
-
-### What Worked
-
-| Variable | Impact | Evidence |
-|----------|--------|----------|
-| ELA preprocessing | **+23.74pp** | P.1 (0.4546) -> P.3 (0.6920) |
-| Multi-quality ELA (3 Q levels) | **+4.09pp** | P.3 (0.6920) -> P.15 (0.7329) |
-| RGB channels in ELA | **+6.36pp** | P.15 (0.7329) -> P.19 (0.7965) |
-| CBAM attention in decoder | **+3.57pp for only 11K params** | P.3 -> P.10 |
-| Extended training (50 epochs) | +2-3pp | P.3 -> P.7 |
-| Cosine annealing scheduler | +2pp | P.19 -> P.28 |
-
-### What Didn't Work
-
-| Variable | Impact | Evidence |
-|----------|--------|----------|
-| DCT spatial features alone | **-13.37pp** | P.16: catastrophic (F1=0.3209) |
-| Test-Time Augmentation (TTA) | **-5.32pp** | P.14: averaging smooths masks |
-| ResNet-50 (vs ResNet-34) | Neutral | P.5: no improvement with ELA |
-| Noiseprint features | -6.35pp vs ELA | P.24: underperforms ELA |
-| Focal+Dice (vs BCE+Dice) | Neutral | P.9: no consistent improvement |
-
-### Impact Hierarchy — Change Contribution vs ELA Baseline
-
-<p align="center">
-  <img src="figures/plots/impact_hierarchy.png" alt="Lollipop chart showing each change's contribution vs ELA baseline in percentage points"/>
-</p>
-
-### Top 15 Experiments by Pixel F1
-
-<p align="center">
-  <img src="figures/plots/top_experiments_bar.png" alt="Horizontal bar chart ranking top 15 experiments by Pixel F1 score"/>
-</p>
-
----
-
-## Repository Structure
-
-```
-submission/                    # Final deliverables (notebook, report, weights)
-Notebooks/
-    final/                     # Best notebooks curated with docs
-    tracks/
-        v0x/                   # Early exploration approaches
-        vK/                    # Kaggle baseline track (25 notebooks)
-        vR/                    # ETASR paper track (11 notebooks)
-        vR.P/                  # Pretrained ablation track (41 notebooks)
-    scripts/                   # Notebook generation scripts
-experiments/
-    runs/                      # 37 W&B exported run notebooks
-    results/                   # All result CSVs (single source of truth)
-    wandb_tracking/            # W&B infrastructure and runners
-Docs/
-    submission/                # Assignment report and LaTeX source
-    research/                  # Full research documentation
-        ablation_study/        # Audit, leaderboard, master plan
-        audits/                # All audit reports
-        reports/               # Research narrative documents
-        version_docs/          # Per-version experiment docs
-        papers/                # Paper reviews
-figures/
-    logos/                     # TIDAL logo assets
-    plots/                     # Generated visualization PNGs
-configs/                       # Training configs, sweeps, modules
-data/                          # Dataset docs, download scripts, workspace
-models/                        # Model weights and checkpoints
-_archive/                      # Historical artifacts (see INDEX.md)
+```text
+┌────────────────┐      ┌──────────────────┐
+│  Frontend      │──────│  FastAPI Backend  │
+│  (Nginx :3000) │ POST │  (Uvicorn :8000)  │
+│  index.html    │/infer│                   │
+└────────────────┘      │  /health /ready   │
+                        │  /infer /metrics  │
+                        │  /version         │
+                        └────────┬──────────┘
+                                 │
+                        ┌────────▼──────────┐
+                        │ TIDALInference    │
+                        │ Engine            │
+                        │  ┌─────────────┐  │
+                        │  │ Multi-Q ELA │  │
+                        │  │ 9 channels  │  │
+                        │  └──────┬──────┘  │
+                        │  ┌──────▼──────┐  │
+                        │  │ UNet        │  │
+                        │  │ ResNet-34   │  │
+                        │  └──────┬──────┘  │
+                        │  ┌──────▼──────┐  │
+                        │  │ Mask +      │  │
+                        │  │ Classify    │  │
+                        │  └─────────────┘  │
+                        └───────────────────┘
 ```
 
-See [Docs/Repository_Structure.md](Docs/Repository_Structure.md) for a detailed breakdown.
+### Security
+
+| Layer | Protection |
+| --- | --- |
+| Network | CORS whitelist, rate limiting (30 req/min) |
+| Input | File type + size (20MB) + resolution (16MP) validation |
+| Docker | Non-root user, multi-stage build, read-only mounts |
+| CI/CD | pip-audit, ruff bandit rules |
+| Model | SHA-256 checkpoint integrity |
 
 ---
 
-## Dataset
+## 🚢 Deploy
 
-**CASIA 2.0 Image Tampering Detection Dataset**
+### Hugging Face Spaces (Backend API)
 
-| Property | Value |
-|----------|-------|
-| Total images | 12,614 |
-| Authentic | 7,491 (59.4%) |
-| Tampered | 5,123 (40.6%) — 3,295 copy-move + 1,828 splicing |
-| GT masks | Binary masks for all tampered images |
-| Split | 70/15/15 train/val/test, stratified, seed=42 |
-| Resolution | 384x384 |
+```bash
+# Copy deploy config to create a new HF Space (SDK: Docker)
+cp deploy/hf-spaces/* .
+# Push to your HF Space repo
+```
+
+Use **CPU Basic** (free) or **T4 GPU** (recommended for real-time inference).
+
+### Vercel (Frontend)
+
+```bash
+# Option 1: Vercel CLI
+cd frontend && vercel --prod
+
+# Option 2: Connect GitHub repo
+# Set root directory to "frontend/" in Vercel dashboard
+```
+
+Update `API_BASE` in `frontend/app.js` to point to your HF Spaces URL.
+
+### Render (Backend API)
+
+```bash
+# Connect GitHub repo to Render
+# Point to deploy/render/render.yaml as Blueprint
+```
+
+### Docker Compose (Full Stack — Local)
+
+```bash
+cd docker && docker compose up -d
+```
+
+| Service | URL |
+| --- | --- |
+| API | http://localhost:8000 |
+| Frontend | http://localhost:3000 |
+| Prometheus | http://localhost:9090 |
+| Grafana | http://localhost:3001 |
 
 ---
 
-## Reproducibility
+## 🧪 Development
 
-All experiments use:
-- **Seed:** 42 (Python, NumPy, PyTorch, CUDA)
-- **Split:** 70/15/15 stratified with `random_state=42`
+### Tests
+
+```bash
+pytest tests/ -v         # All tests (17)
+ruff check backend/      # Lint
+ruff format --check .    # Format check
+```
+
+### DVC Training Pipeline
+
+```bash
+cd dvc_pipeline
+dvc repro   # preprocess → train → evaluate → visualize
+```
+
+All hyperparameters in `dvc_pipeline/params.yaml`. Reproducible with seed=42.
+
+### CI/CD
+
+GitHub Actions on every push/PR to `main` / `production`:
+- **code_quality.yml** — Ruff lint + pytest + pip-audit
+- **docker_build.yml** — Docker build with BuildKit caching
+
+---
+
+## 📁 Repository Structure
+
+```text
+TIDAL/
+├── backend/                    # FastAPI inference server
+│   ├── app.py                  # 5 endpoints + CORS + Prometheus
+│   ├── security.py             # Rate limiting + input validation
+│   └── inference/              # Engine, model loader, ELA preprocessing
+├── dvc_pipeline/               # Reproducible training pipeline
+│   ├── dvc.yaml                # 4-stage DAG
+│   ├── params.yaml             # All hyperparameters
+│   └── src/                    # Dataset, model, train, evaluate, visualize
+├── frontend/                   # Dark glassmorphism web UI
+│   ├── index.html              # Hero + pipeline + demo + results
+│   ├── app.js                  # API client + drag-drop + health polling
+│   └── styles.css              # Dark theme + animations
+├── docker/                     # Production containerization
+│   ├── Dockerfile              # Multi-stage CUDA 12.1 image
+│   ├── Dockerfile.dev          # Hot-reload dev image
+│   └── docker-compose.yml      # Full stack (4 services)
+├── deploy/                     # Deployment configs
+│   ├── hf-spaces/              # HF Spaces Docker config
+│   ├── vercel/                 # Vercel static site config
+│   └── render/                 # Render Blueprint
+├── observability/              # Prometheus + Grafana + alerting
+├── tests/                      # pytest suite (17 tests)
+├── .github/workflows/          # CI/CD (lint + test + Docker)
+├── figures/                    # Plots + logos for README
+├── Notebooks/                  # Research notebooks (60+ experiments)
+├── submission/                 # Assignment deliverables
+├── docs/                       # Architecture + production readiness
+├── pyproject.toml              # Project config + ruff rules
+├── requirements-prod.txt       # Pinned production dependencies
+├── LICENSE                     # MIT
+├── CONTRIBUTING.md             # How to contribute
+└── SECURITY.md                 # Vulnerability reporting
+```
+
+---
+
+## 🔬 Research Methodology
+
+- **Architecture:** UNet encoder-decoder via [SMP](https://github.com/qubvel/segmentation_models.pytorch), with ResNet-34 encoder (ImageNet pretrained)
+- **Training:** BCE + Dice hybrid loss, AdamW optimizer, AMP, early stopping (patience=7)
+- **Evaluation:** 70/15/15 train-val-test split with full held-out test metrics
 - **Single-variable ablation:** Each experiment changes exactly one variable from its parent
 - **W&B logging:** All metrics, configs, and checkpoints tracked
 
@@ -274,77 +314,34 @@ All experiments use:
 
 ## Tech Stack
 
-- **PyTorch 2.x** — training and inference
-- **Segmentation Models PyTorch (SMP)** — UNet with pretrained encoders
-- **Albumentations** — image and mask augmentation
-- **Weights & Biases** — experiment tracking
-- **OpenCV** — ELA computation
-- **Kaggle / Google Colab (T4 GPU)** — training hardware
+| Category | Technologies |
+| --- | --- |
+| **ML** | PyTorch 2.x · SMP · Albumentations · OpenCV |
+| **Backend** | FastAPI · Uvicorn · Prometheus · Pydantic |
+| **Frontend** | Vanilla HTML/CSS/JS · Glassmorphism design |
+| **Infra** | Docker · Docker Compose · DVC · GitHub Actions |
+| **Monitoring** | Prometheus · Grafana · Custom alerting rules |
+| **Tracking** | Weights & Biases |
 
 ---
 
-## License
+## 📜 License
 
-This project was developed as part of the Big Vision internship assignment.
-
----
-
-## 🚀 Production API (`production` branch)
-
-The `production` branch contains a fully productionized system built around the best experiment (vR.P.19).
-
-### Quick Start
-
-```bash
-git checkout production
-
-# Backend (CPU mode)
-set DEVICE=cpu
-python -m uvicorn backend.app:app --host 0.0.0.0 --port 8000 --reload
-
-# Frontend (new terminal)
-cd frontend && python -m http.server 3000
-# → Open http://localhost:3000
-```
-
-### API Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/health` | Liveness check |
-| `GET` | `/ready` | Readiness (model loaded?) |
-| `POST` | `/infer` | Upload image → tamper mask + verdict |
-| `GET` | `/metrics` | Prometheus metrics |
-| `GET` | `/version` | API + model version info |
-
-### Docker (Full Stack)
-
-```bash
-cd docker && docker compose up -d
-# API :8000 · Frontend :3000 · Prometheus :9090 · Grafana :3001
-```
-
-### DVC Training Pipeline
-
-```bash
-cd dvc_pipeline
-dvc repro   # runs preprocess → train → evaluate → visualize
-```
-
-### CI/CD
-
-GitHub Actions runs automatically on push to `main` / `production`:
-- `code_quality.yml` — Ruff lint + pytest + pip-audit
-- `docker_build.yml` — Docker build with BuildKit cache
+This project is licensed under the [MIT License](LICENSE).
 
 ---
 
-## Links
+## 🔗 Links
 
-- [W&B Dashboard](https://wandb.ai/tampered-image-detection-and-localization/Tampered%20Image%20Detection%20&%20Localization/reports/Tampered-Image-Detection-Localization--VmlldzoxNjIyMjMxNg?accessToken=35b8v807ums5jnxtg6z8wieul1ylpetxrv2x4n7k9tr39mwf79ngtqs8w6d6tuaa)
+- [W&B Dashboard](https://wandb.ai/tampered-image-detection-and-localization/Tampered%20Image%20Detection%20%26%20Localization/reports/Tampered-Image-Detection-Localization--VmlldzoxNjIyMjMxNg?accessToken=35b8v807ums5jnxtg6z8wieul1ylpetxrv2x4n7k9tr39mwf79ngtqs8w6d6tuaa)
 - [Submission Report](submission/submission_report.md)
 - [Final Notebook](submission/final_notebook.ipynb)
-- [Repository Structure](Docs/Repository_Structure.md)
+- [Architecture Guide](docs/ARCHITECTURE.md)
+- [Production Readiness](docs/PRODUCTION_READINESS.md)
 - [Project Lifecycle Tracker](Project_Lifecycle_Tracker.md)
-- [Ablation Master Plan](Docs/research/ablation_study/ablation_master_plan.md)
-- [W&B Run Audit](Docs/research/ablation_study/WandB_Run_Audit.md)
+
+---
+
+<p align="center">
+  Built by <a href="https://github.com/The-Harsh-Vardhan">Harsh Vardhan</a> · IIIT Nagpur
+</p>
