@@ -1,5 +1,5 @@
 (()=>{"use strict";
-const API=location.hostname==="localhost"||location.hostname==="127.0.0.1"?"http://localhost:8000":"";
+const API=location.hostname==="localhost"||location.hostname==="127.0.0.1"?"http://localhost:8000":"https://the-harsh-vardhan-tidal-api.hf.space";
 const $=id=>document.getElementById(id);
 const ua=$("uploadArea"),uc=$("uploadContent"),up=$("uploadPreview"),fi=$("fileInput"),
   bb=$("browseBtn"),cb=$("clearBtn"),pi=$("previewImage"),ra=$("resultsArea"),
