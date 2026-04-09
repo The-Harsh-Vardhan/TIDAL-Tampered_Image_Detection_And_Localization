@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TIDAL — Tampered Image Detection & Localization</title>
-    <meta name="description" content="Detect and localize tampered regions in images using Multi-Quality RGB ELA and UNet segmentation. Pixel F1 = 0.7965 on CASIA 2.0.">
+    <meta name="description" content="Detect and localize tampered regions in images using grayscale multi-quality ELA, CBAM-enhanced UNet segmentation, and notebook-style forensic controls.">
 
     <!-- Open Graph -->
     <meta property="og:title" content="TIDAL — Tampered Image Detection & Localization">
-    <meta property="og:description" content="Deep learning forensic analysis using Multi-Quality RGB ELA. Try the live demo.">
+    <meta property="og:description" content="Deep learning forensic analysis using grayscale multi-quality ELA with CBAM and analyst-tunable forensic controls.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://tidal-orpin.vercel.app">
 
@@ -58,8 +58,8 @@
         </div>
         <h1>Detect Image<br>Tampering with AI</h1>
         <p class="hero-subtitle">
-            Deep learning forensic analysis using Multi-Quality RGB Error Level Analysis
-            and UNet segmentation — trained on 60+ controlled experiments.
+            Deep learning forensic analysis using grayscale multi-quality Error Level Analysis,
+            CBAM-enhanced UNet segmentation, and analyst-tunable forensic thresholds.
         </p>
         <div class="hero-actions">
             <a href="#demo" class="btn btn-primary">
@@ -77,8 +77,8 @@
                 <span class="stat-label">Experiments</span>
             </div>
             <div class="stat">
-                <span class="stat-value">9ch</span>
-                <span class="stat-label">Multi-Q ELA</span>
+                <span class="stat-value">3ch</span>
+                <span class="stat-label">Gray MQ-ELA</span>
             </div>
             <div class="stat">
                 <span class="stat-value" data-count="12614">12.6K</span>
@@ -103,7 +103,7 @@
                 </div>
                 <div class="pipeline-step-num">Step 01</div>
                 <h3>Error Level Analysis</h3>
-                <p>Re-saves image at Q=75, 85, 95 producing a 9-channel forensic compression signature.</p>
+                <p>Re-saves image at Q=75, 85, 95 and stacks grayscale ELA maps into a 3-channel forensic signature.</p>
             </div>
             <div class="pipeline-card glass-card fade-in">
                 <div class="pipeline-icon">
@@ -112,7 +112,7 @@
                 </div>
                 <div class="pipeline-step-num">Step 02</div>
                 <h3>Neural Segmentation</h3>
-                <p>UNet with ResNet-34 encoder processes the 9-channel input through pixel-level classification.</p>
+                <p>UNet with a ResNet-34 encoder and CBAM-enhanced decoder blocks processes the grayscale MQ-ELA stack.</p>
             </div>
             <div class="pipeline-card glass-card fade-in">
                 <div class="pipeline-icon">
@@ -348,7 +348,7 @@
         </a>
     </div>
     <div class="footer-meta">
-        TIDAL v1.0.0 <span>·</span> UNet + ResNet-34 + Multi-Q RGB ELA <span>·</span> © 2025 Harsh Vardhan — IIIT Nagpur
+        TIDAL v1.0.0 <span>·</span> UNet + ResNet-34 + Gray MQ-ELA + CBAM <span>·</span> © 2025 Harsh Vardhan — IIIT Nagpur
     </div>
 </footer>
 
