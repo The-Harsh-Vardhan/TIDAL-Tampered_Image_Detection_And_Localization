@@ -1,0 +1,28 @@
+{
+  "bundle_name": "TIDAL vR.P.30.1 inference bundle",
+  "model_version": "vR.P.30.1",
+  "checkpoint_file": "best_model.pt",
+  "versioned_checkpoint_file": "vR.P.30.1_unet_resnet34_mqela_cbam.pth",
+  "checkpoint_source": "models/best_model vR_P_30_1.pt",
+  "versioned_checkpoint_source": "models/best_model vR_P_30_1.pt",
+  "notebook_source": "Notebooks/tracks/vR.P/final_runs/vr_p_30_1_multi_quality_ela_cbam_attention_run_01 (1).ipynb",
+  "huggingface_repo": "the-harsh-vardhan/TIDAL",
+  "model_config": {
+    "encoder_name": "resnet34",
+    "in_channels": 3,
+    "image_size": 384,
+    "ela_qualities": [75, 85, 95],
+    "ela_mean": [0.0684, 0.0605, 0.0402],
+    "ela_std": [0.0656, 0.0604, 0.0471],
+    "attention_type": "cbam",
+    "attention_reduction": 16,
+    "cbam_kernel_size": 7
+  },
+  "api_defaults": {
+    "device": "auto",
+    "model_filename": "best_model.pt",
+    "model_version": "vR.P.30.1",
+    "max_concurrent": 4,
+    "port": 8000
+  }
+}

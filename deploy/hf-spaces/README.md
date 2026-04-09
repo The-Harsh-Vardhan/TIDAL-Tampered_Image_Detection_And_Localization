@@ -13,9 +13,18 @@ license: mit
 
 Tampered Image Detection & Localization — FastAPI inference server.
 
-Upload an image to detect and localize tampered regions using Multi-Quality RGB ELA + UNet segmentation.
+Upload an image to detect and localize tampered regions using the `vR.P.30.1` notebook pipeline:
+- grayscale multi-quality ELA (`Q=75/85/95`)
+- UNet + `resnet34`
+- CBAM decoder attention
+- analyst-facing threshold controls on `/infer`
 
-**Pixel F1 = 0.7965** on CASIA 2.0
+This deployment keeps the legacy response fields for compatibility and adds notebook-style diagnostics such as:
+- `raw_tampered_pixel_count`
+- `tampered_pixel_count`
+- `needs_review`
+- `threshold_sensitivity`
+- `applied_settings`
 
 ## Endpoints
 

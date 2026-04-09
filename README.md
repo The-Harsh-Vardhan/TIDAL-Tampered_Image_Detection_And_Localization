@@ -28,6 +28,8 @@
 
 A production-ready deep learning system for detecting and localizing tampered regions in images, achieving **Pixel F1 = 0.7965** on the CASIA 2.0 dataset.
 
+The current deployed inference API uses the notebook-derived **vR.P.30.1** forensic pipeline with analyst controls for thresholding and review triage. The offline experiment leaderboard still shows **vR.P.19** as the strongest benchmarked run.
+
 Through 60+ controlled ablation experiments, one finding dominated: **input representation matters most**. Switching from raw RGB to Multi-Quality RGB ELA produced a **+34.19pp improvement in Pixel F1** — more than all architectural changes, attention mechanisms, and training strategies combined.
 
 > **Keywords:** image forensics · ELA · UNet · ResNet-34 · CASIA 2.0 · ablation study · segmentation · FastAPI · DVC
@@ -56,6 +58,7 @@ cd frontend && python -m http.server 3000
 ```
 
 Open **http://localhost:3000** → drag & drop any image to scan for tampering.
+Use the **Forensic Controls** panel to tighten or relax pixel-level and image-level decision thresholds.
 
 ---
 
@@ -68,6 +71,7 @@ Open **http://localhost:3000** → drag & drop any image to scan for tampering.
 | **Architecture** | UNet + ResNet-34 (ImageNet pretrained) via SMP |
 | **Best Input** | Multi-Quality RGB ELA 9-channel (Q=75/85/95 × RGB) |
 | **Best Result** | Pixel F1 = 0.7965, IoU = 0.6615, AUC = 0.9665 |
+| **Live API Pipeline** | vR.P.30.1 — grayscale Multi-Q ELA + CBAM + forensic controls |
 | **Experiments** | 60+ controlled ablation experiments across 4 research tracks |
 | **Framework** | PyTorch + Segmentation Models PyTorch (SMP) |
 | **Tracking** | Weights & Biases |
@@ -83,19 +87,22 @@ Input Image (any size)
    Resize to 384×384 RGB
         │
         ▼
-   ELA Preprocessing
-   Q=75, Q=85, Q=95 × RGB = 9 channels
+   Production API:
+   Multi-Q grayscale ELA
+   Q=75, Q=85, Q=95 = 3 channels
         │
         ▼
    UNet + ResNet-34 Encoder
-   (body frozen, BN unfrozen, conv1 unfrozen for 9ch)
+   + CBAM decoder attention
         │
         ▼
    Sigmoid → Binary Mask (384×384)
-   + Image Classification (Authentic / Tampered)
+   + pixel threshold
+   + minimum-area filter
+   + image classification / review triage
 ```
 
-**Error Level Analysis (ELA)** re-saves an image as JPEG at a given quality level and measures the difference from the original. Tampered regions show inconsistent compression artifacts. Using three quality levels (75, 85, 95) captures different compression frequency bands. Full RGB (not grayscale) preserves chrominance artifacts the model can learn from.
+**Error Level Analysis (ELA)** re-saves an image as JPEG at a given quality level and measures the difference from the original. Tampered regions show inconsistent compression artifacts. Using three quality levels (75, 85, 95) captures different compression frequency bands. The live API uses grayscale multi-quality ELA to match the `vR.P.30.1` notebook checkpoint.
 
 ---
 
@@ -184,8 +191,11 @@ Input Image (any size)
 | Network | CORS whitelist, rate limiting (30 req/min) |
 | Input | File type + size (20MB) + resolution (16MP) validation |
 | Docker | Non-root user, multi-stage build, read-only mounts |
-| CI/CD | pip-audit, ruff bandit rules |
+| CI/CD | pip-audit, ruff bandit rules, local axios IOC triage script |
 | Model | SHA-256 checkpoint integrity |
+
+For local supply-chain verification, run `python scripts/security/check_axios_compromise.py`. The
+runbook is in `Docs/SECURITY_AXIOS_IOC_RESPONSE.md`.
 
 ---
 

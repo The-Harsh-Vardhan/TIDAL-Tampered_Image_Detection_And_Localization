@@ -32,6 +32,8 @@ venv/
 *.pth
 *.onnx
 checkpoints/
+!models/inference/vR.P.30.1/best_model.pt
+!models/inference/vR.P.30.1/vR.P.30.1_unet_resnet34_mqela_cbam.pth
 
 # Dataset images (too large for git)
 kaggle/input/
@@ -51,6 +53,8 @@ grafana-data/
 
 # Observability
 observability/*.log
+observability/axios-ioc-report.json
+.ai-policy-backups/
 
 # Sweep outputs
 sweep_outputs/

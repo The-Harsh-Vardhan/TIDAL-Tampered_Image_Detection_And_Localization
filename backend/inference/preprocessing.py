@@ -1,4 +1,4 @@
-"""Multi-Quality RGB Error Level Analysis preprocessing pipeline."""
+"""Grayscale Multi-Quality ELA preprocessing for vR.P.30.1 inference."""
 
 from __future__ import annotations
 
@@ -8,41 +8,39 @@ import numpy as np
 import torch
 from PIL import Image, ImageChops, ImageEnhance
 
-ELA_MEAN = torch.tensor(
-    [0.3021, 0.2938, 0.2847, 0.2156, 0.2089, 0.2012, 0.1043, 0.1005, 0.0963], dtype=torch.float32
-)
-ELA_STD = torch.tensor(
-    [0.2187, 0.2134, 0.2098, 0.1876, 0.1831, 0.1799, 0.1234, 0.1198, 0.1172], dtype=torch.float32
-)
+ELA_MEAN = torch.tensor([0.0684, 0.0605, 0.0402], dtype=torch.float32)
+ELA_STD = torch.tensor([0.0656, 0.0604, 0.0471], dtype=torch.float32)
 ELA_QUALITIES = [75, 85, 95]
 DEFAULT_IMAGE_SIZE = 384
-IN_CHANNELS = 9
+IN_CHANNELS = 3
 
 
-def compute_ela_rgb(image: Image.Image, quality: int, size: int = DEFAULT_IMAGE_SIZE) -> np.ndarray:
+def compute_ela_grayscale(
+    image: Image.Image, quality: int, size: int = DEFAULT_IMAGE_SIZE
+) -> np.ndarray:
     image_rgb = image.convert("RGB")
     buf = io.BytesIO()
     image_rgb.save(buf, "JPEG", quality=quality)
     buf.seek(0)
-    resaved = Image.open(buf)
+    resaved = Image.open(buf).convert("RGB")
     ela = ImageChops.difference(image_rgb, resaved)
     extrema = ela.getextrema()
     max_diff = max(v[1] for v in extrema)
     if max_diff == 0:
         max_diff = 1
     scale = 255.0 / max_diff
-    ela = ImageEnhance.Brightness(ela).enhance(scale)
+    ela = ImageEnhance.Brightness(ela).enhance(scale).convert("L")
     ela = ela.resize((size, size), Image.BILINEAR)
-    return np.array(ela)
+    return np.array(ela, dtype=np.uint8)
 
 
-def compute_multi_quality_rgb_ela(
+def compute_multi_quality_ela(
     image: Image.Image, qualities=None, size: int = DEFAULT_IMAGE_SIZE
 ) -> np.ndarray:
     if qualities is None:
         qualities = ELA_QUALITIES
-    channels = [compute_ela_rgb(image, q, size) for q in qualities]
-    return np.concatenate(channels, axis=-1)
+    channels = [compute_ela_grayscale(image, q, size) for q in qualities]
+    return np.stack(channels, axis=-1)
 
 
 def preprocess_image(
@@ -52,9 +50,9 @@ def preprocess_image(
         mean = ELA_MEAN
     if std is None:
         std = ELA_STD
-    mqela = compute_multi_quality_rgb_ela(image, qualities, size)
+    mqela = compute_multi_quality_ela(image, qualities, size)
     tensor = torch.from_numpy(mqela.astype(np.float32) / 255.0)
     tensor = tensor.permute(2, 0, 1)
     for c in range(tensor.shape[0]):
-        tensor[c] = (tensor[c] - mean[c]) / std[c]
+        tensor[c] = (tensor[c] - mean[c]) / (std[c] + 1e-8)
     return tensor.unsqueeze(0)

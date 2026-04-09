@@ -6,6 +6,6 @@
 - grafana (:3001) - Dashboards
 
 ## Inference Pipeline
-Input -> Resize 384x384 -> Multi-Q RGB ELA (9ch) -> UNet+ResNet-34 -> Sigmoid -> Binary Mask + Classify
+Input -> Resize 384x384 -> Multi-Q grayscale ELA (Q=75/85/95, 3ch) -> UNet+ResNet-34+CBAM -> Sigmoid -> Pixel threshold -> Minimum area filter -> Image decision threshold + review flag
 
 ## DVC Pipeline: preprocess -> train -> evaluate / visualize

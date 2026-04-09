@@ -16,16 +16,17 @@ python -m http.server 3000
 1. **Start the backend** first (`uvicorn backend.app:app --port 8000`)
 2. Open `http://localhost:3000`
 3. Drag & drop or browse for a JPEG/PNG/WebP image
-4. Results appear automatically — verdict, confidence, tampered area %, and heatmap mask
+4. Results appear automatically — verdict, confidence, tampered area %, heatmap mask, and notebook-style diagnostics
 
 ## Features
 
 - Dark glassmorphism design with Inter typography
 - Drag-and-drop or click-to-browse image upload
 - Automatic API health polling with live status indicator
-- Displays tamper verdict, confidence score, tampered area %, and binary heatmap
+- Exposes forensic controls for pixel threshold, image area threshold, minimum prediction area, review confidence, and threshold sensitivity preset
+- Displays tamper verdict, confidence score, tampered area %, binary heatmap, and diagnostic sensitivity data
 - Responsive layout (mobile-friendly)
-- Auto-submits on file select — no button needed
+- Auto-submits on file select, and re-runs when a forensic control changes
 
 ## API Integration
 

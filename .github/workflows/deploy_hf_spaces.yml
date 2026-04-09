@@ -5,6 +5,7 @@ on:
     branches: [production]
     paths:
       - "backend/**"
+      - "models/inference/vR.P.30.1/**"
       - "requirements-prod.txt"
       - "deploy/hf-spaces/**"
 
@@ -21,6 +22,7 @@ jobs:
           cp deploy/hf-spaces/README.md hf_space/
           cp requirements-prod.txt hf_space/
           cp -r backend/* hf_space/backend/
+          cp -r models/inference/vR.P.30.1/* hf_space/models/
 
       - name: Push to HF Spaces
         env:

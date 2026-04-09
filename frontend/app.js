@@ -5,7 +5,8 @@
  * Handles:
  * - API health polling
  * - Image upload (drag-drop + file picker)
- * - Inference request + result display
+ * - Notebook-style forensic control submission
+ * - Diagnostic result rendering
  * - Scroll-triggered fade-in animations
  * - Mobile nav toggle
  */
@@ -13,13 +14,11 @@
 (() => {
   "use strict";
 
-  // ─── Config ────────────────────────────────────
   const API_BASE =
     location.hostname === "localhost" || location.hostname === "127.0.0.1"
       ? "http://localhost:8000"
       : "https://the-harsh-vardhan-tidal-api.hf.space";
 
-  // ─── DOM Refs ──────────────────────────────────
   const $ = (id) => document.getElementById(id);
 
   const uploadArea = $("uploadArea");
@@ -34,7 +33,6 @@
 
   const resultsArea = $("resultsArea");
   const resultVerdict = $("resultVerdict");
-  const verdictIconWrap = $("verdictIconWrap");
   const verdictIconSvg = $("verdictIconSvg");
   const verdictText = $("verdictText");
   const verdictDetail = $("verdictDetail");
@@ -43,14 +41,32 @@
   const metricTime = $("metricTime");
   const maskImage = $("maskImage");
 
+  const diagnosticBanner = $("diagnosticBanner");
+  const diagnosticModel = $("diagnosticModel");
+  const diagnosticNeedsReview = $("diagnosticNeedsReview");
+  const diagnosticRawPixels = $("diagnosticRawPixels");
+  const diagnosticFinalPixels = $("diagnosticFinalPixels");
+  const diagnosticAreaFilter = $("diagnosticAreaFilter");
+  const diagnosticMeanProb = $("diagnosticMeanProb");
+  const settingsPills = $("settingsPills");
+  const sensitivityTable = $("sensitivityTable");
+
+  const pixelThreshold = $("pixelThreshold");
+  const pixelThresholdValue = $("pixelThresholdValue");
+  const maskAreaThreshold = $("maskAreaThreshold");
+  const maskAreaThresholdValue = $("maskAreaThresholdValue");
+  const minPredictionAreaPixels = $("minPredictionAreaPixels");
+  const minPredictionAreaPixelsValue = $("minPredictionAreaPixelsValue");
+  const reviewConfidenceThreshold = $("reviewConfidenceThreshold");
+  const reviewConfidenceThresholdValue = $("reviewConfidenceThresholdValue");
+  const thresholdSensitivityPreset = $("thresholdSensitivityPreset");
+
   const statusDot = $("statusDot");
   const statusText = $("statusText");
   const navToggle = $("navToggle");
   const navLinks = $("navLinks");
 
-  // ─── SVG Templates ─────────────────────────────
-  const ICON_CHECK =
-    '<polyline points="20 6 9 17 4 12"/>';
+  const ICON_CHECK = '<polyline points="20 6 9 17 4 12"/>';
   const ICON_X =
     '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>';
   const ICON_LOADER =
@@ -58,12 +74,68 @@
   const ICON_ALERT =
     '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>';
 
+  const presetLabels = {
+    lenient: "0.20 / 0.35 / 0.50",
+    balanced: "0.30 / 0.50 / 0.70",
+    strict: "0.50 / 0.70 / 0.85",
+  };
+
+  let currentFile = null;
+
   function setVerdictIcon(svgContent, className) {
     verdictIconSvg.innerHTML = svgContent;
-    resultVerdict.className = `result-verdict ${className}`;
+    resultVerdict.className = `result-verdict ${className}`.trim();
   }
 
-  // ─── Health Check ──────────────────────────────
+  function setDiagnosticBanner(message, variant = "") {
+    diagnosticBanner.textContent = message;
+    diagnosticBanner.className = `diagnostic-banner ${variant}`.trim();
+  }
+
+  function setDiagnosticPlaceholders() {
+    diagnosticModel.textContent = "—";
+    diagnosticNeedsReview.textContent = "—";
+    diagnosticRawPixels.textContent = "—";
+    diagnosticFinalPixels.textContent = "—";
+    diagnosticAreaFilter.textContent = "—";
+    diagnosticMeanProb.textContent = "—";
+    settingsPills.innerHTML = "";
+    sensitivityTable.innerHTML = "";
+  }
+
+  function formatCount(value) {
+    return Number(value || 0).toLocaleString();
+  }
+
+  function updateControlOutputs() {
+    pixelThresholdValue.textContent = Number(pixelThreshold.value).toFixed(2);
+    maskAreaThresholdValue.textContent = `${formatCount(maskAreaThreshold.value)} px`;
+    minPredictionAreaPixelsValue.textContent = `${formatCount(
+      minPredictionAreaPixels.value
+    )} px`;
+    reviewConfidenceThresholdValue.textContent = Number(
+      reviewConfidenceThreshold.value
+    ).toFixed(2);
+  }
+
+  function getCurrentSettings() {
+    return {
+      pixel_threshold: Number(pixelThreshold.value).toFixed(2),
+      mask_area_threshold: String(Math.round(Number(maskAreaThreshold.value))),
+      min_prediction_area_pixels: String(
+        Math.round(Number(minPredictionAreaPixels.value))
+      ),
+      review_confidence_threshold: Number(reviewConfidenceThreshold.value).toFixed(2),
+      threshold_sensitivity_preset: thresholdSensitivityPreset.value,
+    };
+  }
+
+  function maybeRerunInference() {
+    if (currentFile) {
+      submitImage(currentFile);
+    }
+  }
+
   async function checkHealth() {
     try {
       const res = await fetch(`${API_BASE}/health`, {
@@ -75,7 +147,7 @@
         return true;
       }
     } catch {
-      // ignore
+      // Ignore.
     }
     statusDot.className = "status-dot offline";
     statusText.textContent = "API offline";
@@ -85,21 +157,18 @@
   checkHealth();
   setInterval(checkHealth, 15000);
 
-  // ─── Mobile Nav ────────────────────────────────
   navToggle.addEventListener("click", () => {
     navLinks.classList.toggle("open");
   });
 
-  // Close on link click
   navLinks.querySelectorAll("a").forEach((link) => {
     link.addEventListener("click", () => {
       navLinks.classList.remove("open");
     });
   });
 
-  // ─── File Upload ───────────────────────────────
-  uploadArea.addEventListener("dragover", (e) => {
-    e.preventDefault();
+  uploadArea.addEventListener("dragover", (event) => {
+    event.preventDefault();
     uploadArea.classList.add("drag-active");
   });
 
@@ -107,16 +176,16 @@
     uploadArea.classList.remove("drag-active");
   });
 
-  uploadArea.addEventListener("drop", (e) => {
-    e.preventDefault();
+  uploadArea.addEventListener("drop", (event) => {
+    event.preventDefault();
     uploadArea.classList.remove("drag-active");
-    if (e.dataTransfer.files.length) {
-      handleFile(e.dataTransfer.files[0]);
+    if (event.dataTransfer.files.length) {
+      handleFile(event.dataTransfer.files[0]);
     }
   });
 
-  browseBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
+  browseBtn.addEventListener("click", (event) => {
+    event.stopPropagation();
     fileInput.click();
   });
 
@@ -126,10 +195,20 @@
     }
   });
 
-  clearBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
+  clearBtn.addEventListener("click", (event) => {
+    event.stopPropagation();
     resetUpload();
   });
+
+  [pixelThreshold, maskAreaThreshold, minPredictionAreaPixels, reviewConfidenceThreshold].forEach(
+    (input) => {
+      input.addEventListener("input", updateControlOutputs);
+      input.addEventListener("change", maybeRerunInference);
+    }
+  );
+
+  thresholdSensitivityPreset.addEventListener("change", maybeRerunInference);
+  updateControlOutputs();
 
   function handleFile(file) {
     const validTypes = ["image/jpeg", "image/png", "image/webp"];
@@ -142,9 +221,10 @@
       return;
     }
 
+    currentFile = file;
     const reader = new FileReader();
-    reader.onload = (e) => {
-      previewImage.src = e.target.result;
+    reader.onload = (event) => {
+      previewImage.src = event.target.result;
       uploadContent.hidden = true;
       uploadPreview.hidden = false;
     };
@@ -153,6 +233,7 @@
   }
 
   function resetUpload() {
+    currentFile = null;
     fileInput.value = "";
     uploadContent.hidden = false;
     uploadPreview.hidden = true;
@@ -160,27 +241,133 @@
     progressBar.hidden = true;
     progressFill.className = "progress-bar-fill";
     progressFill.style.width = "0%";
+    setDiagnosticBanner("Waiting for inference…");
+    setDiagnosticPlaceholders();
   }
 
-  // ─── Inference ─────────────────────────────────
+  function renderSettingsPills(appliedSettings = {}) {
+    settingsPills.innerHTML = "";
+    const pills = [
+      `Pixel ${Number(appliedSettings.pixel_threshold).toFixed(2)}`,
+      `Image area ${formatCount(appliedSettings.mask_area_threshold)} px`,
+      `Min area ${formatCount(appliedSettings.min_prediction_area_pixels)} px`,
+      `Review ${Number(appliedSettings.review_confidence_threshold).toFixed(2)}`,
+      `${
+        appliedSettings.threshold_sensitivity_preset || "balanced"
+      } · ${presetLabels[appliedSettings.threshold_sensitivity_preset || "balanced"]}`,
+    ];
+    pills.forEach((text) => {
+      const pill = document.createElement("span");
+      pill.className = "settings-pill";
+      pill.textContent = text;
+      settingsPills.appendChild(pill);
+    });
+  }
+
+  function renderSensitivityTable(rows = []) {
+    sensitivityTable.innerHTML = "";
+    const maxPixels = Math.max(...rows.map((row) => row.final_pixels), 1);
+
+    rows.forEach((row) => {
+      const rowEl = document.createElement("div");
+      rowEl.className = "sensitivity-row";
+
+      const threshold = document.createElement("span");
+      threshold.className = "sensitivity-threshold";
+      threshold.textContent = `>${Number(row.threshold).toFixed(2)}`;
+
+      const barWrap = document.createElement("div");
+      barWrap.className = "sensitivity-bar-wrap";
+      const bar = document.createElement("div");
+      bar.className = "sensitivity-bar";
+      bar.style.width = `${Math.max((row.final_pixels / maxPixels) * 100, 3)}%`;
+      barWrap.appendChild(bar);
+
+      const count = document.createElement("span");
+      count.className = "sensitivity-count";
+      count.textContent = `${formatCount(row.final_pixels)} px`;
+
+      const filtered = document.createElement("span");
+      filtered.className = "sensitivity-filter";
+      filtered.textContent = row.area_filtered ? "filtered" : "kept";
+
+      rowEl.append(threshold, barWrap, count, filtered);
+      sensitivityTable.appendChild(rowEl);
+    });
+  }
+
+  function renderDiagnostics(data) {
+    diagnosticModel.textContent = data.model_version || "vR.P.30.1";
+    diagnosticNeedsReview.textContent = data.needs_review ? "Yes" : "No";
+    diagnosticRawPixels.textContent = formatCount(data.raw_tampered_pixel_count);
+    diagnosticFinalPixels.textContent = formatCount(data.tampered_pixel_count);
+    diagnosticAreaFilter.textContent = data.area_filter_triggered ? "Yes" : "No";
+    diagnosticMeanProb.textContent = Number(data.confidence_mean_prob || 0).toFixed(4);
+
+    const bannerMessage = data.needs_review
+      ? "Borderline or unstable evidence detected. Manual review is recommended."
+      : data.is_tampered
+      ? "Stable suspicious region detected under the current forensic settings."
+      : "No stable suspicious region detected under the current forensic settings.";
+    const bannerVariant = data.needs_review
+      ? ""
+      : data.is_tampered
+      ? "banner-alert"
+      : "banner-ok";
+    setDiagnosticBanner(bannerMessage, bannerVariant);
+
+    renderSettingsPills(data.applied_settings);
+    renderSensitivityTable(data.threshold_sensitivity || []);
+  }
+
+  function displayResults(data) {
+    if (data.is_tampered) {
+      setVerdictIcon(ICON_X, "verdict-tampered");
+      verdictText.textContent = "Tampered";
+      verdictDetail.textContent = `${(data.tampered_ratio * 100).toFixed(
+        1
+      )}% of image shows tampering`;
+    } else {
+      setVerdictIcon(ICON_CHECK, "verdict-authentic");
+      verdictText.textContent = "Authentic";
+      verdictDetail.textContent = "No tampering detected";
+    }
+
+    metricConfidence.textContent = `${(data.confidence * 100).toFixed(1)}%`;
+    metricRatio.textContent = `${(data.tampered_ratio * 100).toFixed(2)}%`;
+    metricTime.textContent = `${data.inference_time_ms.toFixed(0)}ms`;
+
+    if (data.mask_base64) {
+      maskImage.src = `data:image/png;base64,${data.mask_base64}`;
+      maskImage.alt =
+        "Tamper localization heatmap showing highlighted tampered regions";
+    }
+
+    renderDiagnostics(data);
+  }
+
   async function submitImage(file) {
-    // Show progress
     progressBar.hidden = false;
     progressFill.className = "progress-bar-fill indeterminate";
 
-    // Show results panel in loading state
     resultsArea.hidden = false;
     setVerdictIcon(ICON_LOADER, "");
     verdictText.textContent = "Analyzing…";
-    verdictDetail.textContent = "Processing your image";
+    verdictDetail.textContent = "Applying forensic controls";
     metricConfidence.textContent = "—";
     metricRatio.textContent = "—";
     metricTime.textContent = "—";
     maskImage.src = "";
     maskImage.alt = "Processing…";
+    setDiagnosticBanner("Running the vR.P.30.1 forensic pipeline…");
+    setDiagnosticPlaceholders();
 
     const formData = new FormData();
     formData.append("file", file);
+    const settings = getCurrentSettings();
+    Object.entries(settings).forEach(([key, value]) => {
+      formData.append(key, value);
+    });
 
     try {
       const res = await fetch(`${API_BASE}/infer`, {
@@ -199,8 +386,11 @@
       setVerdictIcon(ICON_ALERT, "");
       verdictText.textContent = "Error";
       verdictDetail.textContent = err.message;
+      setDiagnosticBanner(
+        "The API rejected the request or the forensic model is unavailable.",
+        "banner-alert"
+      );
     } finally {
-      // Hide progress
       progressFill.className = "progress-bar-fill";
       progressFill.style.width = "100%";
       setTimeout(() => {
@@ -210,30 +400,6 @@
     }
   }
 
-  function displayResults(data) {
-    const tampered = data.is_tampered;
-
-    if (tampered) {
-      setVerdictIcon(ICON_X, "verdict-tampered");
-      verdictText.textContent = "Tampered";
-      verdictDetail.textContent = `${(data.tampered_ratio * 100).toFixed(1)}% of image shows tampering`;
-    } else {
-      setVerdictIcon(ICON_CHECK, "verdict-authentic");
-      verdictText.textContent = "Authentic";
-      verdictDetail.textContent = "No tampering detected";
-    }
-
-    metricConfidence.textContent = `${(data.confidence * 100).toFixed(1)}%`;
-    metricRatio.textContent = `${(data.tampered_ratio * 100).toFixed(2)}%`;
-    metricTime.textContent = `${data.inference_time_ms.toFixed(0)}ms`;
-
-    if (data.mask_base64) {
-      maskImage.src = `data:image/png;base64,${data.mask_base64}`;
-      maskImage.alt = "Tamper localization heatmap showing highlighted tampered regions";
-    }
-  }
-
-  // ─── Scroll Fade-in (IntersectionObserver) ─────
   const fadeElements = document.querySelectorAll(".fade-in");
 
   if ("IntersectionObserver" in window) {
@@ -252,16 +418,14 @@
       }
     );
 
-    fadeElements.forEach((el, i) => {
-      el.style.transitionDelay = `${i * 80}ms`;
+    fadeElements.forEach((el, index) => {
+      el.style.transitionDelay = `${index * 80}ms`;
       observer.observe(el);
     });
   } else {
-    // Fallback: show all immediately
     fadeElements.forEach((el) => el.classList.add("visible"));
   }
 
-  // ─── Animated Number Counters ──────────────────
   function animateCounter(element, target, duration = 1500) {
     const isFloat = String(target).includes(".");
     const start = 0;
@@ -270,7 +434,6 @@
     function update(currentTime) {
       const elapsed = currentTime - startTime;
       const progress = Math.min(elapsed / duration, 1);
-      // Ease out cubic
       const ease = 1 - Math.pow(1 - progress, 3);
       const current = start + (target - start) * ease;
 
@@ -282,20 +445,16 @@
 
       if (progress < 1) {
         requestAnimationFrame(update);
+      } else if (isFloat) {
+        element.textContent = target.toFixed(4);
       } else {
-        // Restore original text
-        if (isFloat) {
-          element.textContent = target.toFixed(4);
-        } else {
-          element.textContent = `${target}+`;
-        }
+        element.textContent = `${target}+`;
       }
     }
 
     requestAnimationFrame(update);
   }
 
-  // Observe metric cards for counter animation
   const metricCards = document.querySelectorAll(".metric-card-value[data-count]");
 
   if ("IntersectionObserver" in window && metricCards.length) {
