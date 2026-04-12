@@ -1,2 +1,7 @@
 .vercel
 .env*.local
+.next
+node_modules
+pnpm-debug.log*
+
+.vercel

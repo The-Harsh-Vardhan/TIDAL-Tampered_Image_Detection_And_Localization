@@ -63,3 +63,4 @@ sweep_outputs/
 NUL
 .vercel
 .env*.local
+.pnpm-store/

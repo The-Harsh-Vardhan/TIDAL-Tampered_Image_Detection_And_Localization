@@ -53,8 +53,15 @@ pip install -e ".[dev]"
 # Start the backend (CPU mode)
 DEVICE=cpu uvicorn backend.app:app --host 0.0.0.0 --port 8000 --reload
 
+# Install frontend dependencies inside Docker (new terminal)
+docker run --rm -it \
+  -v "${PWD}:/workspace" \
+  -w /workspace/frontend \
+  node:22-bookworm \
+  bash -lc "corepack enable && pnpm install"
+
 # Start the frontend (new terminal)
-cd frontend && python -m http.server 3000
+cd frontend && pnpm dev
 ```
 
 Open **http://localhost:3000** → drag & drop any image to scan for tampering.
@@ -159,8 +166,8 @@ Input Image (any size)
 ```text
 ┌────────────────┐      ┌──────────────────┐
 │  Frontend      │──────│  FastAPI Backend  │
-│  (Nginx :3000) │ POST │  (Uvicorn :8000)  │
-│  index.html    │/infer│                   │
+│  (Next.js :3000│ POST │  (Uvicorn :8000)  │
+│  App Router)   │/infer│                   │
 └────────────────┘      │  /health /ready   │
                         │  /infer /metrics  │
                         │  /version         │
@@ -221,7 +228,8 @@ cd frontend && vercel --prod
 # Set root directory to "frontend/" in Vercel dashboard
 ```
 
-Update `API_BASE` in `frontend/app.js` to point to your HF Spaces URL.
+Set `NEXT_PUBLIC_API_BASE` in `frontend/.env.local` if you want to override the
+default HF Spaces URL or point the Next.js app at a different backend.
 
 ### Render (Backend API)
 
@@ -284,17 +292,18 @@ TIDAL/
 │   ├── dvc.yaml                # 4-stage DAG
 │   ├── params.yaml             # All hyperparameters
 │   └── src/                    # Dataset, model, train, evaluate, visualize
-├── frontend/                   # Dark glassmorphism web UI
-│   ├── index.html              # Hero + pipeline + demo + results
-│   ├── app.js                  # API client + drag-drop + health polling
-│   └── styles.css              # Dark theme + animations
+├── frontend/                   # Next.js App Router forensic web UI
+│   ├── app/                    # Layout, page entrypoint, global styles
+│   ├── components/             # UI sections and presentation components
+│   ├── hooks/                  # Upload, inference, and render state
+│   └── lib/                    # Analytics + visualization helpers
 ├── docker/                     # Production containerization
 │   ├── Dockerfile              # Multi-stage CUDA 12.1 image
 │   ├── Dockerfile.dev          # Hot-reload dev image
 │   └── docker-compose.yml      # Full stack (4 services)
 ├── deploy/                     # Deployment configs
 │   ├── hf-spaces/              # HF Spaces Docker config
-│   ├── vercel/                 # Vercel static site config
+│   ├── vercel/                 # Legacy static deploy config (superseded by frontend/ root)
 │   └── render/                 # Render Blueprint
 ├── observability/              # Prometheus + Grafana + alerting
 ├── tests/                      # pytest suite (17 tests)
@@ -328,7 +337,7 @@ TIDAL/
 | --- | --- |
 | **ML** | PyTorch 2.x · SMP · Albumentations · OpenCV |
 | **Backend** | FastAPI · Uvicorn · Prometheus · Pydantic |
-| **Frontend** | Vanilla HTML/CSS/JS · Glassmorphism design |
+| **Frontend** | Next.js App Router · React 19 · Vercel Analytics · Glassmorphism design |
 | **Infra** | Docker · Docker Compose · DVC · GitHub Actions |
 | **Monitoring** | Prometheus · Grafana · Custom alerting rules |
 | **Tracking** | Weights & Biases |

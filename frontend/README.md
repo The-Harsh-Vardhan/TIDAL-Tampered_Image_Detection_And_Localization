@@ -1,41 +1,51 @@
 # TIDAL Frontend
 
-Static dark glassmorphism web UI for the TIDAL inference API.
+Next.js App Router frontend for the TIDAL inference API.
 
 ## Quick Start
 
+Install dependencies inside Docker to preserve the repo's package-age gate:
+
 ```bash
-# Serve locally
-cd frontend
-python -m http.server 3000
-# Open http://localhost:3000
+docker run --rm -it \
+  -v "${PWD}:/workspace" \
+  -w /workspace/frontend \
+  node:22-bookworm \
+  bash -lc "corepack enable && pnpm install"
 ```
+
+Run the development server:
+
+```bash
+cd frontend
+pnpm dev
+```
+
+Open `http://localhost:3000`.
 
 ## Usage
 
-1. **Start the backend** first (`uvicorn backend.app:app --port 8000`)
+1. Start the backend first: `uvicorn backend.app:app --port 8000`
 2. Open `http://localhost:3000`
-3. Drag & drop or browse for a JPEG/PNG/WebP image
-4. Results appear automatically — verdict, confidence, tampered area %, heatmap mask, and notebook-style diagnostics
+3. Drag and drop or browse for a JPEG, PNG, or WebP image
+4. Adjust the forensic controls to rerun the notebook-style thresholds
+5. Review the comparison gallery, heatmap, summary meters, and diagnostics
 
 ## Features
 
-- Dark glassmorphism design with Inter typography
-- Drag-and-drop or click-to-browse image upload
-- Automatic API health polling with live status indicator
-- Exposes forensic controls for pixel threshold, image area threshold, minimum prediction area, review confidence, and threshold sensitivity preset
-- Displays tamper verdict, confidence score, tampered area %, binary heatmap, and diagnostic sensitivity data
-- Responsive layout (mobile-friendly)
-- Auto-submits on file select, and re-runs when a forensic control changes
-
-## API Integration
-
-Points to `http://localhost:8000` when running locally. For production, update `API_BASE` in `app.js` or serve via Nginx reverse proxy (see `docker/docker-compose.yml`).
+- Next.js App Router single-page experience that preserves the original TIDAL layout
+- Direct browser-to-HF inference flow with local fallback to `http://localhost:8000`
+- Vercel Analytics pageviews plus custom interaction telemetry
+- Drag-and-drop upload, notebook-style threshold controls, comparison views, heatmap toggle, and forensic summary cards
+- Responsive glassmorphism UI with self-hosted `next/font` typography
 
 ## Files
 
-| File | Purpose |
+| Path | Purpose |
 |------|---------|
-| `index.html` | Page structure — hero, pipeline, upload, results |
-| `styles.css` | Dark theme, glassmorphism cards, animations |
-| `app.js` | API client, drag-drop, health polling, result rendering |
+| `app/layout.jsx` | Metadata, fonts, global CSS, Vercel Analytics |
+| `app/page.jsx` | App Router entrypoint |
+| `app/globals.css` | Global styles migrated from the original static site |
+| `components/` | UI sections and reusable presentation components |
+| `hooks/use-tidal-forensics.js` | Upload, inference, analytics, and derived-image state |
+| `lib/analytics.js` | Safe custom event wrapper for Vercel Analytics |
