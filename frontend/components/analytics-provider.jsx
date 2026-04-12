@@ -27,5 +27,12 @@ function sanitizePageView(event) {
 }
 
 export function AnalyticsProvider() {
+  if (typeof window !== "undefined") {
+    const { hostname } = window.location;
+    if (hostname === "localhost" || hostname === "127.0.0.1") {
+      return null;
+    }
+  }
+
   return <Analytics beforeSend={sanitizePageView} />;
 }
