@@ -9,7 +9,6 @@ import {
   ANALYTICS_MODE_ADVANCED,
   ANALYTICS_MODE_SIMPLE,
   PRESET_LABELS,
-  formatCount,
 } from "@/lib/forensic-formatters";
 
 function RangeField({
@@ -24,6 +23,13 @@ function RangeField({
   title,
   value,
 }) {
+  function clampValue(nextValue) {
+    if (!Number.isFinite(nextValue)) {
+      return null;
+    }
+    return Math.min(Math.max(nextValue, min), max);
+  }
+
   function handleKeyboardCommit(event) {
     if (
       event.key.startsWith("Arrow") ||
@@ -34,6 +40,22 @@ function RangeField({
     ) {
       onCommit(Number(event.currentTarget.value));
     }
+  }
+
+  function handleManualCommit(event) {
+    const nextValue = clampValue(Number(event.currentTarget.value));
+    if (nextValue === null) {
+      return;
+    }
+    onCommit(nextValue);
+  }
+
+  function handleManualChange(event) {
+    const nextValue = clampValue(Number(event.currentTarget.value));
+    if (nextValue === null) {
+      return;
+    }
+    onDraftChange(nextValue);
   }
 
   return (
@@ -53,7 +75,21 @@ function RangeField({
           onKeyUp={handleKeyboardCommit}
           onBlur={(event) => onCommit(Number(event.currentTarget.value))}
         />
-        <output htmlFor={controlId}>{displayValue}</output>
+        <input
+          type="number"
+          min={min}
+          max={max}
+          step={step}
+          value={displayValue}
+          aria-label={`${title} manual value`}
+          onChange={handleManualChange}
+          onBlur={handleManualCommit}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              handleManualCommit(event);
+            }
+          }}
+        />
       </div>
     </label>
   );
@@ -103,6 +139,8 @@ export function DemoWorkspace({
   onSelectFile,
   onUpdateSetting,
   onVisualTabChange,
+  soundEnabled,
+  onToggleSound,
 }) {
   const fileInputRef = useRef(null);
   const [dragActive, setDragActive] = useState(false);
@@ -284,6 +322,14 @@ export function DemoWorkspace({
                 Simple shows the verdict, comparisons, coverage, and decision
                 pressure. Advanced adds controls and diagnostics.
               </p>
+              <label className="sound-toggle">
+                <input
+                  type="checkbox"
+                  checked={soundEnabled}
+                  onChange={onToggleSound}
+                />
+                <span>Sound effects</span>
+              </label>
             </div>
 
             {isAdvancedMode ? (
@@ -299,10 +345,10 @@ export function DemoWorkspace({
                 <RangeField
                   controlId="pixelThreshold"
                   title="Pixel threshold"
-                  helper="0.05 to 0.95. Higher means fewer pixels survive."
-                  min={0.05}
-                  max={0.95}
-                  step={0.05}
+                  helper="0.01 to 0.99. Higher means fewer pixels survive."
+                  min={0.01}
+                  max={0.99}
+                  step={0.01}
                   value={settings.pixelThreshold}
                   displayValue={Number(settings.pixelThreshold).toFixed(2)}
                   onDraftChange={(value) => onUpdateSetting("pixelThreshold", value)}
@@ -311,12 +357,12 @@ export function DemoWorkspace({
                 <RangeField
                   controlId="maskAreaThreshold"
                   title="Image area threshold"
-                  helper="0 to 147456. Higher requires a larger suspicious region."
+                  helper="0 to 200000. Higher requires a larger suspicious region."
                   min={0}
-                  max={147456}
-                  step={25}
+                  max={200000}
+                  step={50}
                   value={settings.maskAreaThreshold}
-                  displayValue={`${formatCount(settings.maskAreaThreshold)} px`}
+                  displayValue={Math.round(settings.maskAreaThreshold)}
                   onDraftChange={(value) =>
                     onUpdateSetting("maskAreaThreshold", value)
                   }
@@ -325,12 +371,12 @@ export function DemoWorkspace({
                 <RangeField
                   controlId="minPredictionAreaPixels"
                   title="Minimum predicted area"
-                  helper="0 to 147456. Higher removes tiny blobs after thresholding."
+                  helper="0 to 200000. Higher removes tiny blobs after thresholding."
                   min={0}
-                  max={147456}
-                  step={25}
+                  max={200000}
+                  step={50}
                   value={settings.minPredictionAreaPixels}
-                  displayValue={`${formatCount(settings.minPredictionAreaPixels)} px`}
+                  displayValue={Math.round(settings.minPredictionAreaPixels)}
                   onDraftChange={(value) =>
                     onUpdateSetting("minPredictionAreaPixels", value)
                   }
@@ -341,10 +387,10 @@ export function DemoWorkspace({
                 <RangeField
                   controlId="reviewConfidenceThreshold"
                   title="Review confidence"
-                  helper="0.05 to 0.95. Higher flags more borderline cases."
-                  min={0.05}
-                  max={0.95}
-                  step={0.05}
+                  helper="0.01 to 0.99. Higher flags more borderline cases."
+                  min={0.01}
+                  max={0.99}
+                  step={0.01}
                   value={settings.reviewConfidenceThreshold}
                   displayValue={Number(settings.reviewConfidenceThreshold).toFixed(2)}
                   onDraftChange={(value) =>

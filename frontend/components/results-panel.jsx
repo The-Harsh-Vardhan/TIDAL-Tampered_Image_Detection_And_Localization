@@ -761,15 +761,18 @@ export function ResultsPanel({
                 {comparisonViews.overlaySrc ? (
                   <img
                     src={comparisonViews.overlaySrc}
-                    alt="Detected region overlaid in red on the original image"
+                    alt="Detected region shown in red"
                   />
+                ) : null}
+                {!comparisonViews.hasMask ? (
+                  <div className="comparison-empty">No detected region</div>
                 ) : null}
               </div>
               <figcaption>
-                <h4>Red Overlay</h4>
+                <h4>Red Mask</h4>
                 <p>
-                  The localized region is tinted in red over the original image
-                  for quick visual review.
+                  Only the detected mask region is rendered in red, matching
+                  the heatmap footprint.
                 </p>
               </figcaption>
             </figure>

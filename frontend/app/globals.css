@@ -806,6 +806,49 @@ a:hover {
   box-shadow: 0 10px 26px rgba(6, 182, 212, 0.16);
 }
 
+.sound-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.sound-toggle input[type="checkbox"] {
+  width: 36px;
+  height: 20px;
+  appearance: none;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(125, 211, 252, 0.16);
+  position: relative;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.sound-toggle input[type="checkbox"]::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.8);
+  transition: all var(--transition);
+}
+
+.sound-toggle input[type="checkbox"]:checked {
+  background: var(--accent-gradient);
+  border-color: rgba(45, 212, 191, 0.4);
+}
+
+.sound-toggle input[type="checkbox"]:checked::after {
+  transform: translateX(16px);
+  background: #03131a;
+}
+
 .forensic-canvas {
   min-width: 0;
   display: flex;
@@ -975,7 +1018,7 @@ a:hover {
   accent-color: var(--accent-light);
 }
 
-.control-input-row output,
+.control-input-row input[type="number"],
 .control-select select {
   min-width: 88px;
   padding: 0.55rem 0.8rem;
@@ -986,6 +1029,16 @@ a:hover {
   font-size: 0.8rem;
   font-weight: 600;
   text-align: right;
+}
+
+.control-input-row input[type="number"] {
+  width: 110px;
+  text-align: right;
+}
+
+.control-input-row input[type="number"]::-webkit-outer-spin-button,
+.control-input-row input[type="number"]::-webkit-inner-spin-button {
+  margin: 0;
 }
 
 .control-select select {

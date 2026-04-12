@@ -74,6 +74,7 @@ export function useTidalForensics() {
   const [visualTab, setVisualTab] = useState(TAB_COMPARISON);
   const [analyticsMode, setAnalyticsMode] = useState(ANALYTICS_MODE_SIMPLE);
   const [isDemoLoading, setIsDemoLoading] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
   const [comparisonViews, setComparisonViews] = useState(EMPTY_COMPARISON_VIEWS);
 
   const requestRef = useRef({
@@ -82,6 +83,8 @@ export function useTidalForensics() {
   });
   const uploadSourceRef = useRef("browse");
   const committedSettingsRef = useRef(DEFAULT_SETTINGS);
+  const audioContextRef = useRef(null);
+  const soundEnabledRef = useRef(true);
 
   useEffect(() => {
     let active = true;
@@ -122,7 +125,7 @@ export function useTidalForensics() {
               ? {
                   originalSrc: previewDataUrl,
                   detectedRegionSrc: "",
-                  overlaySrc: previewDataUrl,
+                  overlaySrc: "",
                   hasMask: false,
                 }
               : EMPTY_COMPARISON_VIEWS
@@ -143,6 +146,55 @@ export function useTidalForensics() {
       requestRef.current.controller?.abort();
     };
   }, []);
+
+  useEffect(() => {
+    soundEnabledRef.current = soundEnabled;
+  }, [soundEnabled]);
+
+  async function playTone(kind) {
+    if (!soundEnabledRef.current) {
+      return;
+    }
+
+    const AudioContextCtor =
+      window.AudioContext || window.webkitAudioContext;
+
+    if (!AudioContextCtor) {
+      return;
+    }
+
+    const context =
+      audioContextRef.current || new AudioContextCtor();
+    audioContextRef.current = context;
+
+    if (context.state === "suspended") {
+      await context.resume();
+    }
+
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+
+    const now = context.currentTime;
+    const baseFrequency = kind === "error" ? 220 : 740;
+    const endFrequency = kind === "error" ? 140 : 980;
+
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(baseFrequency, now);
+    oscillator.frequency.exponentialRampToValueAtTime(
+      endFrequency,
+      now + 0.2
+    );
+
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.16, now + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.24);
+
+    oscillator.connect(gain);
+    gain.connect(context.destination);
+
+    oscillator.start(now);
+    oscillator.stop(now + 0.26);
+  }
 
   async function submitImage(file, nextSettings = committedSettingsRef.current) {
     if (!file) {
@@ -205,6 +257,7 @@ export function useTidalForensics() {
       }
 
       setResultData(data);
+      playTone("success");
       trackTidalEvent(
         "inference_completed",
         getInferencePayload(data, nextSettings, visualTab)
@@ -226,6 +279,7 @@ export function useTidalForensics() {
 
       setErrorMessage(message);
       setVisualTab(TAB_COMPARISON);
+      playTone("error");
       trackTidalEvent("inference_failed", {
         failure_kind: failureKind,
         upload_source: uploadSourceRef.current,
@@ -391,6 +445,10 @@ export function useTidalForensics() {
     });
   }
 
+  function toggleSound() {
+    setSoundEnabled((current) => !current);
+  }
+
   return {
     analyticsMode,
     comparisonViews,
@@ -403,12 +461,14 @@ export function useTidalForensics() {
     resultsVisible,
     selectedFile,
     settings,
+    soundEnabled,
     visualTab,
     clearUpload,
     commitSetting,
     runDemo,
     selectFile,
     submitImage,
+    toggleSound,
     updateAnalyticsMode,
     updateSetting,
     updateVisualTab,

@@ -39,6 +39,8 @@ export function TidalApp() {
         onSelectFile={forensic.selectFile}
         onUpdateSetting={forensic.updateSetting}
         onVisualTabChange={forensic.updateVisualTab}
+        soundEnabled={forensic.soundEnabled}
+        onToggleSound={forensic.toggleSound}
       />
       <KeyResultsSection />
       <SiteFooter onExternalLinkClick={trackExternalLink} />

@@ -34,7 +34,7 @@ export async function buildComparisonViews(
     return {
       originalSrc: previewDataUrl,
       detectedRegionSrc: "",
-      overlaySrc: previewDataUrl,
+      overlaySrc: "",
       hasMask: false,
     };
   }
@@ -90,7 +90,8 @@ export async function buildComparisonViews(
   tintedMaskCtx.globalCompositeOperation = "source-over";
 
   const { canvas: overlayCanvas, ctx: overlayCtx } = makeCanvas(width, height);
-  overlayCtx.drawImage(sourceCanvas, 0, 0);
+  overlayCtx.fillStyle = "#000000";
+  overlayCtx.fillRect(0, 0, width, height);
   if (hasMask) {
     overlayCtx.globalAlpha = overlayAlpha;
     overlayCtx.drawImage(tintedMaskCanvas, 0, 0);
