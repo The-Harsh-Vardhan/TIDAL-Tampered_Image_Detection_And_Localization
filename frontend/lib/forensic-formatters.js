@@ -1,5 +1,8 @@
 export const TAB_COMPARISON = "comparison";
 export const TAB_HEATMAP = "heatmap";
+export const ANALYTICS_MODE_SIMPLE = "simple";
+export const ANALYTICS_MODE_ADVANCED = "advanced";
+export const DEMO_IMAGE_PATH = "/demo/tamper-sample.jpg";
 
 export const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ||

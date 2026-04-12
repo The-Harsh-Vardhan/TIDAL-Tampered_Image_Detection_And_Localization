@@ -3,6 +3,8 @@ import { track } from "@vercel/analytics";
 const VALID_EVENT_NAMES = new Set([
   "image_upload_selected",
   "image_upload_cleared",
+  "analytics_mode_changed",
+  "demo_inference_requested",
   "inference_requested",
   "inference_completed",
   "inference_failed",

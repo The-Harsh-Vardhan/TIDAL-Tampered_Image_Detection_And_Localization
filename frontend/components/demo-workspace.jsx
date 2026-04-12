@@ -5,7 +5,12 @@ import { useRef, useState } from "react";
 
 import { FadeIn } from "@/components/fade-in";
 import { ResultsPanel } from "@/components/results-panel";
-import { PRESET_LABELS, formatCount } from "@/lib/forensic-formatters";
+import {
+  ANALYTICS_MODE_ADVANCED,
+  ANALYTICS_MODE_SIMPLE,
+  PRESET_LABELS,
+  formatCount,
+} from "@/lib/forensic-formatters";
 
 function RangeField({
   controlId,
@@ -66,18 +71,35 @@ function getStatusLabel(healthStatus) {
   return "Checking API…";
 }
 
+function ModeButton({ isActive, label, mode, onSelect }) {
+  return (
+    <button
+      className={`mode-option ${isActive ? "is-active" : ""}`.trim()}
+      type="button"
+      aria-pressed={isActive}
+      onClick={() => onSelect(mode)}
+    >
+      {label}
+    </button>
+  );
+}
+
 export function DemoWorkspace({
+  analyticsMode,
   comparisonViews,
   errorMessage,
   healthStatus,
   isAnalyzing,
+  isDemoLoading,
   previewDataUrl,
   resultData,
   resultsVisible,
   settings,
   visualTab,
+  onAnalyticsModeChange,
   onClearUpload,
   onCommitSetting,
+  onRunDemo,
   onSelectFile,
   onUpdateSetting,
   onVisualTabChange,
@@ -94,20 +116,96 @@ export function DemoWorkspace({
     await onSelectFile(file, source);
   }
 
+  const isAdvancedMode = analyticsMode === ANALYTICS_MODE_ADVANCED;
+  const statusLabel = getStatusLabel(healthStatus);
+
   return (
-    <section className="section section-alt" id="demo">
+    <section className="section section-alt forensic-workspace-section" id="demo">
       <div className="container">
         <FadeIn className="section-header">
-          <h2 className="section-title">Try It Live</h2>
+          <div className="section-kicker">Operator Console</div>
+          <h2 className="section-title">Live Forensic Workspace</h2>
           <p className="section-subtitle">
-            Upload any image to scan for tampering instantly
+            Start with the bundled tampered sample or upload your own image.
+            Simple mode keeps the readout visual; Advanced exposes every
+            forensic threshold.
           </p>
         </FadeIn>
 
-        <FadeIn className="demo-layout">
-          <div className="demo-stack">
-            <div
-              className={`upload-area glass-card ${dragActive ? "drag-active" : ""}`.trim()}
+        <FadeIn className="forensic-console">
+          <aside className="forensic-rail glass-card" aria-label="Forensic controls">
+            <div className="rail-status">
+              <span className={`status-dot ${healthStatus}`.trim()} />
+              <div>
+                <span className="rail-eyebrow">HF Space</span>
+                <strong>{statusLabel}</strong>
+              </div>
+            </div>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              hidden
+              onChange={(event) => {
+                const [file] = event.target.files || [];
+                handleFiles(file, "browse");
+                event.target.value = "";
+              }}
+            />
+
+            <div className="rail-panel">
+              <span className="rail-eyebrow">Input</span>
+              <div className="rail-action-grid">
+                <button
+                  className="rail-button rail-button--primary"
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                    <circle cx="8.5" cy="8.5" r="1.5" />
+                    <polyline points="21 15 16 10 5 21" />
+                  </svg>
+                  Upload
+                </button>
+                <button
+                  className="rail-button"
+                  type="button"
+                  disabled={isDemoLoading}
+                  onClick={onRunDemo}
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polygon points="5 3 19 12 5 21 5 3" />
+                  </svg>
+                  Demo
+                </button>
+              </div>
+              <p className="rail-note">
+                {isDemoLoading
+                  ? "Running demo image through HF inference..."
+                  : "Use the sample if you do not have a CASIA-style tampered image ready."}
+              </p>
+            </div>
+
+            <button
+              className={`rail-dropzone ${dragActive ? "drag-active" : ""}`.trim()}
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
               onDragOver={(event) => {
                 event.preventDefault();
                 setDragActive(true);
@@ -119,9 +217,30 @@ export function DemoWorkspace({
                 handleFiles(file, "drop");
               }}
             >
-              {!previewDataUrl ? (
-                <div className="upload-content">
-                  <div className="upload-icon">
+              <span className="upload-icon rail-upload-icon">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                  <polyline points="17 8 12 3 7 8" />
+                  <line x1="12" y1="3" x2="12" y2="15" />
+                </svg>
+              </span>
+              <strong>Drop image here</strong>
+              <span>JPEG, PNG, WebP · Max 20 MB</span>
+            </button>
+
+            {previewDataUrl ? (
+              <div className="rail-preview">
+                <img src={previewDataUrl} alt="Current forensic input preview" />
+                <div className="rail-preview-meta">
+                  <span>Current input</span>
+                  <button className="btn btn-sm btn-secondary" type="button" onClick={onClearUpload}>
                     <svg
                       viewBox="0 0 24 24"
                       fill="none"
@@ -129,61 +248,6 @@ export function DemoWorkspace({
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                    >
-                      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-                      <polyline points="17 8 12 3 7 8" />
-                      <line x1="12" y1="3" x2="12" y2="15" />
-                    </svg>
-                  </div>
-                  <h3>Drop image here</h3>
-                  <p>JPEG, PNG, WebP · Max 20 MB</p>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    hidden
-                    onChange={(event) => {
-                      const [file] = event.target.files || [];
-                      handleFiles(file, "browse");
-                      event.target.value = "";
-                    }}
-                  />
-                  <button
-                    className="btn btn-primary"
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <rect x="3" y="3" width="18" height="18" rx="2" />
-                      <circle cx="8.5" cy="8.5" r="1.5" />
-                      <polyline points="21 15 16 10 5 21" />
-                    </svg>
-                    Select Image
-                  </button>
-                </div>
-              ) : (
-                <div className="upload-preview">
-                  <img src={previewDataUrl} alt="Uploaded image preview" />
-                  <button
-                    className="btn btn-sm btn-secondary"
-                    type="button"
-                    onClick={onClearUpload}
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      style={{ width: 14, height: 14 }}
                     >
                       <line x1="18" y1="6" x2="6" y2="18" />
                       <line x1="6" y1="6" x2="18" y2="18" />
@@ -191,16 +255,39 @@ export function DemoWorkspace({
                     Clear
                   </button>
                 </div>
-              )}
+              </div>
+            ) : null}
 
-              {isAnalyzing ? (
-                <div className="progress-bar">
-                  <div className="progress-bar-fill indeterminate" />
-                </div>
-              ) : null}
+            {(isAnalyzing || isDemoLoading) ? (
+              <div className="progress-bar">
+                <div className="progress-bar-fill indeterminate" />
+              </div>
+            ) : null}
+
+            <div className="rail-panel">
+              <span className="rail-eyebrow">Analytics Mode</span>
+              <div className="mode-toggle" role="group" aria-label="Analytics mode">
+                <ModeButton
+                  isActive={analyticsMode === ANALYTICS_MODE_SIMPLE}
+                  label="Simple Analytics"
+                  mode={ANALYTICS_MODE_SIMPLE}
+                  onSelect={onAnalyticsModeChange}
+                />
+                <ModeButton
+                  isActive={isAdvancedMode}
+                  label="Advanced Analytics"
+                  mode={ANALYTICS_MODE_ADVANCED}
+                  onSelect={onAnalyticsModeChange}
+                />
+              </div>
+              <p className="rail-note">
+                Simple shows the verdict, comparisons, coverage, and decision
+                pressure. Advanced adds controls and diagnostics.
+              </p>
             </div>
 
-            <div className="controls-card glass-card">
+            {isAdvancedMode ? (
+            <div className="controls-card rail-controls">
               <div className="controls-header">
                 <h3>Forensic Controls</h3>
                 <p>
@@ -296,10 +383,25 @@ export function DemoWorkspace({
                 </select>
               </label>
             </div>
-          </div>
+            ) : null}
+          </aside>
 
-          {resultsVisible ? (
+          <main className="forensic-canvas" aria-live="polite">
+            <div className="workspace-strip">
+              <span className="workspace-chip">vR.P.30.1</span>
+              <span className="workspace-chip">
+                {analyticsMode === ANALYTICS_MODE_SIMPLE
+                  ? "Simple Analytics"
+                  : "Advanced Analytics"}
+              </span>
+              <span className="workspace-chip workspace-chip--status">
+                {isAnalyzing ? "Inference running" : "Ready"}
+              </span>
+            </div>
+
+            {resultsVisible ? (
             <ResultsPanel
+              analyticsMode={analyticsMode}
               comparisonViews={comparisonViews}
               errorMessage={errorMessage}
               isAnalyzing={isAnalyzing}
@@ -309,13 +411,37 @@ export function DemoWorkspace({
                 onVisualTabChange(nextTab, nextTab !== visualTab)
               }
             />
-          ) : null}
+            ) : (
+              <div className="workspace-empty glass-card">
+                <span className="workspace-empty-tag">No scan loaded</span>
+                <h3>Run Demo to see a full forensic readout instantly.</h3>
+                <p>
+                  The console will render original, black-background detection,
+                  red overlay, coverage pixels, and the decision threshold
+                  pressure without needing any new backend route.
+                </p>
+                <button
+                  className="btn btn-primary"
+                  type="button"
+                  disabled={isDemoLoading}
+                  onClick={onRunDemo}
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polygon points="5 3 19 12 5 21 5 3" />
+                  </svg>
+                  Run Demo
+                </button>
+              </div>
+            )}
+          </main>
         </FadeIn>
-
-        <div className="status-bar">
-          <div className={`status-dot ${healthStatus}`.trim()} />
-          <span>{getStatusLabel(healthStatus)}</span>
-        </div>
       </div>
     </section>
   );

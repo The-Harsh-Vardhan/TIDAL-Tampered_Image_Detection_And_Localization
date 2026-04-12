@@ -21,17 +21,21 @@ export function TidalApp() {
       <HeroSection onNavLinkClick={trackNavLink} />
       <PipelineSection />
       <DemoWorkspace
+        analyticsMode={forensic.analyticsMode}
         comparisonViews={forensic.comparisonViews}
         errorMessage={forensic.errorMessage}
         healthStatus={forensic.healthStatus}
         isAnalyzing={forensic.isAnalyzing}
+        isDemoLoading={forensic.isDemoLoading}
         previewDataUrl={forensic.previewDataUrl}
         resultData={forensic.resultData}
         resultsVisible={forensic.resultsVisible}
         settings={forensic.settings}
         visualTab={forensic.visualTab}
+        onAnalyticsModeChange={forensic.updateAnalyticsMode}
         onClearUpload={forensic.clearUpload}
         onCommitSetting={forensic.commitSetting}
+        onRunDemo={forensic.runDemo}
         onSelectFile={forensic.selectFile}
         onUpdateSetting={forensic.updateSetting}
         onVisualTabChange={forensic.updateVisualTab}

@@ -8,7 +8,8 @@ export function KeyResultsSection() {
         <FadeIn className="section-header">
           <h2 className="section-title">Key Results</h2>
           <p className="section-subtitle">
-            Best run vR.P.19 — Multi-Quality RGB ELA, 25 epochs
+            Live inference runs vR.P.30.1 — gray multi-quality ELA with CBAM
+            decoder attention
           </p>
         </FadeIn>
         <div className="metrics-grid">
@@ -16,10 +17,10 @@ export function KeyResultsSection() {
             <div className="metric-card-value">
               <CountUp target={0.7965} decimals={4} />
             </div>
-            <div className="metric-card-label">Pixel F1</div>
+            <div className="metric-card-label">Pixel F1 Benchmark</div>
             <p>
-              Best result on CASIA 2.0 with Multi-Q RGB ELA input
-              representation
+              Project research benchmark retained for context while the public
+              console serves the vR.P.30.1 inference bundle
             </p>
           </FadeIn>
           <FadeIn className="metric-card glass-card" delayMs={80}>
@@ -33,8 +34,8 @@ export function KeyResultsSection() {
             <div className="metric-card-value">
               <CountUp target={0.9665} decimals={4} />
             </div>
-            <div className="metric-card-label">Pixel AUC</div>
-            <p>Area Under ROC Curve across all tampered image pairs</p>
+            <div className="metric-card-label">Pixel AUC Benchmark</div>
+            <p>Reference localization AUC across tampered image pairs</p>
           </FadeIn>
         </div>
       </div>

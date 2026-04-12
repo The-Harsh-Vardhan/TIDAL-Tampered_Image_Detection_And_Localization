@@ -4,8 +4,10 @@ import { useEffect, useRef, useState } from "react";
 
 import { trackTidalEvent } from "@/lib/analytics";
 import {
+  ANALYTICS_MODE_SIMPLE,
   API_BASE,
   DEFAULT_SETTINGS,
+  DEMO_IMAGE_PATH,
   MAX_FILE_SIZE_BYTES,
   TAB_COMPARISON,
   VALID_FILE_TYPES,
@@ -70,6 +72,8 @@ export function useTidalForensics() {
   const [resultData, setResultData] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [visualTab, setVisualTab] = useState(TAB_COMPARISON);
+  const [analyticsMode, setAnalyticsMode] = useState(ANALYTICS_MODE_SIMPLE);
+  const [isDemoLoading, setIsDemoLoading] = useState(false);
   const [comparisonViews, setComparisonViews] = useState(EMPTY_COMPARISON_VIEWS);
 
   const requestRef = useRef({
@@ -267,6 +271,42 @@ export function useTidalForensics() {
     return true;
   }
 
+  async function runDemo() {
+    trackTidalEvent("demo_inference_requested", {
+      active_visual_tab: visualTab,
+      had_selected_file: Boolean(selectedFile),
+    });
+
+    setIsDemoLoading(true);
+    setErrorMessage("");
+
+    try {
+      const response = await fetch(DEMO_IMAGE_PATH, {
+        cache: "no-store",
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const blob = await response.blob();
+      const demoFile = new File([blob], "tidal-demo-tamper-sample.jpg", {
+        type: blob.type || "image/jpeg",
+      });
+
+      await selectFile(demoFile, "demo");
+    } catch {
+      setResultsVisible(true);
+      setResultData(null);
+      setVisualTab(TAB_COMPARISON);
+      setErrorMessage(
+        "The bundled demo image could not be loaded. Please try a manual upload."
+      );
+    } finally {
+      setIsDemoLoading(false);
+    }
+  }
+
   function clearUpload() {
     if (selectedFile) {
       trackTidalEvent("image_upload_cleared", {
@@ -337,11 +377,27 @@ export function useTidalForensics() {
     }
   }
 
+  function updateAnalyticsMode(nextMode) {
+    if (nextMode === analyticsMode) {
+      return;
+    }
+
+    setAnalyticsMode(nextMode);
+    trackTidalEvent("analytics_mode_changed", {
+      analytics_mode: nextMode,
+      has_selected_file: Boolean(selectedFile),
+      has_result: Boolean(resultData),
+      active_visual_tab: visualTab,
+    });
+  }
+
   return {
+    analyticsMode,
     comparisonViews,
     errorMessage,
     healthStatus,
     isAnalyzing,
+    isDemoLoading,
     previewDataUrl,
     resultData,
     resultsVisible,
@@ -350,8 +406,10 @@ export function useTidalForensics() {
     visualTab,
     clearUpload,
     commitSetting,
+    runDemo,
     selectFile,
     submitImage,
+    updateAnalyticsMode,
     updateSetting,
     updateVisualTab,
   };

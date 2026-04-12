@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 
 import {
+  ANALYTICS_MODE_ADVANCED,
   PRESET_LABELS,
   TAB_COMPARISON,
   clamp,
@@ -176,7 +177,50 @@ function renderSettingsPills(appliedSettings = {}) {
   ];
 }
 
-function SummarySection({ resultData }) {
+function SummarySection({ analyticsMode, resultData }) {
+  const isAdvancedMode = analyticsMode === ANALYTICS_MODE_ADVANCED;
+
+  if (!isAdvancedMode && !resultData) {
+    return (
+      <div className="forensic-summary glass-card">
+        <div className="forensic-summary-header">
+          <div className="forensic-summary-title">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M3 3v18h18" />
+              <path d="M7 14l3-3 3 2 4-5" />
+            </svg>
+            Simple Analytics
+          </div>
+          <p>
+            The compact readout focuses on coverage, final predicted pixels,
+            and distance from the image-level threshold.
+          </p>
+        </div>
+        <div className="summary-grid summary-grid--simple">
+          {["Coverage", "Final Pixels", "Decision Threshold"].map((label) => (
+            <article key={label} className="summary-card summary-card--simple">
+              <span className="summary-eyebrow">{label}</span>
+              <div className="summary-value-row">
+                <strong>—</strong>
+                <span>Waiting for inference</span>
+              </div>
+              <div className="summary-meter">
+                <div className="summary-meter-fill" style={{ width: "0%" }} />
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   if (!resultData) {
     return (
       <div className="forensic-summary glass-card">
@@ -262,6 +306,76 @@ function SummarySection({ resultData }) {
     ...sensitivityRows.map((row) => Number(row.final_pixels || 0)),
     1
   );
+
+  if (!isAdvancedMode) {
+    return (
+      <div className="forensic-summary glass-card">
+        <div className="forensic-summary-header">
+          <div className="forensic-summary-title">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M3 3v18h18" />
+              <path d="M7 14l3-3 3 2 4-5" />
+            </svg>
+            Simple Analytics
+          </div>
+          <p>
+            Visual-first summary: coverage, final predicted area, and whether
+            the current mask crosses the decision threshold.
+          </p>
+        </div>
+        <div className="summary-grid summary-grid--simple">
+          <article className="summary-card summary-card--simple">
+            <span className="summary-eyebrow">Coverage</span>
+            <div className="summary-value-row">
+              <strong>{coveragePercent.toFixed(2)}%</strong>
+              <span>of image flagged</span>
+            </div>
+            <div className="summary-meter">
+              <div
+                className="summary-meter-fill"
+                style={{ width: `${clamp(coveragePercent, 0, 100)}%` }}
+              />
+            </div>
+          </article>
+          <article className="summary-card summary-card--simple">
+            <span className="summary-eyebrow">Final Pixels</span>
+            <div className="summary-value-row">
+              <strong>{formatCount(finalPixels)}</strong>
+              <span>mask-positive pixels kept</span>
+            </div>
+            <div className="summary-meter">
+              <div
+                className="summary-meter-fill summary-meter-fill--accent"
+                style={{ width: `${decisionFill}%` }}
+              />
+            </div>
+          </article>
+          <article className="summary-card summary-card--simple">
+            <span className="summary-eyebrow">Decision Threshold</span>
+            <div className="summary-value-row">
+              <strong>
+                {finalPixels >= thresholdPixels ? "Crossed" : "Below"}
+              </strong>
+              <span>{formatCount(thresholdPixels)} px line</span>
+            </div>
+            <div className="summary-meter">
+              <div
+                className="summary-meter-fill summary-meter-fill--danger"
+                style={{ width: `${decisionFill}%` }}
+              />
+            </div>
+          </article>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="forensic-summary glass-card">
@@ -473,6 +587,7 @@ function DiagnosticsSection({ diagnosticState, resultData }) {
 }
 
 export function ResultsPanel({
+  analyticsMode,
   comparisonViews,
   errorMessage,
   isAnalyzing,
@@ -485,6 +600,16 @@ export function ResultsPanel({
   const maskDataUrl = resultData?.mask_base64
     ? `data:image/png;base64,${resultData.mask_base64}`
     : "";
+  const appliedSettings = resultData?.applied_settings || {};
+  const finalPixels = Number(resultData?.tampered_pixel_count || 0);
+  const decisionThreshold = Number(appliedSettings.mask_area_threshold || 0);
+  const decisionPressure =
+    decisionThreshold <= 0
+      ? resultData?.is_tampered
+        ? 100
+        : 0
+      : clamp((finalPixels / decisionThreshold) * 100, 0, 100);
+  const isAdvancedMode = analyticsMode === ANALYTICS_MODE_ADVANCED;
 
   return (
     <div className="results-panel">
@@ -499,24 +624,49 @@ export function ResultsPanel({
           </div>
         </div>
         <div className="result-metrics">
-          <div className="metric">
-            <span className="metric-label">Confidence</span>
-            <span className="metric-value">
-              {resultData ? `${(resultData.confidence * 100).toFixed(1)}%` : "—"}
-            </span>
-          </div>
-          <div className="metric">
-            <span className="metric-label">Tampered</span>
-            <span className="metric-value">
-              {resultData ? formatRatioPercent(resultData.tampered_ratio) : "—"}
-            </span>
-          </div>
-          <div className="metric">
-            <span className="metric-label">Time</span>
-            <span className="metric-value">
-              {resultData ? `${Number(resultData.inference_time_ms).toFixed(0)}ms` : "—"}
-            </span>
-          </div>
+          {isAdvancedMode ? (
+            <>
+              <div className="metric">
+                <span className="metric-label">Confidence</span>
+                <span className="metric-value">
+                  {resultData ? `${(resultData.confidence * 100).toFixed(1)}%` : "—"}
+                </span>
+              </div>
+              <div className="metric">
+                <span className="metric-label">Tampered</span>
+                <span className="metric-value">
+                  {resultData ? formatRatioPercent(resultData.tampered_ratio) : "—"}
+                </span>
+              </div>
+              <div className="metric">
+                <span className="metric-label">Time</span>
+                <span className="metric-value">
+                  {resultData ? `${Number(resultData.inference_time_ms).toFixed(0)}ms` : "—"}
+                </span>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="metric">
+                <span className="metric-label">Coverage</span>
+                <span className="metric-value">
+                  {resultData ? formatRatioPercent(resultData.tampered_ratio) : "—"}
+                </span>
+              </div>
+              <div className="metric">
+                <span className="metric-label">Final Pixels</span>
+                <span className="metric-value">
+                  {resultData ? formatCount(finalPixels) : "—"}
+                </span>
+              </div>
+              <div className="metric">
+                <span className="metric-label">Decision</span>
+                <span className="metric-value">
+                  {resultData ? `${decisionPressure.toFixed(0)}%` : "—"}
+                </span>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -658,11 +808,13 @@ export function ResultsPanel({
         </div>
       </div>
 
-      <SummarySection resultData={resultData} />
-      <DiagnosticsSection
-        diagnosticState={diagnosticState}
-        resultData={resultData}
-      />
+      <SummarySection analyticsMode={analyticsMode} resultData={resultData} />
+      {isAdvancedMode ? (
+        <DiagnosticsSection
+          diagnosticState={diagnosticState}
+          resultData={resultData}
+        />
+      ) : null}
     </div>
   );
 }
