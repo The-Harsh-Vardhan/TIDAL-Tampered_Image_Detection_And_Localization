@@ -9,7 +9,7 @@ import {
   DEFAULT_SETTINGS,
   DEMO_IMAGE_PATH,
   MAX_FILE_SIZE_BYTES,
-  TAB_COMPARISON,
+  TAB_ORIGINAL,
   VALID_FILE_TYPES,
   getAppliedSettings,
   getFileSizeBucket,
@@ -71,10 +71,10 @@ export function useTidalForensics() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [resultData, setResultData] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
-  const [visualTab, setVisualTab] = useState(TAB_COMPARISON);
+  const [visualTab, setVisualTab] = useState(TAB_ORIGINAL);
   const [analyticsMode, setAnalyticsMode] = useState(ANALYTICS_MODE_SIMPLE);
   const [isDemoLoading, setIsDemoLoading] = useState(false);
-  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [soundEnabled, setSoundEnabled] = useState(false);
   const [comparisonViews, setComparisonViews] = useState(EMPTY_COMPARISON_VIEWS);
 
   const requestRef = useRef({
@@ -84,7 +84,7 @@ export function useTidalForensics() {
   const uploadSourceRef = useRef("browse");
   const committedSettingsRef = useRef(DEFAULT_SETTINGS);
   const audioContextRef = useRef(null);
-  const soundEnabledRef = useRef(true);
+  const soundEnabledRef = useRef(false);
 
   useEffect(() => {
     let active = true;
@@ -278,7 +278,7 @@ export function useTidalForensics() {
           : "The API rejected the request or the forensic model is unavailable.";
 
       setErrorMessage(message);
-      setVisualTab(TAB_COMPARISON);
+      setVisualTab(TAB_ORIGINAL);
       playTone("error");
       trackTidalEvent("inference_failed", {
         failure_kind: failureKind,
@@ -313,7 +313,7 @@ export function useTidalForensics() {
     setSelectedFile(file);
     setPreviewDataUrl(nextPreviewDataUrl);
     setResultsVisible(true);
-    setVisualTab(TAB_COMPARISON);
+    setVisualTab(TAB_ORIGINAL);
 
     trackTidalEvent("image_upload_selected", {
       upload_source: source,
@@ -352,7 +352,7 @@ export function useTidalForensics() {
     } catch {
       setResultsVisible(true);
       setResultData(null);
-      setVisualTab(TAB_COMPARISON);
+      setVisualTab(TAB_ORIGINAL);
       setErrorMessage(
         "The bundled demo image could not be loaded. Please try a manual upload."
       );
@@ -382,7 +382,7 @@ export function useTidalForensics() {
     setResultsVisible(false);
     setIsAnalyzing(false);
     setComparisonViews(EMPTY_COMPARISON_VIEWS);
-    setVisualTab(TAB_COMPARISON);
+    setVisualTab(TAB_ORIGINAL);
   }
 
   function updateSetting(name, value) {

@@ -3,7 +3,9 @@
 import {
   ANALYTICS_MODE_ADVANCED,
   PRESET_LABELS,
-  TAB_COMPARISON,
+  TAB_MASK,
+  TAB_MASK_ON_ORIGINAL,
+  TAB_ORIGINAL,
   clamp,
   formatCount,
   formatRatioPercent,
@@ -600,6 +602,7 @@ export function ResultsPanel({
   const maskDataUrl = resultData?.mask_base64
     ? `data:image/png;base64,${resultData.mask_base64}`
     : "";
+  const hasMask = comparisonViews.hasMask;
   const appliedSettings = resultData?.applied_settings || {};
   const finalPixels = Number(resultData?.tampered_pixel_count || 0);
   const decisionThreshold = Number(appliedSettings.mask_area_threshold || 0);
@@ -685,129 +688,115 @@ export function ResultsPanel({
                 <rect x="3" y="3" width="18" height="18" rx="2" />
                 <path d="M7 16l3-3 2 2 5-5" />
               </svg>
-              Visual Comparison
+              Visual Views
             </div>
             <p>
-              Compare the uploaded image, isolated detected region, and a red
-              forensic overlay. Switch to heatmap when you want the raw
-              localization mask.
+              Review the source frame, the backend mask output, and the
+              composited overlay without switching into a separate comparison
+              layout.
             </p>
           </div>
           <div className="visual-tabs" role="tablist" aria-label="Result visualizations">
             <button
-              className={`visual-tab ${visualTab === TAB_COMPARISON ? "is-active" : ""}`.trim()}
+              className={`visual-tab ${visualTab === TAB_ORIGINAL ? "is-active" : ""}`.trim()}
               type="button"
               role="tab"
-              aria-selected={visualTab === TAB_COMPARISON}
-              onClick={() => onVisualTabChange(TAB_COMPARISON)}
+              aria-selected={visualTab === TAB_ORIGINAL}
+              onClick={() => onVisualTabChange(TAB_ORIGINAL)}
             >
-              Comparison
+              Original
             </button>
             <button
-              className={`visual-tab ${visualTab !== TAB_COMPARISON ? "is-active" : ""}`.trim()}
+              className={`visual-tab ${visualTab === TAB_MASK ? "is-active" : ""}`.trim()}
               type="button"
               role="tab"
-              aria-selected={visualTab !== TAB_COMPARISON}
-              onClick={() => onVisualTabChange("heatmap")}
+              aria-selected={visualTab === TAB_MASK}
+              onClick={() => onVisualTabChange(TAB_MASK)}
             >
-              Heatmap
+              Mask
+            </button>
+            <button
+              className={`visual-tab ${visualTab === TAB_MASK_ON_ORIGINAL ? "is-active" : ""}`.trim()}
+              type="button"
+              role="tab"
+              aria-selected={visualTab === TAB_MASK_ON_ORIGINAL}
+              onClick={() => onVisualTabChange(TAB_MASK_ON_ORIGINAL)}
+            >
+              Mask on Original
             </button>
           </div>
         </div>
 
         <div
-          className={`visual-panel ${visualTab === TAB_COMPARISON ? "is-active" : ""}`.trim()}
-          hidden={visualTab !== TAB_COMPARISON}
+          className={`visual-panel ${visualTab === TAB_ORIGINAL ? "is-active" : ""}`.trim()}
+          hidden={visualTab !== TAB_ORIGINAL}
         >
-          <div className="comparison-grid">
-            <figure className="comparison-card">
-              <div className="comparison-frame">
-                {comparisonViews.originalSrc ? (
-                  <img
-                    src={comparisonViews.originalSrc}
-                    alt="Original uploaded image"
-                  />
-                ) : null}
-              </div>
-              <figcaption>
-                <h4>Original Image</h4>
-                <p>Uploaded frame used as the source for the forensic pass.</p>
-              </figcaption>
-            </figure>
-
-            <figure className="comparison-card comparison-card--blackout">
-              <div className="comparison-frame comparison-frame--black">
-                {comparisonViews.detectedRegionSrc ? (
-                  <img
-                    src={comparisonViews.detectedRegionSrc}
-                    alt="Detected region on black background"
-                  />
-                ) : null}
-                {!comparisonViews.hasMask ? (
-                  <div className="comparison-empty">No detected region</div>
-                ) : null}
-              </div>
-              <figcaption>
-                <h4>Detected Region</h4>
-                <p>
-                  Only mask-positive pixels are preserved, everything else is
-                  suppressed to black.
-                </p>
-              </figcaption>
-            </figure>
-
-            <figure className="comparison-card">
-              <div className="comparison-frame">
-                {comparisonViews.overlaySrc ? (
-                  <img
-                    src={comparisonViews.overlaySrc}
-                    alt="Detected region shown in red"
-                  />
-                ) : null}
-                {!comparisonViews.hasMask ? (
-                  <div className="comparison-empty">No detected region</div>
-                ) : null}
-              </div>
-              <figcaption>
-                <h4>Red Mask</h4>
-                <p>
-                  Only the detected mask region is rendered in red, matching
-                  the heatmap footprint.
-                </p>
-              </figcaption>
-            </figure>
-          </div>
+          <figure className="visual-card">
+            <div className="visual-frame">
+              {comparisonViews.originalSrc ? (
+                <img
+                  src={comparisonViews.originalSrc}
+                  alt="Original uploaded image"
+                />
+              ) : (
+                <div className="comparison-empty">No image available yet</div>
+              )}
+            </div>
+            <figcaption>
+              <h4>Original Image</h4>
+              <p>Uploaded frame used as the source for the forensic pass.</p>
+            </figcaption>
+          </figure>
         </div>
 
         <div
-          className={`visual-panel ${visualTab !== TAB_COMPARISON ? "is-active" : ""}`.trim()}
-          hidden={visualTab === TAB_COMPARISON}
+          className={`visual-panel ${visualTab === TAB_MASK ? "is-active" : ""}`.trim()}
+          hidden={visualTab !== TAB_MASK}
         >
-          <div className="result-mask">
-            <div className="result-mask-title">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <rect x="3" y="3" width="18" height="18" rx="2" />
-                <line x1="3" y1="9" x2="21" y2="9" />
-                <line x1="9" y1="3" x2="9" y2="21" />
-              </svg>
-              Tamper Heatmap
+          <figure className="visual-card">
+            <div className="visual-frame visual-frame--mask">
+              {hasMask && maskDataUrl ? (
+                <img
+                  src={maskDataUrl}
+                  alt="Tamper localization heatmap showing highlighted tampered regions"
+                />
+              ) : (
+                <div className="comparison-empty">No detected region</div>
+              )}
             </div>
-            {maskDataUrl ? (
-              <img
-                src={maskDataUrl}
-                alt="Tamper localization heatmap showing highlighted tampered regions"
-              />
-            ) : (
-              <div className="comparison-empty">No heatmap available yet</div>
-            )}
-          </div>
+            <figcaption>
+              <h4>Mask</h4>
+              <p>
+                Direct backend `mask_base64` output showing the detected
+                localization footprint.
+              </p>
+            </figcaption>
+          </figure>
+        </div>
+
+        <div
+          className={`visual-panel ${visualTab === TAB_MASK_ON_ORIGINAL ? "is-active" : ""}`.trim()}
+          hidden={visualTab !== TAB_MASK_ON_ORIGINAL}
+        >
+          <figure className="visual-card">
+            <div className="visual-frame">
+              {hasMask && comparisonViews.overlaySrc ? (
+                <img
+                  src={comparisonViews.overlaySrc}
+                  alt="Detected mask shown as a red overlay on the original image"
+                />
+              ) : (
+                <div className="comparison-empty">No detected region</div>
+              )}
+            </div>
+            <figcaption>
+              <h4>Mask on Original</h4>
+              <p>
+                Original image with the detected mask composited in red at the
+                exact backend footprint.
+              </p>
+            </figcaption>
+          </figure>
         </div>
       </div>
 

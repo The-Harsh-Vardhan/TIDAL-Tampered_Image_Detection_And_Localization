@@ -1,3 +1,3 @@
-*
-!frontend/
-!frontend/**
+# The Vercel project rootDirectory already points at `frontend`.
+# Keep the repo-level ignore empty so CLI source deployments don't strip the
+# scoped app directory out from under the build.

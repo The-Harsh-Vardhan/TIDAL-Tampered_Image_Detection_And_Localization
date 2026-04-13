@@ -1,7 +1,7 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { FadeIn } from "@/components/fade-in";
 import { ResultsPanel } from "@/components/results-panel";
@@ -23,6 +23,12 @@ function RangeField({
   title,
   value,
 }) {
+  const [inputValue, setInputValue] = useState(String(displayValue));
+
+  useEffect(() => {
+    setInputValue(String(displayValue));
+  }, [displayValue]);
+
   function clampValue(nextValue) {
     if (!Number.isFinite(nextValue)) {
       return null;
@@ -43,19 +49,40 @@ function RangeField({
   }
 
   function handleManualCommit(event) {
-    const nextValue = clampValue(Number(event.currentTarget.value));
-    if (nextValue === null) {
+    const rawValue = event.currentTarget.value.trim();
+    if (!rawValue) {
+      setInputValue(String(displayValue));
       return;
     }
+
+    const nextValue = clampValue(Number(rawValue));
+    if (nextValue === null) {
+      setInputValue(String(displayValue));
+      return;
+    }
+    setInputValue(String(nextValue));
     onCommit(nextValue);
   }
 
   function handleManualChange(event) {
-    const nextValue = clampValue(Number(event.currentTarget.value));
-    if (nextValue === null) {
+    const nextValue = event.currentTarget.value;
+    setInputValue(nextValue);
+
+    if (nextValue.trim() === "") {
       return;
     }
-    onDraftChange(nextValue);
+
+    const parsedValue = Number(nextValue);
+    if (!Number.isFinite(parsedValue)) {
+      return;
+    }
+
+    const clampedValue = clampValue(parsedValue);
+    if (clampedValue === null) {
+      return;
+    }
+
+    onDraftChange(clampedValue);
   }
 
   return (
@@ -80,7 +107,7 @@ function RangeField({
           min={min}
           max={max}
           step={step}
-          value={displayValue}
+          value={inputValue}
           aria-label={`${title} manual value`}
           onChange={handleManualChange}
           onBlur={handleManualCommit}
@@ -319,7 +346,7 @@ export function DemoWorkspace({
                 />
               </div>
               <p className="rail-note">
-                Simple shows the verdict, comparisons, coverage, and decision
+                Simple shows the verdict, visual tabs, coverage, and decision
                 pressure. Advanced adds controls and diagnostics.
               </p>
               <label className="sound-toggle">
@@ -338,14 +365,14 @@ export function DemoWorkspace({
                 <h3>Forensic Controls</h3>
                 <p>
                   Tune the notebook-style thresholds live. Higher values are
-                  stricter.
+                  stricter, and manual commits clamp to the supported UI range.
                 </p>
               </div>
               <div className="controls-grid">
                 <RangeField
                   controlId="pixelThreshold"
                   title="Pixel threshold"
-                  helper="0.01 to 0.99. Higher means fewer pixels survive."
+                  helper="Range 0.01 to 0.99. Type a value or drag the slider; higher means fewer pixels survive."
                   min={0.01}
                   max={0.99}
                   step={0.01}
@@ -357,7 +384,7 @@ export function DemoWorkspace({
                 <RangeField
                   controlId="maskAreaThreshold"
                   title="Image area threshold"
-                  helper="0 to 200000. Higher requires a larger suspicious region."
+                  helper="Range 0 to 200000 px. Higher requires a larger suspicious region before the image flips to tampered."
                   min={0}
                   max={200000}
                   step={50}
@@ -371,7 +398,7 @@ export function DemoWorkspace({
                 <RangeField
                   controlId="minPredictionAreaPixels"
                   title="Minimum predicted area"
-                  helper="0 to 200000. Higher removes tiny blobs after thresholding."
+                  helper="Range 0 to 200000 px. Higher removes tiny blobs after thresholding; out-of-range entries clamp on commit."
                   min={0}
                   max={200000}
                   step={50}
@@ -387,7 +414,7 @@ export function DemoWorkspace({
                 <RangeField
                   controlId="reviewConfidenceThreshold"
                   title="Review confidence"
-                  helper="0.01 to 0.99. Higher flags more borderline cases."
+                  helper="Range 0.01 to 0.99. Higher flags more borderline cases for manual review."
                   min={0.01}
                   max={0.99}
                   step={0.01}
@@ -404,7 +431,7 @@ export function DemoWorkspace({
               <label className="control-select" htmlFor="thresholdSensitivityPreset">
                 <span className="control-title">Threshold sensitivity preset</span>
                 <span className="control-helper">
-                  This affects the comparison chart, not the live verdict
+                  This affects the sensitivity chart, not the live verdict
                   threshold.
                 </span>
                 <select
@@ -462,8 +489,8 @@ export function DemoWorkspace({
                 <span className="workspace-empty-tag">No scan loaded</span>
                 <h3>Run Demo to see a full forensic readout instantly.</h3>
                 <p>
-                  The console will render original, black-background detection,
-                  red overlay, coverage pixels, and the decision threshold
+                  The console will render the original image, backend mask,
+                  mask-on-original overlay, coverage pixels, and decision
                   pressure without needing any new backend route.
                 </p>
                 <button

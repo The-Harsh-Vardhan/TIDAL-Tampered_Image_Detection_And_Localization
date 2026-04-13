@@ -1,5 +1,6 @@
-export const TAB_COMPARISON = "comparison";
-export const TAB_HEATMAP = "heatmap";
+export const TAB_ORIGINAL = "original";
+export const TAB_MASK = "mask";
+export const TAB_MASK_ON_ORIGINAL = "mask_on_original";
 export const ANALYTICS_MODE_SIMPLE = "simple";
 export const ANALYTICS_MODE_ADVANCED = "advanced";
 export const DEMO_IMAGE_PATH = "/demo/tamper-sample.jpg";

@@ -90,9 +90,8 @@ export async function buildComparisonViews(
   tintedMaskCtx.globalCompositeOperation = "source-over";
 
   const { canvas: overlayCanvas, ctx: overlayCtx } = makeCanvas(width, height);
-  overlayCtx.fillStyle = "#000000";
-  overlayCtx.fillRect(0, 0, width, height);
   if (hasMask) {
+    overlayCtx.drawImage(sourceCanvas, 0, 0);
     overlayCtx.globalAlpha = overlayAlpha;
     overlayCtx.drawImage(tintedMaskCanvas, 0, 0);
     overlayCtx.globalAlpha = 1;
@@ -101,7 +100,7 @@ export async function buildComparisonViews(
   return {
     originalSrc: previewDataUrl,
     detectedRegionSrc: blackCanvas.toDataURL("image/png"),
-    overlaySrc: overlayCanvas.toDataURL("image/png"),
+    overlaySrc: hasMask ? overlayCanvas.toDataURL("image/png") : "",
     hasMask,
   };
 }
