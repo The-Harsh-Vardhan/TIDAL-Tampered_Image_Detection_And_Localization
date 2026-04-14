@@ -7,6 +7,7 @@ import {
   ANALYTICS_MODE_SIMPLE,
   API_BASE,
   DEFAULT_SETTINGS,
+  DEMO_SETTINGS,
   DEMO_IMAGE_PATH,
   MAX_FILE_SIZE_BYTES,
   TAB_ORIGINAL,
@@ -112,9 +113,16 @@ export function useTidalForensics() {
       const maskDataUrl = resultData?.mask_base64
         ? `data:image/png;base64,${resultData.mask_base64}`
         : "";
+      const overlayDataUrl = resultData?.overlay_base64
+        ? `data:image/png;base64,${resultData.overlay_base64}`
+        : "";
 
       try {
-        const views = await buildComparisonViews(previewDataUrl, maskDataUrl);
+        const views = await buildComparisonViews(
+          previewDataUrl,
+          maskDataUrl,
+          overlayDataUrl
+        );
         if (!cancelled) {
           setComparisonViews(views);
         }
@@ -125,8 +133,8 @@ export function useTidalForensics() {
               ? {
                   originalSrc: previewDataUrl,
                   detectedRegionSrc: "",
-                  overlaySrc: "",
-                  hasMask: false,
+                  overlaySrc: overlayDataUrl,
+                  hasMask: Boolean(overlayDataUrl),
                 }
               : EMPTY_COMPARISON_VIEWS
           );
@@ -294,7 +302,7 @@ export function useTidalForensics() {
     }
   }
 
-  async function selectFile(file, source = "browse") {
+  async function selectFile(file, source = "browse", overrideSettings = null) {
     if (!VALID_FILE_TYPES.includes(file.type)) {
       window.alert("Please upload a JPEG, PNG, or WebP image.");
       return false;
@@ -305,11 +313,16 @@ export function useTidalForensics() {
       return false;
     }
 
+    const nextSettings = overrideSettings
+      ? { ...overrideSettings }
+      : { ...settings };
+
     uploadSourceRef.current = source;
-    committedSettingsRef.current = settings;
+    committedSettingsRef.current = nextSettings;
 
     const nextPreviewDataUrl = await readFileAsDataUrl(file);
 
+    setSettings(nextSettings);
     setSelectedFile(file);
     setPreviewDataUrl(nextPreviewDataUrl);
     setResultsVisible(true);
@@ -321,7 +334,7 @@ export function useTidalForensics() {
       file_size_bucket: getFileSizeBucket(file.size),
     });
 
-    await submitImage(file, settings);
+    await submitImage(file, nextSettings);
     return true;
   }
 
@@ -344,11 +357,11 @@ export function useTidalForensics() {
       }
 
       const blob = await response.blob();
-      const demoFile = new File([blob], "tidal-demo-tamper-sample.jpg", {
-        type: blob.type || "image/jpeg",
+      const demoFile = new File([blob], "tidal-gemini-demo.png", {
+        type: blob.type || "image/png",
       });
 
-      await selectFile(demoFile, "demo");
+      await selectFile(demoFile, "demo", DEMO_SETTINGS);
     } catch {
       setResultsVisible(true);
       setResultData(null);
@@ -362,6 +375,8 @@ export function useTidalForensics() {
   }
 
   function clearUpload() {
+    const resetToDefaultSettings = uploadSourceRef.current === "demo";
+
     if (selectedFile) {
       trackTidalEvent("image_upload_cleared", {
         upload_source: uploadSourceRef.current,
@@ -383,6 +398,12 @@ export function useTidalForensics() {
     setIsAnalyzing(false);
     setComparisonViews(EMPTY_COMPARISON_VIEWS);
     setVisualTab(TAB_ORIGINAL);
+    uploadSourceRef.current = "browse";
+
+    if (resetToDefaultSettings) {
+      committedSettingsRef.current = DEFAULT_SETTINGS;
+      setSettings(DEFAULT_SETTINGS);
+    }
   }
 
   function updateSetting(name, value) {

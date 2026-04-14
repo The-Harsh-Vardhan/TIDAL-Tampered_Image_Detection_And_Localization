@@ -9,6 +9,7 @@ import {
   clamp,
   formatCount,
   formatRatioPercent,
+  formatThresholdValue,
 } from "@/lib/forensic-formatters";
 
 function VerdictIcon({ variant }) {
@@ -171,10 +172,10 @@ function renderSettingsPills(appliedSettings = {}) {
   const preset = appliedSettings.threshold_sensitivity_preset || "balanced";
 
   return [
-    `Pixel ${Number(appliedSettings.pixel_threshold).toFixed(2)}`,
+    `Pixel ${formatThresholdValue(appliedSettings.pixel_threshold)}`,
     `Image area ${formatCount(appliedSettings.mask_area_threshold)} px`,
     `Min area ${formatCount(appliedSettings.min_prediction_area_pixels)} px`,
-    `Review ${Number(appliedSettings.review_confidence_threshold).toFixed(2)}`,
+    `Review ${formatThresholdValue(appliedSettings.review_confidence_threshold, 2)}`,
     `${preset} · ${PRESET_LABELS[preset]}`,
   ];
 }
@@ -792,8 +793,8 @@ export function ResultsPanel({
             <figcaption>
               <h4>Mask on Original</h4>
               <p>
-                Original image with the detected mask composited in red at the
-                exact backend footprint.
+                Server-generated `overlay_base64` using the final filtered mask
+                at the exact inference footprint.
               </p>
             </figcaption>
           </figure>

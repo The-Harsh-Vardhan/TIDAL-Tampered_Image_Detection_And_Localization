@@ -25,10 +25,11 @@ This deployment keeps the legacy response fields for compatibility and adds note
 - `needs_review`
 - `threshold_sensitivity`
 - `applied_settings`
+- `overlay_base64`
 
 ## Endpoints
 
-- `POST /infer` — Upload image → tamper mask + verdict
+- `POST /infer` — Upload image → tamper mask, overlay, and verdict
 - `GET /health` — Liveness check
 - `GET /ready` — Model readiness
 - `GET /version` — Version info

@@ -19,13 +19,14 @@ function makeCanvas(width, height, smoothingEnabled = true) {
 export async function buildComparisonViews(
   previewDataUrl,
   maskDataUrl,
+  overlayDataUrl = "",
   overlayAlpha = 0.4
 ) {
   if (!previewDataUrl) {
     return {
       originalSrc: "",
       detectedRegionSrc: "",
-      overlaySrc: "",
+      overlaySrc: overlayDataUrl,
       hasMask: false,
     };
   }
@@ -34,7 +35,7 @@ export async function buildComparisonViews(
     return {
       originalSrc: previewDataUrl,
       detectedRegionSrc: "",
-      overlaySrc: "",
+      overlaySrc: overlayDataUrl,
       hasMask: false,
     };
   }
@@ -100,7 +101,9 @@ export async function buildComparisonViews(
   return {
     originalSrc: previewDataUrl,
     detectedRegionSrc: blackCanvas.toDataURL("image/png"),
-    overlaySrc: hasMask ? overlayCanvas.toDataURL("image/png") : "",
+    overlaySrc: hasMask
+      ? overlayDataUrl || overlayCanvas.toDataURL("image/png")
+      : "",
     hasMask,
   };
 }

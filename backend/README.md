@@ -8,7 +8,7 @@ FastAPI-based inference server for Tampered Image Detection & Localization.
 |--------|------|-------------|
 | `GET` | `/health` | Liveness probe — always 200 if alive |
 | `GET` | `/ready` | Readiness probe — 200 only when model loaded |
-| `POST` | `/infer` | Upload image → tamper detection result + mask |
+| `POST` | `/infer` | Upload image → tamper detection result + mask/overlay |
 | `GET` | `/metrics` | Prometheus metrics |
 | `GET` | `/version` | API and model version info |
 
@@ -32,6 +32,9 @@ DEVICE=cpu python -m uvicorn backend.app:app --host 0.0.0.0 --port 8000 --reload
 - optional `review_confidence_threshold`
 - optional `threshold_sensitivity_preset`
 
+`pixel_threshold` accepts `0.001` to `0.95`, which keeps the demo-only `0.004`
+setting valid.
+
 **Response:**
 ```json
 {
@@ -45,9 +48,9 @@ DEVICE=cpu python -m uvicorn backend.app:app --host 0.0.0.0 --port 8000 --reload
   "needs_review": false,
   "model_version": "vR.P.30.1",
   "applied_settings": {
-    "pixel_threshold": 0.7,
-    "mask_area_threshold": 400,
-    "min_prediction_area_pixels": 0,
+    "pixel_threshold": 0.004,
+    "mask_area_threshold": 10000,
+    "min_prediction_area_pixels": 15000,
     "review_confidence_threshold": 0.65,
     "threshold_sensitivity_preset": "balanced",
     "threshold_sensitivity_levels": [0.3, 0.5, 0.7]
@@ -63,7 +66,8 @@ DEVICE=cpu python -m uvicorn backend.app:app --host 0.0.0.0 --port 8000 --reload
   ],
   "inference_time_ms": 234.5,
   "mask_shape": [384, 384],
-  "mask_base64": "iVBORw0KGgoAAAANS..."
+  "mask_base64": "iVBORw0KGgoAAAANS...",
+  "overlay_base64": "iVBORw0KGgoAAAANS..."
 }
 ```
 

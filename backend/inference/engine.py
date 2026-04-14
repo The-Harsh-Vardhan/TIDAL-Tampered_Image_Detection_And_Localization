@@ -14,7 +14,7 @@ from .model_loader import ModelLoader
 from .preprocessing import DEFAULT_IMAGE_SIZE, preprocess_image
 
 logger = logging.getLogger(__name__)
-MIN_PIXEL_THRESHOLD = 0.05
+MIN_PIXEL_THRESHOLD = 0.001
 MAX_PIXEL_THRESHOLD = 0.95
 MIN_REVIEW_CONFIDENCE_THRESHOLD = 0.05
 MAX_REVIEW_CONFIDENCE_THRESHOLD = 0.95
@@ -85,9 +85,27 @@ def is_tampered_prediction(tampered_pixel_count: int, mask_area_threshold: int) 
     return tampered_pixel_count >= mask_area_threshold
 
 
+def build_overlay_image(
+    image: Image.Image,
+    mask: np.ndarray,
+    overlay_alpha: float = 0.42,
+) -> np.ndarray | None:
+    if int(mask.sum()) == 0:
+        return None
+
+    height, width = mask.shape
+    resized_image = image.resize((width, height), Image.Resampling.BILINEAR)
+    base_pixels = np.asarray(resized_image, dtype=np.float32)
+    overlay_color = np.array([255.0, 59.0, 48.0], dtype=np.float32)
+    alpha_mask = (mask.astype(np.float32) * overlay_alpha)[..., None]
+    blended = (base_pixels * (1.0 - alpha_mask)) + (overlay_color * alpha_mask)
+    return np.clip(blended, 0, 255).astype(np.uint8)
+
+
 @dataclass(slots=True)
 class InferenceResult:
     mask: np.ndarray
+    overlay: np.ndarray | None
     is_tampered: bool
     confidence: float
     confidence_mean_prob: float
@@ -172,6 +190,7 @@ class TIDALInferenceEngine:
         elapsed_ms = (time.perf_counter() - t0) * 1000
         return InferenceResult(
             mask=mask,
+            overlay=build_overlay_image(image, mask),
             is_tampered=is_tampered,
             confidence=confidence,
             confidence_mean_prob=confidence_mean_prob,

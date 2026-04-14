@@ -9,6 +9,7 @@ import {
   ANALYTICS_MODE_ADVANCED,
   ANALYTICS_MODE_SIMPLE,
   PRESET_LABELS,
+  formatThresholdValue,
 } from "@/lib/forensic-formatters";
 
 function RangeField({
@@ -263,7 +264,7 @@ export function DemoWorkspace({
               <p className="rail-note">
                 {isDemoLoading
                   ? "Running demo image through HF inference..."
-                  : "Use the sample if you do not have a CASIA-style tampered image ready."}
+                  : "Demo loads the bundled Gemini sample with the validated 0.004 / 10000 / 15000 profile."}
               </p>
             </div>
 
@@ -372,12 +373,12 @@ export function DemoWorkspace({
                 <RangeField
                   controlId="pixelThreshold"
                   title="Pixel threshold"
-                  helper="Range 0.01 to 0.99. Type a value or drag the slider; higher means fewer pixels survive."
-                  min={0.01}
+                  helper="Range 0.001 to 0.99. Type a value or drag the slider; higher means fewer pixels survive. Demo uses 0.004."
+                  min={0.001}
                   max={0.99}
-                  step={0.01}
+                  step={0.001}
                   value={settings.pixelThreshold}
-                  displayValue={Number(settings.pixelThreshold).toFixed(2)}
+                  displayValue={formatThresholdValue(settings.pixelThreshold)}
                   onDraftChange={(value) => onUpdateSetting("pixelThreshold", value)}
                   onCommit={(value) => onCommitSetting("pixelThreshold", value)}
                 />
@@ -490,8 +491,8 @@ export function DemoWorkspace({
                 <h3>Run Demo to see a full forensic readout instantly.</h3>
                 <p>
                   The console will render the original image, backend mask,
-                  mask-on-original overlay, coverage pixels, and decision
-                  pressure without needing any new backend route.
+                  server overlay, coverage pixels, and decision pressure using
+                  the tuned demo-only forensic settings.
                 </p>
                 <button
                   className="btn btn-primary"

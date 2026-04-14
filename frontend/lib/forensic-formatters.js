@@ -3,7 +3,7 @@ export const TAB_MASK = "mask";
 export const TAB_MASK_ON_ORIGINAL = "mask_on_original";
 export const ANALYTICS_MODE_SIMPLE = "simple";
 export const ANALYTICS_MODE_ADVANCED = "advanced";
-export const DEMO_IMAGE_PATH = "/demo/tamper-sample.jpg";
+export const DEMO_IMAGE_PATH = "/demo/gemini-demo.png";
 
 export const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ||
@@ -19,6 +19,13 @@ export const DEFAULT_SETTINGS = {
   minPredictionAreaPixels: 0,
   reviewConfidenceThreshold: 0.65,
   thresholdSensitivityPreset: "balanced",
+};
+
+export const DEMO_SETTINGS = {
+  ...DEFAULT_SETTINGS,
+  pixelThreshold: 0.004,
+  maskAreaThreshold: 10000,
+  minPredictionAreaPixels: 15000,
 };
 
 export const PRESET_LABELS = {
@@ -46,6 +53,14 @@ export function formatRatioPercent(value) {
   return `${(Number(value || 0) * 100).toFixed(2)}%`;
 }
 
+export function formatThresholdValue(value, precision = 4) {
+  const numericValue = Number(value || 0);
+  return numericValue
+    .toFixed(precision)
+    .replace(/\.?0+$/, "")
+    .replace(/^-0$/, "0");
+}
+
 export function getFileSizeBucket(size) {
   if (size < 1_000_000) {
     return "lt_1mb";
@@ -61,7 +76,7 @@ export function getFileSizeBucket(size) {
 
 export function getAppliedSettings(settings) {
   return {
-    pixel_threshold: Number(settings.pixelThreshold).toFixed(2),
+    pixel_threshold: Number(settings.pixelThreshold).toFixed(4),
     mask_area_threshold: String(Math.round(Number(settings.maskAreaThreshold))),
     min_prediction_area_pixels: String(
       Math.round(Number(settings.minPredictionAreaPixels))

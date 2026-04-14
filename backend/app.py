@@ -172,9 +172,21 @@ async def infer(
         REQUEST_LATENCY.observe(time.perf_counter() - t0)
         REQUEST_COUNT.labels(status="success").inc()
     mask_img = Image.fromarray((result.mask * 255).astype(np.uint8), mode="L")
-    buf = io.BytesIO()
-    mask_img.save(buf, format="PNG")
-    return {**result.to_dict(), "mask_base64": base64.b64encode(buf.getvalue()).decode("ascii")}
+    mask_buf = io.BytesIO()
+    mask_img.save(mask_buf, format="PNG")
+
+    overlay_base64 = ""
+    if result.overlay is not None:
+        overlay_img = Image.fromarray(result.overlay, mode="RGB")
+        overlay_buf = io.BytesIO()
+        overlay_img.save(overlay_buf, format="PNG")
+        overlay_base64 = base64.b64encode(overlay_buf.getvalue()).decode("ascii")
+
+    return {
+        **result.to_dict(),
+        "mask_base64": base64.b64encode(mask_buf.getvalue()).decode("ascii"),
+        "overlay_base64": overlay_base64,
+    }
 
 
 @app.get("/metrics")

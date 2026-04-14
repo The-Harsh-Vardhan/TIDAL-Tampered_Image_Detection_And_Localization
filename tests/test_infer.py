@@ -51,6 +51,8 @@ def test_infer_returns_legacy_and_diagnostic_fields(sample_image_bytes):
     assert "tampered_pixel_count" in payload
     assert "needs_review" in payload
     assert "threshold_sensitivity" in payload
+    assert "mask_base64" in payload
+    assert "overlay_base64" in payload
     assert payload["model_version"] == "vR.P.30.1"
     assert payload["applied_settings"]["threshold_sensitivity_preset"] == "balanced"
 
@@ -60,9 +62,9 @@ def test_infer_accepts_runtime_knobs(sample_image_bytes):
         response = client.post(
             "/infer",
             data={
-                "pixel_threshold": "0.85",
-                "mask_area_threshold": "50",
-                "min_prediction_area_pixels": "25",
+                "pixel_threshold": "0.004",
+                "mask_area_threshold": "10000",
+                "min_prediction_area_pixels": "15000",
                 "review_confidence_threshold": "0.80",
                 "threshold_sensitivity_preset": "strict",
             },
@@ -71,12 +73,13 @@ def test_infer_accepts_runtime_knobs(sample_image_bytes):
     assert response.status_code == 200
     payload = response.json()
     settings = payload["applied_settings"]
-    assert settings["pixel_threshold"] == 0.85
-    assert settings["mask_area_threshold"] == 50
-    assert settings["min_prediction_area_pixels"] == 25
+    assert settings["pixel_threshold"] == 0.004
+    assert settings["mask_area_threshold"] == 10000
+    assert settings["min_prediction_area_pixels"] == 15000
     assert settings["review_confidence_threshold"] == 0.8
     assert settings["threshold_sensitivity_preset"] == "strict"
     assert settings["threshold_sensitivity_levels"] == [0.5, 0.7, 0.85]
+    assert isinstance(payload["overlay_base64"], str)
 
 
 def test_infer_rejects_out_of_range_knobs(sample_image_bytes):
