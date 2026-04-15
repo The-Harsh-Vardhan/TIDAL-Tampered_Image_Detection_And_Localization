@@ -603,7 +603,15 @@ export function ResultsPanel({
   const maskDataUrl = resultData?.mask_base64
     ? `data:image/png;base64,${resultData.mask_base64}`
     : "";
-  const hasMask = comparisonViews.hasMask;
+  const overlayDataUrl = resultData?.overlay_base64
+    ? `data:image/png;base64,${resultData.overlay_base64}`
+    : "";
+  const hasMask =
+    comparisonViews.hasMask || Number(resultData?.tampered_pixel_count || 0) > 0;
+  const hasOverlay =
+    comparisonViews.hasOverlay ||
+    Boolean(overlayDataUrl) ||
+    Number(resultData?.tampered_pixel_count || 0) > 0;
   const appliedSettings = resultData?.applied_settings || {};
   const finalPixels = Number(resultData?.tampered_pixel_count || 0);
   const decisionThreshold = Number(appliedSettings.mask_area_threshold || 0);
@@ -756,11 +764,15 @@ export function ResultsPanel({
         >
           <figure className="visual-card">
             <div className="visual-frame visual-frame--mask">
-              {hasMask && maskDataUrl ? (
-                <img
-                  src={maskDataUrl}
-                  alt="Tamper localization heatmap showing highlighted tampered regions"
-                />
+              {hasMask ? (
+                maskDataUrl ? (
+                  <img
+                    src={maskDataUrl}
+                    alt="Tamper localization heatmap showing highlighted tampered regions"
+                  />
+                ) : (
+                  <div className="comparison-empty">Mask unavailable</div>
+                )
               ) : (
                 <div className="comparison-empty">No detected region</div>
               )}
@@ -781,11 +793,15 @@ export function ResultsPanel({
         >
           <figure className="visual-card">
             <div className="visual-frame">
-              {hasMask && comparisonViews.overlaySrc ? (
-                <img
-                  src={comparisonViews.overlaySrc}
-                  alt="Detected mask shown as a red overlay on the original image"
-                />
+              {hasOverlay ? (
+                overlayDataUrl ? (
+                  <img
+                    src={overlayDataUrl}
+                    alt="Detected mask shown as a red overlay on the original image"
+                  />
+                ) : (
+                  <div className="comparison-empty">Overlay unavailable</div>
+                )
               ) : (
                 <div className="comparison-empty">No detected region</div>
               )}

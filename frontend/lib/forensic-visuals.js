@@ -19,15 +19,15 @@ function makeCanvas(width, height, smoothingEnabled = true) {
 export async function buildComparisonViews(
   previewDataUrl,
   maskDataUrl,
-  overlayDataUrl = "",
-  overlayAlpha = 0.4
+  hasMaskFromInference = false
 ) {
   if (!previewDataUrl) {
     return {
       originalSrc: "",
       detectedRegionSrc: "",
-      overlaySrc: overlayDataUrl,
+      overlaySrc: "",
       hasMask: false,
+      hasOverlay: false,
     };
   }
 
@@ -35,8 +35,9 @@ export async function buildComparisonViews(
     return {
       originalSrc: previewDataUrl,
       detectedRegionSrc: "",
-      overlaySrc: overlayDataUrl,
-      hasMask: false,
+      overlaySrc: "",
+      hasMask: hasMaskFromInference,
+      hasOverlay: false,
     };
   }
 
@@ -59,7 +60,7 @@ export async function buildComparisonViews(
   scaledMaskCtx.drawImage(maskImage, 0, 0, width, height);
 
   const maskPixels = scaledMaskCtx.getImageData(0, 0, width, height).data;
-  let hasMask = false;
+  let hasMask = hasMaskFromInference;
   for (let index = 0; index < maskPixels.length; index += 4) {
     if (maskPixels[index] > 0) {
       hasMask = true;
@@ -80,30 +81,11 @@ export async function buildComparisonViews(
     blackCtx.drawImage(isolatedCanvas, 0, 0);
   }
 
-  const { canvas: tintedMaskCanvas, ctx: tintedMaskCtx } = makeCanvas(
-    width,
-    height
-  );
-  tintedMaskCtx.fillStyle = "rgb(255, 59, 48)";
-  tintedMaskCtx.fillRect(0, 0, width, height);
-  tintedMaskCtx.globalCompositeOperation = "destination-in";
-  tintedMaskCtx.drawImage(scaledMaskCanvas, 0, 0);
-  tintedMaskCtx.globalCompositeOperation = "source-over";
-
-  const { canvas: overlayCanvas, ctx: overlayCtx } = makeCanvas(width, height);
-  if (hasMask) {
-    overlayCtx.drawImage(sourceCanvas, 0, 0);
-    overlayCtx.globalAlpha = overlayAlpha;
-    overlayCtx.drawImage(tintedMaskCanvas, 0, 0);
-    overlayCtx.globalAlpha = 1;
-  }
-
   return {
     originalSrc: previewDataUrl,
     detectedRegionSrc: blackCanvas.toDataURL("image/png"),
-    overlaySrc: hasMask
-      ? overlayDataUrl || overlayCanvas.toDataURL("image/png")
-      : "",
+    overlaySrc: "",
     hasMask,
+    hasOverlay: false,
   };
 }

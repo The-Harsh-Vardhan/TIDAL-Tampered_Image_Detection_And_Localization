@@ -23,6 +23,7 @@ const EMPTY_COMPARISON_VIEWS = {
   detectedRegionSrc: "",
   overlaySrc: "",
   hasMask: false,
+  hasOverlay: false,
 };
 
 function readFileAsDataUrl(file) {
@@ -113,18 +114,18 @@ export function useTidalForensics() {
       const maskDataUrl = resultData?.mask_base64
         ? `data:image/png;base64,${resultData.mask_base64}`
         : "";
-      const overlayDataUrl = resultData?.overlay_base64
-        ? `data:image/png;base64,${resultData.overlay_base64}`
-        : "";
+      const hasMaskFromInference =
+        Number(resultData?.tampered_pixel_count || 0) > 0;
+      const hasOverlayFromInference =
+        Boolean(resultData?.overlay_base64) || hasMaskFromInference;
 
       try {
-        const views = await buildComparisonViews(
-          previewDataUrl,
-          maskDataUrl,
-          overlayDataUrl
-        );
+        const views = await buildComparisonViews(previewDataUrl, maskDataUrl, hasMaskFromInference);
         if (!cancelled) {
-          setComparisonViews(views);
+          setComparisonViews({
+            ...views,
+            hasOverlay: hasOverlayFromInference,
+          });
         }
       } catch {
         if (!cancelled) {
@@ -133,8 +134,9 @@ export function useTidalForensics() {
               ? {
                   originalSrc: previewDataUrl,
                   detectedRegionSrc: "",
-                  overlaySrc: overlayDataUrl,
-                  hasMask: Boolean(overlayDataUrl),
+                  overlaySrc: "",
+                  hasMask: hasMaskFromInference,
+                  hasOverlay: hasOverlayFromInference,
                 }
               : EMPTY_COMPARISON_VIEWS
           );
