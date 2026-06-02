@@ -3,6 +3,25 @@ import { Inter, Outfit } from "next/font/google";
 import "@/app/globals.css";
 import { AnalyticsProvider } from "@/components/analytics-provider";
 
+const DEFAULT_SITE_URL = "https://tidal-orpin.vercel.app";
+
+function resolveSiteUrl() {
+  const configuredUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (configuredUrl) {
+    return configuredUrl;
+  }
+
+  const vercelHost =
+    process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL;
+  if (vercelHost) {
+    return `https://${vercelHost}`;
+  }
+
+  return DEFAULT_SITE_URL;
+}
+
+const siteUrl = resolveSiteUrl();
+
 const inter = Inter({
   subsets: ["latin"],
   display: "swap",
@@ -16,7 +35,7 @@ const outfit = Outfit({
 });
 
 export const metadata = {
-  metadataBase: new URL("https://tidal-orpin.vercel.app"),
+  metadataBase: new URL(siteUrl),
   title: "TIDAL — Tampered Image Detection & Localization",
   description:
     "Detect and localize tampered regions in images using grayscale multi-quality ELA, CBAM-enhanced UNet segmentation, and notebook-style forensic controls.",
@@ -25,7 +44,7 @@ export const metadata = {
     description:
       "Deep learning forensic analysis using grayscale multi-quality ELA with CBAM and analyst-tunable forensic controls.",
     type: "website",
-    url: "https://tidal-orpin.vercel.app",
+    url: siteUrl,
   },
 };
 

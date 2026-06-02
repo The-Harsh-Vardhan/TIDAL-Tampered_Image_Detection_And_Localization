@@ -121,8 +121,7 @@ function getVerdictState(resultData, isAnalyzing, errorMessage) {
 function getDiagnosticState(resultData, isAnalyzing, errorMessage) {
   if (errorMessage) {
     return {
-      message:
-        "The API rejected the request or the forensic model is unavailable.",
+      message: errorMessage,
       variant: "banner-alert",
     };
   }

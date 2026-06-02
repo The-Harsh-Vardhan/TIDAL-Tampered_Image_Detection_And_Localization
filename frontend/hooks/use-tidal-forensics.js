@@ -12,6 +12,7 @@ import {
   MAX_FILE_SIZE_BYTES,
   TAB_ORIGINAL,
   VALID_FILE_TYPES,
+  createHttpError,
   getAppliedSettings,
   getFileSizeBucket,
   getInferencePayload,
@@ -53,6 +54,10 @@ async function fetchHealthStatus() {
 }
 
 function getFailureKind(error) {
+  if (error?.kind === "http") {
+    return "http";
+  }
+
   if (error?.name === "AbortError") {
     return "aborted";
   }
@@ -257,7 +262,7 @@ export function useTidalForensics() {
 
       if (!response.ok) {
         const error = await response.json().catch(() => ({}));
-        throw new Error(error.detail || `HTTP ${response.status}`);
+        throw createHttpError(response.status, error);
       }
 
       const data = await response.json();

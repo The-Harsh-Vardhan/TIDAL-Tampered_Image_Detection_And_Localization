@@ -198,11 +198,17 @@ Input Image (any size)
 | Network | CORS whitelist, rate limiting (30 req/min) |
 | Input | File type + size (20MB) + resolution (16MP) validation |
 | Docker | Non-root user, multi-stage build, read-only mounts |
-| CI/CD | pip-audit, ruff bandit rules, local axios IOC triage script |
+| CI/CD | pip-audit, ruff bandit rules, repository secret scanning workflow |
 | Model | SHA-256 checkpoint integrity |
 
-For local supply-chain verification, run `python scripts/security/check_axios_compromise.py`. The
-runbook is in `Docs/SECURITY_AXIOS_IOC_RESPONSE.md`.
+For local secret and freeze-readiness checks, run:
+
+```bash
+python scripts/security/scan_secrets.py --root .
+python scripts/security/deploy_freeze_checklist.py --strict
+```
+
+The incident runbook is in `docs/SECURITY_INCIDENT_RUNBOOK.md`.
 
 ---
 

@@ -13,6 +13,51 @@ export const API_BASE =
     ? "http://localhost:8000"
     : "https://the-harsh-vardhan-tidal-api.hf.space");
 
+function formatApiIssuePath(loc) {
+  if (!Array.isArray(loc)) {
+    return "";
+  }
+
+  return loc
+    .filter((part) => typeof part === "string" && part !== "body")
+    .join(".");
+}
+
+function formatApiIssue(issue) {
+  if (typeof issue === "string") {
+    return issue.trim();
+  }
+
+  if (!issue || typeof issue !== "object") {
+    return "";
+  }
+
+  const path = formatApiIssuePath(issue.loc);
+  const message =
+    typeof issue.msg === "string" ? issue.msg.trim() : "";
+
+  if (path && message) {
+    return `${path}: ${message}`;
+  }
+
+  return message || path;
+}
+
+function formatApiDetail(detail) {
+  if (typeof detail === "string") {
+    return detail.trim();
+  }
+
+  if (!Array.isArray(detail)) {
+    return "";
+  }
+
+  return detail
+    .map((issue) => formatApiIssue(issue))
+    .filter(Boolean)
+    .join(" ");
+}
+
 export const DEFAULT_SETTINGS = {
   pixelThreshold: 0.7,
   maskAreaThreshold: 400,
@@ -39,6 +84,16 @@ export const MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024;
 
 export function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
+}
+
+export function createHttpError(status, payload = {}) {
+  const detailMessage = formatApiDetail(payload?.detail);
+  const error = new Error(detailMessage || `HTTP ${status}`);
+
+  error.kind = "http";
+  error.status = status;
+
+  return error;
 }
 
 export function formatCount(value) {

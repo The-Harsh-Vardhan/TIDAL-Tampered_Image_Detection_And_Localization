@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TIDAL Legacy Demo</title>
+  <meta
+    name="description"
+    content="Legacy static TIDAL demo with Gemini sample playback, notebook-style forensic controls, backend mask output, and server-generated overlay output."
+  >
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="page-shell">
+    <section class="hero-card">
+      <div class="hero-copy">
+        <span class="eyebrow">Legacy Static Demo</span>
+        <h1>TIDAL Forensic Console</h1>
+        <p>
+          This preserved static frontend mirrors the production API flow with the
+          Gemini sample, exact demo thresholds, direct backend mask output, and
+          server-generated overlay output.
+        </p>
+      </div>
+      <div class="status-row">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="statusText">Checking API…</span>
+      </div>
+    </section>
+
+    <section class="workspace-grid">
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <span class="eyebrow">Input</span>
+            <h2>Upload or Run Demo</h2>
+          </div>
+          <div class="button-row">
+            <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" hidden>
+            <button type="button" id="browseBtn">Upload Image</button>
+            <button type="button" id="demoBtn" class="button-secondary">Run Demo</button>
+            <button type="button" id="clearBtn" class="button-ghost">Clear</button>
+          </div>
+        </div>
+
+        <p class="helper-text" id="inputHelper">
+          Demo uses the validated profile: pixel threshold 0.004, image area
+          threshold 10000, minimum predicted area 15000.
+        </p>
+
+        <div class="preview-frame">
+          <img id="previewImage" alt="Selected source image" hidden>
+          <div id="previewEmpty" class="empty-state">
+            Select an image or run the Gemini demo sample.
+          </div>
+        </div>
+
+        <div class="progress-bar" id="progressBar" hidden>
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <div class="controls-grid">
+          <label class="control-field" for="pixelThreshold">
+            <span class="control-label">Pixel threshold</span>
+            <input type="range" id="pixelThreshold" min="0.001" max="0.99" step="0.001" value="0.7">
+            <output id="pixelThresholdValue">0.7</output>
+          </label>
+
+          <label class="control-field" for="maskAreaThreshold">
+            <span class="control-label">Image area threshold</span>
+            <input type="range" id="maskAreaThreshold" min="0" max="200000" step="50" value="400">
+            <output id="maskAreaThresholdValue">400 px</output>
+          </label>
+
+          <label class="control-field" for="minPredictionAreaPixels">
+            <span class="control-label">Minimum predicted area</span>
+            <input type="range" id="minPredictionAreaPixels" min="0" max="200000" step="50" value="0">
+            <output id="minPredictionAreaPixelsValue">0 px</output>
+          </label>
+
+          <label class="control-field" for="reviewConfidenceThreshold">
+            <span class="control-label">Review confidence</span>
+            <input type="range" id="reviewConfidenceThreshold" min="0.01" max="0.99" step="0.01" value="0.65">
+            <output id="reviewConfidenceThresholdValue">0.65</output>
+          </label>
+        </div>
+
+        <label class="control-field" for="thresholdSensitivityPreset">
+          <span class="control-label">Threshold sensitivity preset</span>
+          <select id="thresholdSensitivityPreset">
+            <option value="lenient">Lenient · 0.20 / 0.35 / 0.50</option>
+            <option value="balanced" selected>Balanced · 0.30 / 0.50 / 0.70</option>
+            <option value="strict">Strict · 0.50 / 0.70 / 0.85</option>
+          </select>
+        </label>
+      </section>
+
+      <section class="panel" id="resultsArea" hidden>
+        <div class="result-header">
+          <div class="verdict" id="resultVerdict">
+            <div class="verdict-icon">
+              <svg id="verdictIconSvg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </div>
+            <div>
+              <div class="verdict-text" id="verdictText">Authentic</div>
+              <div class="verdict-detail" id="verdictDetail">No tampering detected</div>
+            </div>
+          </div>
+          <div class="metric-strip">
+            <div class="metric-card">
+              <span class="metric-label">Confidence</span>
+              <strong id="metricConfidence">—</strong>
+            </div>
+            <div class="metric-card">
+              <span class="metric-label">Coverage</span>
+              <strong id="metricRatio">—</strong>
+            </div>
+            <div class="metric-card">
+              <span class="metric-label">Time</span>
+              <strong id="metricTime">—</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="visual-grid">
+          <article class="visual-card">
+            <h3>Original</h3>
+            <div class="visual-frame">
+              <img id="originalImage" alt="Original image used for inference" hidden>
+              <div id="originalEmpty" class="empty-state">Waiting for inference</div>
+            </div>
+          </article>
+
+          <article class="visual-card">
+            <h3>Mask</h3>
+            <div class="visual-frame">
+              <img id="maskImage" alt="Binary mask generated by the inference backend" hidden>
+              <div id="maskEmpty" class="empty-state">No detected region</div>
+            </div>
+          </article>
+
+          <article class="visual-card">
+            <h3>Mask on Original</h3>
+            <div class="visual-frame">
+              <img id="overlayImage" alt="Server-generated red overlay rendered on top of the source image" hidden>
+              <div id="overlayEmpty" class="empty-state">No detected region</div>
+            </div>
+          </article>
+        </div>
+
+        <div class="diagnostic-banner" id="diagnosticBanner">Waiting for inference…</div>
+
+        <div class="diagnostic-grid">
+          <div class="diagnostic-card">
+            <span class="metric-label">Model</span>
+            <strong id="diagnosticModel">—</strong>
+          </div>
+          <div class="diagnostic-card">
+            <span class="metric-label">Needs review</span>
+            <strong id="diagnosticNeedsReview">—</strong>
+          </div>
+          <div class="diagnostic-card">
+            <span class="metric-label">Raw predicted pixels</span>
+            <strong id="diagnosticRawPixels">—</strong>
+          </div>
+          <div class="diagnostic-card">
+            <span class="metric-label">Final predicted pixels</span>
+            <strong id="diagnosticFinalPixels">—</strong>
+          </div>
+          <div class="diagnostic-card">
+            <span class="metric-label">Area filter hit</span>
+            <strong id="diagnosticAreaFilter">—</strong>
+          </div>
+          <div class="diagnostic-card">
+            <span class="metric-label">Mean probability</span>
+            <strong id="diagnosticMeanProb">—</strong>
+          </div>
+        </div>
+
+        <section class="stack">
+          <div>
+            <h3>Applied Settings</h3>
+            <div class="pill-row" id="settingsPills"></div>
+          </div>
+
+          <div>
+            <h3>Threshold Sensitivity</h3>
+            <div class="sensitivity-table" id="sensitivityTable"></div>
+          </div>
+        </section>
+      </section>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

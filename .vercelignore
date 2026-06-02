@@ -1,3 +1,21 @@
-# The Vercel project rootDirectory already points at `frontend`.
-# Keep the repo-level ignore empty so CLI source deployments don't strip the
-# scoped app directory out from under the build.
+# Root deployment uploads the whole repository before Vercel applies the
+# project rootDirectory. Keep frontend included, but exclude heavy artifacts.
+
+.git
+.venv
+**/__pycache__
+node_modules
+frontend/node_modules
+frontend/.next
+
+# Large research/model artifacts not required for frontend builds
+models
+data
+experiments
+Notebooks
+submission
+_archive
+hf_space_preview
+dvc_pipeline
+figures
+observability

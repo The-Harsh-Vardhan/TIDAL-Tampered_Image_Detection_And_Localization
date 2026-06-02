@@ -12,3 +12,7 @@
 - pip-audit + ruff bandit rules in CI
 - SHA-256 model checkpoint integrity
 - No PII collected, no uploaded images persisted
+
+## Incident Response
+- Use `docs/SECURITY_INCIDENT_RUNBOOK.md` for active incidents affecting deployment providers, credentials, or supply-chain integrity.
+- Treat suspected credential exposure as compromised until rotation and validation are complete.

@@ -12,6 +12,15 @@ Step-by-step deployment for **Hugging Face Spaces** (backend), **Vercel** (front
 - A [Render](https://render.com) account (free)
 - Your trained `best_model.pt` weights file (for live inference)
 
+## Security Incident Mode (Emergency)
+
+If a deployment provider or credential system is under active security incident:
+
+1. Freeze production deploys first (Vercel dashboard).
+2. Rotate provider tokens and CI/CD tokens before any new production release.
+3. Re-run CI and health checks before unfreezing deploys.
+4. Follow the detailed runbook in `docs/SECURITY_INCIDENT_RUNBOOK.md`.
+
 ---
 
 ## 1. Hugging Face Spaces — Backend API
