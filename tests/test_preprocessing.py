@@ -15,9 +15,10 @@ from backend.inference.preprocessing import (
 
 
 def test_ela_grayscale_shape(sample_image):
-    result = compute_ela_grayscale(sample_image, 85, 384)
-    assert result.shape == (384, 384)
-    assert result.dtype == np.uint8
+    arr, stats = compute_ela_grayscale(sample_image, 85, 384)
+    assert arr.shape == (384, 384)
+    assert arr.dtype == np.uint8
+    assert set(stats.keys()) == {"quality", "mean_energy", "max_energy", "scale_factor"}
 
 
 def test_multi_q_ela_shape(sample_image):

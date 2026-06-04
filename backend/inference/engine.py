@@ -11,7 +11,8 @@ import torch
 from PIL import Image
 
 from .model_loader import ModelLoader
-from .preprocessing import DEFAULT_IMAGE_SIZE, preprocess_image
+from .exif_analyzer import extract_exif
+from .preprocessing import DEFAULT_IMAGE_SIZE, compute_ela_stats, preprocess_image
 
 logger = logging.getLogger(__name__)
 MIN_PIXEL_THRESHOLD = 0.001
@@ -105,6 +106,7 @@ def build_overlay_image(
 @dataclass(slots=True)
 class InferenceResult:
     mask: np.ndarray
+    prob_map: np.ndarray
     overlay: np.ndarray | None
     is_tampered: bool
     confidence: float
@@ -118,6 +120,8 @@ class InferenceResult:
     applied_settings: dict
     model_version: str
     inference_time_ms: float
+    exif: dict
+    ela_stats: list[dict]
 
     def to_dict(self):
         return {
@@ -134,6 +138,8 @@ class InferenceResult:
             "model_version": self.model_version,
             "inference_time_ms": round(self.inference_time_ms, 2),
             "mask_shape": list(self.mask.shape),
+            "exif": self.exif,
+            "ela_stats": self.ela_stats,
         }
 
 
@@ -155,7 +161,12 @@ class TIDALInferenceEngine:
         logger.info("Engine warmed up")
 
     @torch.no_grad()
-    def predict(self, image: Image.Image, settings: InferenceSettings | None = None) -> InferenceResult:
+    def predict(
+        self,
+        image: Image.Image,
+        settings: InferenceSettings | None = None,
+        raw_bytes: bytes | None = None,
+    ) -> InferenceResult:
         if settings is None:
             settings = InferenceSettings()
         t0 = time.perf_counter()
@@ -187,9 +198,17 @@ class TIDALInferenceEngine:
             thresholds=settings.threshold_sensitivity_levels,
             min_area_pixels=settings.min_prediction_area_pixels,
         )
+        exif_data = extract_exif(raw_bytes) if raw_bytes is not None else {
+            "raw": {},
+            "has_exif": False,
+            "has_gps": False,
+            "forensic_flags": ["Raw bytes not provided; EXIF analysis skipped."],
+        }
+        ela_stats = compute_ela_stats(image)
         elapsed_ms = (time.perf_counter() - t0) * 1000
         return InferenceResult(
             mask=mask,
+            prob_map=prob_map,
             overlay=build_overlay_image(image, mask),
             is_tampered=is_tampered,
             confidence=confidence,
@@ -203,4 +222,6 @@ class TIDALInferenceEngine:
             applied_settings=settings.to_dict(),
             model_version=self._loader.manifest.get("model_version", "vR.P.30.1"),
             inference_time_ms=elapsed_ms,
+            exif=exif_data,
+            ela_stats=ela_stats,
         )

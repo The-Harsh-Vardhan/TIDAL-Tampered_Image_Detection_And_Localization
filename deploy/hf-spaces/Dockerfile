@@ -10,9 +10,13 @@ FROM python:3.11-slim
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     DEVICE=cpu \
-    MODEL_DIR=/app/models \
+    MODEL_DIR=/app/models/inference/vR.P.30.1 \
     MODEL_VERSION=vR.P.30.1 \
-    CORS_ORIGINS=*
+    CORS_ORIGINS=* \
+    HF_REPO_ID=the-harsh-vardhan/TIDAL \
+    HF_MODEL_FILE=checkpoints/vR.P.30.1/best_model.pt \
+    HF_MANIFEST_FILE=checkpoints/vR.P.30.1/manifest.json
+# HF_TOKEN must be set as a Space Secret in the HF Spaces dashboard.
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends libgl1 libglib2.0-0 curl && \

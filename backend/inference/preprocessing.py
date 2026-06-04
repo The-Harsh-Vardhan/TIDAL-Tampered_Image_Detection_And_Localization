@@ -17,7 +17,8 @@ IN_CHANNELS = 3
 
 def compute_ela_grayscale(
     image: Image.Image, quality: int, size: int = DEFAULT_IMAGE_SIZE
-) -> np.ndarray:
+) -> tuple[np.ndarray, dict]:
+    """Return (scaled_grayscale_array, energy_stats_dict)."""
     image_rgb = image.convert("RGB")
     buf = io.BytesIO()
     image_rgb.save(buf, "JPEG", quality=quality)
@@ -29,9 +30,18 @@ def compute_ela_grayscale(
     if max_diff == 0:
         max_diff = 1
     scale = 255.0 / max_diff
-    ela = ImageEnhance.Brightness(ela).enhance(scale).convert("L")
-    ela = ela.resize((size, size), Image.BILINEAR)
-    return np.array(ela, dtype=np.uint8)
+    ela_scaled = ImageEnhance.Brightness(ela).enhance(scale).convert("L")
+    ela_scaled = ela_scaled.resize((size, size), Image.BILINEAR)
+    arr = np.array(ela_scaled, dtype=np.uint8)
+    # Energy stats computed on the raw (pre-scale) difference image
+    ela_gray_raw = np.array(ela.convert("L"), dtype=np.float32)
+    stats = {
+        "quality": quality,
+        "mean_energy": round(float(ela_gray_raw.mean()), 4),
+        "max_energy": round(float(ela_gray_raw.max()), 4),
+        "scale_factor": round(float(scale), 4),
+    }
+    return arr, stats
 
 
 def compute_multi_quality_ela(
@@ -39,8 +49,22 @@ def compute_multi_quality_ela(
 ) -> np.ndarray:
     if qualities is None:
         qualities = ELA_QUALITIES
-    channels = [compute_ela_grayscale(image, q, size) for q in qualities]
+    channels = [compute_ela_grayscale(image, q, size)[0] for q in qualities]
     return np.stack(channels, axis=-1)
+
+
+def compute_ela_stats(
+    image: Image.Image, qualities=None, size: int = DEFAULT_IMAGE_SIZE
+) -> list[dict]:
+    """Return per-quality ELA energy statistics (Feature 3).
+
+    Each entry: {quality, mean_energy, max_energy, scale_factor}
+    Higher mean_energy at lower quality suggests heavier re-compression
+    in tampered regions.
+    """
+    if qualities is None:
+        qualities = ELA_QUALITIES
+    return [compute_ela_grayscale(image, q, size)[1] for q in qualities]
 
 
 def preprocess_image(

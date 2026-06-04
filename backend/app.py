@@ -2,8 +2,18 @@
 
 from __future__ import annotations
 
+# Load .env before any other imports so that HF_TOKEN and other secrets
+# are available via os.environ throughout the application.
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv(override=False)  # override=False: real env vars always win
+except ImportError:
+    pass  # python-dotenv is optional; env vars can be set externally
+
 import asyncio
 import base64
+import hashlib
 import io
 import logging
 import os
@@ -12,6 +22,10 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from typing import Literal
 
+import matplotlib
+
+matplotlib.use("Agg")  # non-interactive backend — must be set before pyplot import
+import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np
 import torch
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
@@ -19,8 +33,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from PIL import Image
 from prometheus_client import Counter, Histogram, generate_latest
-from starlette.responses import Response
+from starlette.responses import Response as StarletteResponse
 
+from .cache import InferenceCache
 from .inference.engine import (
     DEFAULT_MASK_AREA_THRESHOLD,
     DEFAULT_MIN_PREDICTION_AREA_PIXELS,
@@ -36,6 +51,7 @@ from .inference.engine import (
     TIDALInferenceEngine,
 )
 from .inference.model_loader import ModelLoader
+from .report import build_report
 from .security import RateLimiter, validate_file_size, validate_file_type, validate_image_dimensions
 
 logging.basicConfig(
@@ -53,6 +69,8 @@ engine = None
 rate_limiter = RateLimiter()
 _semaphore = None
 _start_time = 0.0
+_cache = InferenceCache(max_size=int(os.environ.get("CACHE_MAX_SIZE", "128")))
+BATCH_MAX_FILES = int(os.environ.get("BATCH_MAX_FILES", "8"))
 
 
 @asynccontextmanager
@@ -132,6 +150,12 @@ async def infer(
     except Exception as exc:
         raise HTTPException(400, "Invalid image file") from exc
     validate_image_dimensions(image.width, image.height)
+    cache_key = hashlib.sha256(file_bytes).hexdigest()
+    cached = _cache.get(cache_key)
+    if cached is not None:
+        logger.info("Cache HIT for %s", cache_key[:16])
+        return {**cached, "cache_hit": True}
+
     async with _semaphore:
         t0 = time.perf_counter()
         loop = asyncio.get_event_loop()
@@ -161,7 +185,9 @@ async def infer(
             ),
         )
         try:
-            result = await loop.run_in_executor(None, engine.predict, image, settings)
+            result = await loop.run_in_executor(
+                None, engine.predict, image, settings, file_bytes
+            )
         except torch.cuda.OutOfMemoryError as exc:
             torch.cuda.empty_cache()
             REQUEST_COUNT.labels(status="oom").inc()
@@ -182,16 +208,29 @@ async def infer(
         overlay_img.save(overlay_buf, format="PNG")
         overlay_base64 = base64.b64encode(overlay_buf.getvalue()).decode("ascii")
 
-    return {
+    # Feature 2: probability heatmap (jet colormap, blue→green→red)
+    heatmap_rgba = plt.cm.jet(result.prob_map)  # float32 RGBA in [0,1]
+    heatmap_rgb = (heatmap_rgba[:, :, :3] * 255).astype(np.uint8)
+    heatmap_img = Image.fromarray(heatmap_rgb, mode="RGB")
+    heatmap_buf = io.BytesIO()
+    heatmap_img.save(heatmap_buf, format="PNG")
+    heatmap_base64 = base64.b64encode(heatmap_buf.getvalue()).decode("ascii")
+
+    response_data = {
         **result.to_dict(),
         "mask_base64": base64.b64encode(mask_buf.getvalue()).decode("ascii"),
         "overlay_base64": overlay_base64,
+        "heatmap_base64": heatmap_base64,
+        "cache_key": cache_key,
+        "cache_hit": False,
     }
+    _cache.set(cache_key, response_data)
+    return response_data
 
 
 @app.get("/metrics")
 async def metrics():
-    return Response(
+    return StarletteResponse(
         content=generate_latest(), media_type="text/plain; version=0.0.4; charset=utf-8"
     )
 
@@ -211,3 +250,144 @@ async def version():
         "cuda_available": torch.cuda.is_available(),
         "uptime_seconds": round(time.time() - _start_time, 1),
     }
+
+
+# ── Feature 4: Cache stats ─────────────────────────────────────────────────
+
+@app.get("/cache/stats")
+async def cache_stats():
+    """Return current inference result cache statistics."""
+    return _cache.stats()
+
+
+# ── Feature 5: PDF Report ──────────────────────────────────────────────────
+
+@app.get("/report/{cache_key}")
+async def report(cache_key: str):
+    """Download a forensic PDF report for a previously inferred image.
+
+    The image must have been submitted to /infer first (its cache_key is
+    returned in the /infer response).  Returns 404 if the key has been
+    evicted or was never inferred.
+    """
+    cached = _cache.get(cache_key)
+    if cached is None:
+        raise HTTPException(
+            404,
+            "Result not found in cache. Submit the image to /infer first, "
+            "then use the returned cache_key here.",
+        )
+    try:
+        pdf_bytes = build_report(cache_key, cached)
+    except Exception as exc:
+        logger.error("Report generation failed: %s", exc)
+        raise HTTPException(500, "Failed to generate report") from exc
+    return StarletteResponse(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="tidal_report_{cache_key[:12]}.pdf"'
+        },
+    )
+
+
+# ── Feature 6: Batch inference ─────────────────────────────────────────────
+
+@app.post("/infer/batch")
+async def infer_batch(
+    request: Request,
+    files: list[UploadFile] = File(...),  # noqa: B008
+):
+    """Run inference on multiple images in a single request.
+
+    Accepts up to BATCH_MAX_FILES images.  Each image is validated and
+    inferred independently.  Per-image failures are reported inline rather
+    than aborting the whole batch.
+
+    Returns::
+
+        {
+          "results": [ ... ],   # one entry per file
+          "total": N,
+          "succeeded": M,
+          "failed": K,
+        }
+    """
+    rate_limiter.check(request)
+    if engine is None:
+        raise HTTPException(503, "Model not loaded")
+    if not files:
+        raise HTTPException(422, "No files provided")
+    if len(files) > BATCH_MAX_FILES:
+        raise HTTPException(
+            422, f"Too many files. Maximum is {BATCH_MAX_FILES} per batch request."
+        )
+
+    results = []
+    succeeded = 0
+    failed = 0
+
+    for upload in files:
+        entry: dict = {"filename": upload.filename}
+        try:
+            validate_file_type(upload.content_type, upload.filename)
+            file_bytes = await upload.read()
+            validate_file_size(len(file_bytes))
+            image = Image.open(io.BytesIO(file_bytes)).convert("RGB")
+            validate_image_dimensions(image.width, image.height)
+
+            # Cache lookup
+            cache_key = hashlib.sha256(file_bytes).hexdigest()
+            cached = _cache.get(cache_key)
+            if cached is not None:
+                entry.update({**cached, "cache_hit": True})
+                succeeded += 1
+                results.append(entry)
+                continue
+
+            async with _semaphore:
+                loop = asyncio.get_event_loop()
+                result = await loop.run_in_executor(
+                    None, engine.predict, image, None, file_bytes
+                )
+
+            mask_img = Image.fromarray((result.mask * 255).astype(np.uint8), mode="L")
+            mask_buf = io.BytesIO()
+            mask_img.save(mask_buf, format="PNG")
+
+            overlay_base64 = ""
+            if result.overlay is not None:
+                overlay_img = Image.fromarray(result.overlay, mode="RGB")
+                overlay_buf = io.BytesIO()
+                overlay_img.save(overlay_buf, format="PNG")
+                overlay_base64 = base64.b64encode(overlay_buf.getvalue()).decode("ascii")
+
+            heatmap_rgba = plt.cm.jet(result.prob_map)
+            heatmap_rgb = (heatmap_rgba[:, :, :3] * 255).astype(np.uint8)
+            heatmap_buf = io.BytesIO()
+            Image.fromarray(heatmap_rgb, mode="RGB").save(heatmap_buf, format="PNG")
+            heatmap_base64 = base64.b64encode(heatmap_buf.getvalue()).decode("ascii")
+
+            result_data = {
+                **result.to_dict(),
+                "mask_base64": base64.b64encode(mask_buf.getvalue()).decode("ascii"),
+                "overlay_base64": overlay_base64,
+                "heatmap_base64": heatmap_base64,
+                "cache_key": cache_key,
+                "cache_hit": False,
+            }
+            _cache.set(cache_key, result_data)
+            entry.update(result_data)
+            succeeded += 1
+            REQUEST_COUNT.labels(status="success").inc()
+        except HTTPException as exc:
+            entry["error"] = exc.detail
+            failed += 1
+            REQUEST_COUNT.labels(status="error").inc()
+        except Exception as exc:
+            entry["error"] = str(exc)
+            failed += 1
+            REQUEST_COUNT.labels(status="error").inc()
+        results.append(entry)
+
+    return {"results": results, "total": len(files), "succeeded": succeeded, "failed": failed}
