@@ -415,7 +415,7 @@ experiments/
     wandb_runs/                          # 37 W&B exported run notebooks
     wandb_tracking/                      # W&B infrastructure
 
-Docs/
+docs/
     submission_report/                   # Clean submission documents
     research_docs/                       # Full research documentation
         ablation_study/                  # Ablation plans, audits, leaderboards

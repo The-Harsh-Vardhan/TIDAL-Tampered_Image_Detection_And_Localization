@@ -1,0 +1,8 @@
+theme: jekyll-theme-cayman
+title: TIDAL
+description: Pixel-level tampered image detection and localization with UNet, ResNet-34 and multi-quality ELA on CASIA v2.0
+show_downloads: false
+exclude:
+  - research
+  - submission
+  - DEPLOYMENT.md
